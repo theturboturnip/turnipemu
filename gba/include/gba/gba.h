@@ -7,7 +7,8 @@
 
 namespace GBA{
 	class GBA{
-
+		friend class MemoryMap;
+		
 		void reset();
 		void reset(GamePak newGamePak);
 		
@@ -16,7 +17,7 @@ namespace GBA{
 		
 		MemoryMap memoryMap;
 
-		GamePak gamePak; // TODO: Define. This isn't a pointer because a cartridge should have a state per GBA, in case it's reused by multiple GBA instances
+		GamePak gamePak;
 		struct {
 			LCDEngine lcdEngine; // TODO: Define, should control both the Internal Display Memory (0x05000000 - 0x07000400) and the LCD Control Registers (0x04000000 - 0x04000060)
 			SoundEngine soundEngine; // TODO: Define
@@ -28,4 +29,3 @@ namespace GBA{
 		} io;
 	};
 }
-

@@ -11,12 +11,16 @@ namespace GBA{
 // An interface for reading and writing bytes from memory. 
 class MemoryController{
 public:
-	virtual bool allowRead(uint32_t address) = 0;
-	virtual byte read(uint32_t address) = 0;
-	virtual bool allowWrite(uint32_t address) = 0;
-	virtual bool write(uint32_t address, byte value) = 0;
+	virtual bool ownsAddress(uint32_t address) const = 0;
+	
+	virtual bool allowRead(uint32_t address) const = 0;
+	virtual byte read(uint32_t address) const = 0;
+	virtual bool allowWrite(uint32_t address) const {
+		return false;
+	}
+	virtual bool write(uint32_t address, byte value){}
 
-	virtual uint8_t cyclesForRead(uint8_t byteWidth){
+	virtual uint8_t cyclesForRead(uint32_t address, uint8_t byteWidth) const {
 		switch(width){
 		case 1:
 		case 2:
@@ -27,7 +31,7 @@ public:
 			return 0; // 0 is for an unsupported read width
 		}
 	}
-	virtual uint8_t cyclesForWrite(uint8_t byteWidth){
+	virtual uint8_t cyclesForWrite(uint32_t address, uint8_t byteWidth) const {
 		switch(width){
 		case 1:
 		case 2:
@@ -38,17 +42,16 @@ public:
 			return 0; // 0 is for an unsupported read width
 		}
 	}
-}
-	struct AddressableMemoryRange{
-		const uint32_t startAddress;
-		const uint32_t endAddress;
-		const MemoryController* controller = nullptr;
+};
+class MemoryRangeController : public MemoryController{
+public:
+	const uint32_t startAddress = 0;
+	const uint32_t endAddress = 0;
 
-		// Other implementations can override this, if they only control individual addresses across a large range
-		virtual bool ownsAddress(uint32_t address) const{
-			return (startAddress <= address) && (address < endAddress);
-		}
-	};
+	bool ownsAddress(uint32_t address) override const {
+		return (startAddress <= address) && (address < endAddress);
+	}
+};
 	
 class MemoryMap{
 	// Read/Write Pseudocode
@@ -58,7 +61,7 @@ class MemoryMap{
 	// 4. Do the op.
 		
 public:
-	MemoryMap(GBA::GBA&); // Setup the AddressableMemoryRanges based on the current GBA implementation.
+	MemoryMap(GBA::GBA&); // Setup the MemoryControllers based on the current GBA implementation.
 
 	// Instantiated for byte, halfword, word
 	template<typename ReadType>
@@ -68,7 +71,7 @@ public:
 protected:
 	MemoryController* controllerForAddress(uint32_t address) const; 
 		
-	const std::vector<AddressableMemoryRange> addressableMemoryRanges;
+	const std::vector<MemoryController*> memoryControllers;
 	// TODO: std::unordered_map<uint32_t, MemoryController*> could be used as a cache? Use FIFO to limit total space taken up?
 
 	ARM7TDMI& cpu; // Memory reads take cycles, and affect the CPU registers.
