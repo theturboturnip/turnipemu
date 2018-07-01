@@ -11,8 +11,8 @@ namespace GBA{
 		GamePak(std::vector<byte>& rom); // TODO: Define
 
 		// TODO: Define memory functions. The cycles will be wrong, and the backup data is writeable
-		using MemoryRangeController::startAddress = 0x08000000;
-		using MemoryRangeController::endAddress = 0x0E010000;
+		//using MemoryRangeController::startAddress = 0x08000000;
+		//using MemoryRangeController::endAddress = 0x0E010000;
 		bool allowRead(uint32_t address) const override {
 			return true;
 		}
@@ -31,7 +31,7 @@ namespace GBA{
 		
 	protected:
 		struct {
-			char title[16 + 1];
+			char title[12 + 1];
 			char gameCode[4 + 1];
 			char makerCode[2 + 1];
 			byte version;
@@ -40,12 +40,21 @@ namespace GBA{
 		std::vector<byte>& rom; // Max 32MB, commonly 4MB or 8MB
 
 		enum class BackupType {
-			eEEPROM,   // EEPROM, 512B OR 8KB
-			eSRAM,     // SRAM, 32KB
-			eFLASH512, // FLASH, 64KB (i.e. 512Kb)
-			eFLASH1M   // FLASH, 128KB, (i.e. 1Mb)
+			eEEPROM = 0,   // EEPROM, 512B OR 8KB
+			eSRAM = 1,     // SRAM, 32KB
+			eFlash512 = 2, // FLASH, 64KB (i.e. 512Kb)
+			eFlash1M = 3,  // FLASH, 128KB, (i.e. 1Mb)
+			eUnknown = 4
 		};
-		BackupType backupType;
+		char const* const backupTypeStrings[5] = {
+			"EEPROM (Size UNK.)",
+			"SRAM (32KB)",
+			"Flash (64KB)",
+			"Flash (128KB)",
+			"Unknown"
+		};
+			
+		BackupType backupType = BackupType::eUnknown;
 		std::vector<byte> backup; 
 	};
 }

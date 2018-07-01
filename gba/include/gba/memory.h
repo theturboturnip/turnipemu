@@ -2,11 +2,13 @@
 
 #include "types.h"
 
+#include <assert.h>
 #include <vector>
 
 namespace GBA{
 	class GBA;
 }
+class ARM7TDMI;
 
 // An interface for reading and writing bytes from memory. 
 class MemoryController{
@@ -14,14 +16,14 @@ public:
 	virtual bool ownsAddress(uint32_t address) const = 0;
 	
 	virtual bool allowRead(uint32_t address) const = 0;
-	virtual byte read(uint32_t address) const = 0;
+	virtual GBA::byte read(uint32_t address) const = 0;
 	virtual bool allowWrite(uint32_t address) const {
 		return false;
 	}
-	virtual bool write(uint32_t address, byte value){}
+	virtual void write(uint32_t address, GBA::byte value){}
 
 	virtual uint8_t cyclesForRead(uint32_t address, uint8_t byteWidth) const {
-		switch(width){
+		switch(byteWidth){
 		case 1:
 		case 2:
 		case 4:
@@ -32,7 +34,7 @@ public:
 		}
 	}
 	virtual uint8_t cyclesForWrite(uint32_t address, uint8_t byteWidth) const {
-		switch(width){
+		switch(byteWidth){
 		case 1:
 		case 2:
 		case 4:
@@ -48,7 +50,7 @@ public:
 	const uint32_t startAddress = 0;
 	const uint32_t endAddress = 0;
 
-	bool ownsAddress(uint32_t address) override const {
+	bool ownsAddress(uint32_t address) const override {
 		return (startAddress <= address) && (address < endAddress);
 	}
 };
