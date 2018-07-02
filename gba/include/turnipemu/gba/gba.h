@@ -5,6 +5,7 @@
 #include "arm7tdmi.h"
 #include "dma.h"
 #include "gamepak.h"
+#include "lcd.h"
 
 namespace TurnipEmu::GBA{
 	class GBA{
@@ -22,9 +23,9 @@ namespace TurnipEmu::GBA{
 
 		GamePak gamePak;
 		struct {
-			LCDEngine lcdEngine; // TODO: Define, should control both the Internal Display Memory (0x05000000 - 0x07000400) and the LCD Control Registers (0x04000000 - 0x04000060)
+			LCDEngine lcdEngine; // TODO: Define fully, should control both the Internal Display Memory (0x05000000 - 0x07000400) and the LCD Control Registers (0x04000000 - 0x04000060)
 			SoundEngine soundEngine; // TODO: Define
-			DMAEngine dmaEngine;
+			DMAEngine dmaEngine; // TODO: Define behaviour
 			Timer timer; // TODO: Define
 			SerialEngine serialEngine; // TODO: Define. Can be a no-op, serial support isn't planned for now
 			Keypad keypad; // TODO: Define

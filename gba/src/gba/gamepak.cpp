@@ -1,6 +1,6 @@
+#include "turnipemu/config.h"
 #include "turnipemu/log.h"
 #include "turnipemu/gba/gamepak.h"
-#include "turnipemu/gba/config.h"
 
 #include <regex>
 
