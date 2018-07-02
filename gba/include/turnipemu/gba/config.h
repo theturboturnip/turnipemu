@@ -1,5 +1,5 @@
 #pragma once
 
-namespace GBA::StaticConfig{
+namespace TurnipEmu::GBA::StaticConfig{
 	constexpr bool DebugRomData = true;
 }

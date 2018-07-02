@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace GBA{
+namespace TurnipEmu::GBA{
 	class GamePak : public MemoryRangeController {
 	public:
 		GamePak(std::vector<byte>& rom); // TODO: Define

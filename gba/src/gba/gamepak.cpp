@@ -1,10 +1,10 @@
-#include "gba/gamepak.h"
-#include "gba/config.h"
+#include "turnipemu/log.h"
+#include "turnipemu/gba/gamepak.h"
+#include "turnipemu/gba/config.h"
 
-#include <cstdio>
 #include <regex>
 
-namespace GBA{
+namespace TurnipEmu::GBA{
 	GamePak::GamePak(std::vector<byte>& rom) : rom(rom) {
 		assert(rom.size() >= 0x400000 && (rom.size() % 0x100000) == 0);
 		assert(rom[0xB2] == 0x96);
@@ -18,6 +18,7 @@ namespace GBA{
 
 		gameInfo.version = rom[0xBC];
 
+		// Backup Type detection, only works for ROMs built with Nintendo libraries
 		std::regex regexes[] = {
 			std::regex("EEPROM_V\\d\\d\\d"),
 			std::regex("SRAM_V\\d\\d\\d"),
@@ -32,7 +33,12 @@ namespace GBA{
 		}
 
 		if (StaticConfig::DebugRomData){
-			fprintf(stdout, "Successfully loaded ROM\nTitle: %s\nGame Code: %s\nMaker Code: %s\nVersion: %d\nBackup Type: %s\n", gameInfo.title, gameInfo.gameCode, gameInfo.makerCode, gameInfo.version, backupTypeStrings[(int)backupType]);
+			LogLine("ROM", "Successfully loaded ROM");
+			LogLine("ROM", "Title: %s", gameInfo.title);
+			LogLine("ROM", "Game Code: %s", gameInfo.gameCode);
+			LogLine("ROM", "Maker Code: %s", gameInfo.makerCode);
+			LogLine("ROM", "Version: %d", gameInfo.version);
+			LogLine("ROM", "Backup Type: %s", backupTypeStrings[(int)backupType]);
 		}
 	}
 }

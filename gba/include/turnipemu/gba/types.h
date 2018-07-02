@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace GBA{
+namespace TurnipEmu::GBA{
 	using byte = uint8_t;
 	using halfword = uint16_t;
 	using word = uint32_t;

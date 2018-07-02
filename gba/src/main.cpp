@@ -1,9 +1,11 @@
-#include "gba/gamepak.h"
+#include "turnipemu/gba/gamepak.h"
 
 #include <assert.h>
 #include <fstream>
 #include <iostream>
 #include <string>
+
+using namespace TurnipEmu;
 
 int main(int argc, char* argv[]){
 	assert(argc >= 2);
