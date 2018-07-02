@@ -4,10 +4,13 @@
 #include "memory.h"
 #include "arm7tdmi.h"
 #include "dma.h"
+#include "gamepak.h"
 
-namespace GBA{
+namespace TurnipEmu::GBA{
 	class GBA{
 		friend class MemoryMap;
+
+		GBA(GamePak gamePak);
 		
 		void reset();
 		void reset(GamePak newGamePak);

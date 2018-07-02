@@ -1,5 +1,7 @@
 all: prog
 
+PROJECT_NAME = turnipemu
+
 BUILD_FOLDER = ./build
 DEPENDS_FOLDER = $(BUILD_FOLDER)/depends
 OBJECT_FOLDER = $(BUILD_FOLDER)/objects
@@ -10,7 +12,7 @@ EXTERNAL_HEADER_FOLDER = ./external
 
 LINK      = clang++
 LINKFLAGS = -g -lGL -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
-CPPFLAGS  = -g -Wall -O3 -I/usr/include/SDL2 -std=c++1z -I$(EXTERNAL_HEADER_FOLDER) -I$(SOURCE_HEADER_FOLDER)
+CPPFLAGS  = -g -Wall -O3 -I/usr/include/SDL2 -std=c++1z -I$(EXTERNAL_HEADER_FOLDER) -I$(SOURCE_HEADER_FOLDER) -I$(SOURCE_HEADER_FOLDER)/$(PROJECT_NAME)
 CPP_HEADER_FLAGS = -Wno-pragma-once-outside-header
 
 HEADER_FILES = $(shell find $(SOURCE_HEADER_FOLDER)/ -name "*.h")
