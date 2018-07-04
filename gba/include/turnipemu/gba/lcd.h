@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
+
 #include "types.h"
 #include "memory.h"
+#include "utils.h"
 
 namespace TurnipEmu::GBA{
 	class LCDEngine : public MemoryController{
@@ -12,9 +15,10 @@ namespace TurnipEmu::GBA{
 #pragma pack(1) // No Padding
 
 		// TODO: VRAM structs
-		
+		// TODO: Check that nested structs get the endian-ness right.
+		// If I have a halfword-sized struct Fred{ byte a; byte b; }, and then I have a struct Bob { Fred one; Fred two; }, it should be laid out as struct Bob { byte one.a; byte one.b; byte two.a; byte two.b }
 		union Control{
-			word value;
+			byte values[4];
 			struct {
 				uint8_t bgMode : 3; // Bits 0-2
 				bool inCgbMode : 1; // Bit 3, should always be false
@@ -22,7 +26,7 @@ namespace TurnipEmu::GBA{
 				bool allowOAMAccessDuringHBlank : 1; // Bit 5
 				uint8_t objCharacterVramMapping : 1; // Bit 6, 0 for 2D, 1 for 1D
 				bool forceBlank : 1; // Bit 7
-
+					
 				bool displayBg0 : 1; // Bit 8
 				bool displayBg1 : 1; // Bit 9
 				bool displayBg2 : 1; // Bit 10
@@ -39,7 +43,7 @@ namespace TurnipEmu::GBA{
 		static_assert(sizeof(Control) == 4, "LCDEngine::Control must be a full word");
 
 		union Status {
-			word value;
+			byte values[4];
 			struct {
 				bool vblankFlag : 1; // Bit 0 (Read only, use as internal state?)
 				bool hblankFlag : 1; // Bit 1 (Read only, use as internal state?)
@@ -49,27 +53,27 @@ namespace TurnipEmu::GBA{
 				bool enableVCounterInterrupt : 1; // Bit 5 (R/W)
 				bool dsiLcdInited : 1; // Bit 6 (Read only, set on read, only used on DSi)
 				uint8_t ndsMSBOfVCountDelta : 1; // Bit 7 (Read only, set on read, only used on DS)
-				
-				uint16_t vCount : 8; // Bits 8-15, (R/W)
-
+					
+				uint8_t vCount : 8; // Bits 8-15, (R/W)
+					
 				uint8_t currentScanline : 8; // Bits 16-23 (Read only, use as internal state)
-				
+					
 				uint8_t ndsMSBOfCurrentScanline : 1; // Bit 24 (Read only, set on read, only used on DS)
-				uint16_t unused : 7;
+				uint8_t unused : 7;
 			};
 		};
 		static_assert(sizeof(Status) == 4, "LCDEngine::Status must be a full word");
-		constexpr static word statusWriteMask = 0b1111111100111000;
+		constexpr static byte statusFirstButeWriteMask = 0b00111000;
 
 		union BGControl {
-			halfword value;
+			byte values[2];
 			struct {
 				uint8_t priority : 2; // Bits 0-1, 0 = Highest Priority
 				uint8_t characterStartBlock : 2; // Bits 2-3, units of 16KB, basically BG Tile Data
 				uint8_t unused : 2; // Bits 4-5, should be 0
 				bool enableMosaic : 1; // Bit 6
 				uint8_t colorSpace : 1; // Bit 7, 0 for 16 colors and 16 palettes, 1 for 256 colors and 1 palette
-				
+					
 				uint8_t screenStartBlock : 5; // Bits 8-12, units of 2KB, basically BG Map Data
 				bool wrapMode : 1; // Bit 13, 0 for clamp, 1 for wrap, used for BGs 2 and 3 ONLY
 				uint8_t screenSize : 2; // Bit 14-15, different meanings depending on the BG mode
@@ -95,26 +99,39 @@ namespace TurnipEmu::GBA{
 		static_assert(sizeof(BGControl) == 2, "LCDEngine::BGControl must be a half word");
 		// Only used in Text Mode
 		struct BGOffset {
-			uint16_t x : 9;
-			uint16_t unused : 7;
-			uint16_t y : 9;
-			uint16_t unused1 : 7;
+			uint8_t x_high : 8;
+			uint8_t x_low : 1;
+			uint8_t unused : 7;
+				
+			uint8_t y_high : 8;
+			uint8_t y_low : 1;
+			uint8_t unused1 : 7;
+			
+			uint16_t x() const {
+				return (x_high << 1) + x_low;
+			}
+			uint16_t y() const {
+				return (y_high << 1) + y_low;
+			}
 		};
 		static_assert(sizeof(BGOffset) == 4, "LCDEngine::BGOffset must be a full word");
 
 		struct BGFullFloat {
 			uint8_t fractionalPortion : 8; // Bits 0-7
-			uint32_t integerPortion : 19; // Bits 8-26
+			uint8_t integerPortion_highest : 8; // Bits 8-15
+			uint8_t integerPortion_high : 8; // Bits 16-23
+			uint8_t integerPortion_low : 3; // Bits 24-26
 			int sign : 1; // Bit 27, int : 1 is automatically the sign bit
 			uint8_t unused : 4; // Bits 28-31
 
 			operator float(){
+				uint32_t integerPortion = (integerPortion_highest << 11) + (integerPortion_high << 3) + integerPortion_low;
 				return sign * (integerPortion + (fractionalPortion / 256.0f)); // TODO: Are the brackets in the right place?
 			}
 		};
 		static_assert(sizeof(BGFullFloat) == 4, "LCDEngine::BGFullFloat must be a full word");
 		struct BGDeltaFloat {
-			uint8_t fractionalPortion : 8; // Bits 0-7
+			uint8_t fractionalPortion : 8; // Bits 0-7				
 			uint8_t integerPortion : 7; // Bits 8-14
 			int sign : 1; // Bit 15, int : 1 is automatically the sign bit
 
@@ -177,57 +194,50 @@ namespace TurnipEmu::GBA{
 		struct MosaicControl {
 			uint8_t bgMosaicHorizontalSizeMinus1 : 4; // Bits 0-3
 			uint8_t bgMosaicVerticalSizeMinus1 : 4; // Bits 4-7
+				
 			uint8_t objMosaicHorizontalSizeMinus1 : 4; // Bits 8-11
 			uint8_t objMosaicVerticalSizeMinus1 : 4; // Bits 12-15
-			
+				
 			uint16_t unused;
 		};
 		static_assert(sizeof(MosaicControl) == 4, "LCDEngine::EffectControl must be a full word");
 
-		struct ColorEffectControl {
-			// Bits 0-5
+		struct ColorEffectData {
 			bool allowBg0AsFirstTarget : 1;
 			bool allowBg1AsFirstTarget : 1;
 			bool allowBg2AsFirstTarget : 1;
 			bool allowBg3AsFirstTarget : 1;
 			bool allowTopmostObjAsFirstTarget : 1;
 			bool allowBackdropAsFirstTarget : 1;
-
-			// Bits 6-7
 			uint8_t selectedEffect : 2;
-
-			// Bits 7-13
+				
 			bool allowBg0AsSecondTarget : 1;
 			bool allowBg1AsSecondTarget : 1;
 			bool allowBg2AsSecondTarget : 1;
 			bool allowBg3AsSecondTarget : 1;
 			bool allowTopmostObjAsSecondTarget : 1;
 			bool allowBackdropAsSecondTarget : 1;
-
-			// Bits 14-15
 			uint8_t unused : 2;
-		};
-		static_assert(sizeof(ColorEffectControl) == 2, "LCDEngine::ColorEffectControl must be a halfword");
 
-		struct ColorEffectCoefficients {
-			uint8_t firstTargetCoefficient : 5; // Bits 0-4, divided by 16 with the result capped at 1
-			uint8_t unused : 3; // Bits 5-7
-			uint8_t secondTargetCoefficient : 5; // Bits 8-12, divided by 16 with the result capped at 1
-			uint8_t unused1 : 3; // Bits 13-15
-			uint8_t brightnessCoefficient : 5; // Bits 16-20, divided by 16 with the result capped at 1
-			uint32_t unused2 : 11; // Bits 21 - 31
+			uint8_t firstTargetCoefficient : 5; // Divided by 16 with the result capped at 1
+			uint8_t unused1 : 3;
+			uint8_t secondTargetCoefficient : 5; // Divided by 16 with the result capped at 1
+			uint8_t unused2 : 3;
+			
+			uint8_t brightnessCoefficient : 5; // Divided by 16 with the result capped at 1
+			uint32_t unused3 : 27;
 		};
-		static_assert(sizeof(ColorEffectCoefficients) == 4, "LCDEngine::ColorEffectCoefficients must be a word");
+		static_assert(sizeof(ColorEffectData) == 8, "LCDEngine::ColorEffectCoefficients must be two words");
 		
 		union EffectData {
-			byte values[0x56 - 0x40]; // 0x16 = 16 + 6 = 22 bytes, 5.5 words
+			byte values[0x58 - 0x40]; // 0x18 = 16 + 8 = 24 bytes, 6 words
 			struct {
 				// 0x40 - 0x47
 				WindowDimension window0HorizDimen;
 				WindowDimension window1HorizDimen;
 				WindowDimension window0VertDimen;
 				WindowDimension window1VertDimen;
-
+					
 				// 0x48 - 0x4B
 				EffectControl window0Effects;
 				EffectControl window1Effects;
@@ -239,13 +249,10 @@ namespace TurnipEmu::GBA{
 				MosaicControl mosaicControl;
 
 				// 0x50
-				ColorEffectControl colorEffectControl;
-
-				// 0x52-0x56
-				ColorEffectCoefficients colorEffectCoefficients;
+				ColorEffectData colorEffectData;
 			};
 		};
-		static_assert(sizeof(EffectData) == (0x56 - 0x40), "LCDEngine::EffectData must have the right size");
+		static_assert(sizeof(EffectData) == (0x58 - 0x40), "LCDEngine::EffectData must have the right size");
 
 #pragma pack() 
 		Control control;

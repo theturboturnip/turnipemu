@@ -19,7 +19,7 @@ namespace TurnipEmu {
 
 		protected:
 			struct DMAChannelState {
-				// TODO: Internal DMA State
+				
 			};
 			DMAChannelState channels[4];
 		};
