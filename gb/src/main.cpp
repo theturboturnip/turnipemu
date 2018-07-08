@@ -14,6 +14,7 @@
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* texture = nullptr;
+SDL_Joystick* controller = nullptr;
 
 int sdl_setup(int width, int height){
 	/* Initialize SDL. */
@@ -53,9 +54,24 @@ int sdl_setup(int width, int height){
 		return 1;
 	}
 
+	 //Check for joysticks
+	if( SDL_NumJoysticks() < 1 ) {
+		fprintf(stderr, "No joysticks connected!\n");
+	} else {
+		//Load joystick
+	    controller = SDL_JoystickOpen( 0 );
+		if(!controller) {
+			fprintf(stderr, "Unable to open game controller! SDL Error: %s\n", SDL_GetError() );
+			return 1;
+		}
+		fprintf(stderr, "Successfully loaded controller!\n");
+	}
+
 	return 0;
 }
 void sdl_cleanup(){
+	SDL_JoystickClose(controller);
+	controller = nullptr;
 	SDL_DestroyTexture(texture);
 	texture = nullptr;
 	SDL_DestroyRenderer(renderer);
@@ -66,6 +82,8 @@ void sdl_cleanup(){
 
 static bool wants_quit = false;
 void test_input(GB::CPU& cpu){
+	constexpr int JOYSTICK_DEADZONE = 8000;
+	
 	SDL_Event keyevent;    //The SDL event that we will poll to get events.
 	while (SDL_PollEvent(&keyevent)){
 		if (keyevent.type == SDL_QUIT)
@@ -130,6 +148,29 @@ void test_input(GB::CPU& cpu){
 			default:
 				break;
 			}
+		}else if (keyevent.type == SDL_JOYAXISMOTION){
+			fprintf(stderr, "JOYAXIS_MOTION\n");
+			if (keyevent.jaxis.axis == 0){
+				if (keyevent.jaxis.value < -JOYSTICK_DEADZONE){
+					cpu.input.on_direction_down(GB::Input::Direction::Left);
+				}else if (keyevent.jaxis.value > JOYSTICK_DEADZONE){
+					cpu.input.on_direction_down(GB::Input::Direction::Right);
+				}else{
+					cpu.input.on_direction_up(GB::Input::Direction::Left); // This can be either value on the correct axis
+				}
+				fprintf(stderr, "Detected Horizontal Joystick Input!\n");
+			}else if (keyevent.jaxis.axis == 1){
+				if (keyevent.jaxis.value < -JOYSTICK_DEADZONE){
+					cpu.input.on_direction_down(GB::Input::Direction::Down);
+				}else if (keyevent.jaxis.value > JOYSTICK_DEADZONE){
+					cpu.input.on_direction_down(GB::Input::Direction::Up);
+				}else{
+					cpu.input.on_direction_up(GB::Input::Direction::Down); // This can be either value on the correct axis
+				}
+				fprintf(stderr, "Detected Vertical Joystick Input!\n");
+			}
+		}else{
+			fprintf(stderr, "Unhandled Input %d\n", keyevent.type);
 		}
 	}
 }
