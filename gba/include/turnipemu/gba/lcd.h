@@ -254,6 +254,58 @@ namespace TurnipEmu::GBA{
 		};
 		static_assert(sizeof(EffectData) == (0x58 - 0x40), "LCDEngine::EffectData must have the right size");
 
+		struct Tile4 {
+			byte data[32];
+			inline uint8_t paletteIndex(uint8_t x, uint8_t y){
+				return (data[4 * y + (x / 2)] >> (x % 2 == 0 ? 0 : 4)) & 0x0F;
+			}
+		};
+		static_assert(sizeof(Tile4) == 32, "LCDEngine::Tile4 must be 32 bytes!");
+		struct Tile8 {
+			byte data[64];
+			inline uint8_t paletteIndex(uint8_t x, uint8_t y){
+				return data[y * 8 + x];
+			}
+		};
+		static_assert(sizeof(Tile8) == 64, "LCDEngine::Tile8 must be 64 bytes!");
+		struct TextMapItem {
+			uint8_t tileNumber_high;
+			uint8_t tileNumber_low : 2;
+
+			bool horizontalFlip : 1;
+			bool verticalFlip : 1;
+			uint8_t paletteNumber : 4;
+			
+			inline uint16_t tileNumber(){
+				return tileNumber_high << 2 + tileNumber_low;
+			}
+		};
+		static_assert(sizeof(TextMapItem) == 2, "LCDEngine::TextMapItem must be 2 bytes"); 
+		
+		union Vram {
+			byte data[0x18000];
+			struct {
+				union {
+					Tile4 dataAs4BitTiles[0x10000/sizeof(Tile4)];
+					Tile8 dataAs8BitTiles[0x10000/sizeof(Tile8)];
+					
+					TextMapItem dataAsTextMapItems[0x10000/sizeof(TextMapItem)];
+					byte dataAsRotScaleMap[0x10000];
+				};
+				Obj objects[0x8000/sizeof(Obj)];
+			} tileModes; // Modes 0, 1, 2
+			struct {
+				byte frame0Buffer[0x14000];
+				Obj objects[0x4000/sizeof(Obj)];
+			} singleBufferedBitmapMode; // Mode 3
+			struct {
+				byte frame0Buffer[0xA000];
+				byte frame1Buffer[0xA000];
+				Obj objects[0x4000/sizeof(Obj)];
+			} doubleBufferedBitmapModes; // Modes 4, 5
+		} vram; // 0x06000000 - 0x06017FFF
+		static_assert(sizeof(Vram) == 0x18000, "VRam must take exactly 0x18000 bytes");
+		
 #pragma pack() 
 		Control control;
 		Status status;
