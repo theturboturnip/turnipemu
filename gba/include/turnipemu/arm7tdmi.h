@@ -3,6 +3,9 @@
 #include "types.h"
 #include "memory.h"
 
+#include <string>
+#include <memory>
+
 namespace TurnipEmu {
 	class ARM7TDMI{
 	public:
@@ -108,5 +111,44 @@ namespace TurnipEmu {
 
 		uint32_t cyclesThisTick;
 		uint32_t cyclesTotal;
+
+		struct InstructionMask {
+			struct MaskRange {
+				uint8_t end;
+				uint8_t start;
+				uint32_t value;
+				
+			MaskRange(uint8_t end, uint8_t start, uint32_t value) : end(end), start(start), value(value) {
+				assert(start <= end);
+			}
+			MaskRange(uint8_t bit, bool set) : end(bit), start(bit), value(set << bit){}
+				
+				inline void updateMask(word& mask) const {
+					mask |= ((~0) << start) & ((0) << (end + 1)); 
+				}
+				inline void updateExpectedValue(word& expectedValue) const {
+					word maskedValue = value & ((~0) << start) & ((0) << (end + 1));
+					// TODO: This should already be done, this is kinda redundant
+					expectedValue |= maskedValue;
+				}
+			};
+			word mask;
+			word expectedValue;
+			InstructionMask(std::initializer_list<MaskRange>);
+			inline bool matches(word input) const {
+				return (input & mask) == expectedValue;
+			}
+		};
+		class Instruction {
+		public:
+			Instruction(std::string category, InstructionMask mask);
+			
+			//const InstructionMask mask;
+			//virtual void execute(ARM7TDMI& cpu, RegisterPointers);
+		};
+		friend class Instruction;
+		// This has to be vector of unique_ptr because Instruction is virtual
+		std::vector<std::unique_ptr<Instruction>> instructions;
+		void setupInstructions();
 	};
 }
