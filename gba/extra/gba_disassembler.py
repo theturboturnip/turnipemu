@@ -45,6 +45,13 @@ class ArmInstruction:
     
     def __str__(self):
         return self.action_string() + "\n[ COND ] " + self.condition_string
+class ArmPUWLInstruction(ArmInstruction):
+    def __init__(self, word):
+        ArmInstruction.__init__(self, word)
+        self.P = (word >> 24) & 1
+        self.U = (word >> 23) & 1
+        self.writeback = (word >> 21) & 1
+        self.load = (word >> 20) & 1 # Previously L
 class ArmUndefinedInstruction(ArmInstruction):
     @staticmethod
     def fits(word):
@@ -68,9 +75,12 @@ class ArmBranchExchangeInstruction(ArmInstruction):
     @staticmethod
     def fits(word):
         return ((word >> 4) & 0xFFFFFF) == 0b000100101111111111110001
-    # TODO: DEFINE BEHAVIOUR!!!
     def __init__(self, word):
-        raise Exception("Must define the ArmBranchExchangeBehaviour code")
+        global in_thumb_mode
+        ArmInstruction.__init__(self, word)
+        self.source_register = ((word >> 4) & 0xF)
+    def action_string(self):
+        return "Branch to register {}, set thumb mode to bit 0 of that".format(self.source_register)
 class ArmALUInstruction(ArmInstruction):
     OPCODE_STRINGS = [
         "AND (src AND operand)",
@@ -108,7 +118,7 @@ class ArmALUInstruction(ArmInstruction):
         ArmInstruction.__init__(self, word)
         self.immediate = (word >> 25) & 1
         self.opcode = (word >> 21) & 0xF
-        self.S = (word >> 20) & 1
+        self.set_flags = (word >> 20) & 1
         
         self.r_register = (word >> 16) & 0xF
         self.destination_register = (word >> 12) & 0xF
@@ -116,7 +126,7 @@ class ArmALUInstruction(ArmInstruction):
         if self.immediate:
             rotation = ((word >> 8) & 0xF) * 2
             byte_value = word & 0xFF
-            self.operand = (byte_value >> rotation) + (((byte_value << 32) >> rotation) & 0xFFFF)
+            self.operand = (byte_value >> rotation) + (((byte_value << 32) >> rotation) & 0xFFFFFFFF)
             if rotation != 0:
                 pass # The carry bit is set to bit 31 of self.operand in this case
         else:
@@ -133,7 +143,12 @@ class ArmALUInstruction(ArmInstruction):
             if ((full_operand >> 5) & 0b11 == 0b11) and self.operand_transform_amount == 0 and not register_as_transform:
                 self.operand_transform_type = "rotate_right_with_extend"
             self.operand_register = full_operand & 0xF
-                
+
+        if self.opcode == 0b1001 and not self.set_flags:
+            self.opcode_string = "TEQP (Move SPSR to CPSR IF in privileged mode)" 
+        else:
+            self.opcode_string = self.OPCODE_STRINGS[self.opcode]
+            
     def changes_pc(self):
         if (self.destination_register == 15):
             return False # TODO: Update PC if possible?
@@ -144,7 +159,7 @@ class ArmALUInstruction(ArmInstruction):
             operand_string = "immediate {}".format(self.operand)
         else:
             operand_string = "register {0} with transformation {1} by {2}".format(self.operand_register, self.operand_transform_type, self.operand_transform_amount)
-        return "ALU Command {0} from register {1} to register {2} with operand '{3}'".format(self.OPCODE_STRINGS[self.opcode], self.r_register, self.destination_register, operand_string)
+        return "ALU Command {0} from register {1} to register {2} with operand '{3}', set flags:{4}".format(self.opcode_string, self.r_register, self.destination_register, operand_string, self.set_flags)
 
 arm_instruction_types = [ArmBranchInstruction, ArmBranchExchangeInstruction, ArmALUInstruction, ArmUndefinedInstruction]
 
@@ -162,7 +177,7 @@ def disassemble_current():
             if (arm_instruction_type.fits(instruction_word)):
                 disassembled_instruction = arm_instruction_type(instruction_word)
         # TODO: If reg 15 is written to by some constant then apply the change
-        print("[0x{0:04x}] {1:0b}".format(pc, instruction_word))
+        print("[0x{0:04x}] {1:04b} {2:0b}".format(pc, instruction_word >> 28, instruction_word & ~(0xF << 28)))
         print("[ARM32 ] %s" % str(disassembled_instruction))
         pc += 4
         pc_change = disassembled_instruction.changes_pc()
@@ -179,5 +194,12 @@ def disassemble_current():
                 pc = new_pc
                 print("New PC: 0x%04x" % pc)
 
-while input("").lower().strip() != "stop":
+while True:
     disassemble_current()
+    command = input("> ").lower().strip()
+    if command in ["stop", "quit", "exit"]:
+        break
+    elif command == "thumb":
+        in_thumb_mode = True
+    elif command == "arm":
+        in_thumb_mode = False
