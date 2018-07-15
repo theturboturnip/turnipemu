@@ -1,4 +1,5 @@
 #include "turnipemu/gba/gamepak.h"
+#include "turnipemu/display.h"
 
 #include <assert.h>
 #include <fstream>
@@ -32,5 +33,8 @@ int main(int argc, char* argv[]){
 
 	TurnipEmu::GBA::GamePak gamePak(rom);
 
+	TurnipEmu::Display display("GameBoy Advance", 1280, 720);
+	display.loop();
+	
 	return 0;
 }

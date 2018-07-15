@@ -47,7 +47,7 @@ $(OBJECT_FOLDER)/%.o : $(SOURCE_FOLDER)/%.cpp
 	$(CXX) -MD -MF $(DEPENDS_FOLDER)/$*.d -c $(CPPFLAGS) $(SOURCE_FOLDER)/$*.cpp -o $(OBJECT_FOLDER)/$*.o
 
 prog: $(OBJS) $(EXTERNAL_OBJS)
-	$(LINK) $(OBJS) $(LINKFLAGS) -o $(EXEC)
+	$(LINK) $(OBJS) $(EXTERNAL_OBJS) $(LINKFLAGS) -o $(EXEC)
 
 rebuild: clean prog
 
