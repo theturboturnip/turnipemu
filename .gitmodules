@@ -1,0 +1,3 @@
+[submodule "gba/external/imgui"]
+	path = gba/external/imgui
+	url = https://github.com/theturboturnip/imgui
