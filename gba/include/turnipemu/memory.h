@@ -6,10 +6,7 @@
 #include <vector>
 
 namespace TurnipEmu{
-	namespace GBA{
-		class GBA;
-	}
-	class ARM7TDMI;
+	class Emulator;
 
     // An interface for reading and writing bytes from memory. 
 	class MemoryController{
@@ -48,12 +45,16 @@ namespace TurnipEmu{
 	};
 	class MemoryRangeController : public MemoryController{
 	public:
-		const uint32_t startAddress = 0;
-		const uint32_t endAddress = 0;
-
+		MemoryRangeController(uint32_t startAddress, uint32_t endAddress) :
+			startAddress(startAddress), endAddress(endAddress) {}
+		
 		bool ownsAddress(uint32_t address) const override {
 			return (startAddress <= address) && (address < endAddress);
 		}
+	protected:
+		// If these are const then any MemoryRangeController subclass can't be copied
+		uint32_t startAddress = 0;
+		uint32_t endAddress = 0;
 	};
 	
 	class MemoryMap{
@@ -64,7 +65,8 @@ namespace TurnipEmu{
 		// 4. Do the op.
 		
 	public:
-		MemoryMap(GBA::GBA&); // Setup the MemoryControllers based on the current GBA implementation.
+		MemoryMap(Emulator& emulator);
+		void registerMemoryController(MemoryController* memoryController);
 
 		// Instantiated for byte, halfword, word
 		template<typename ReadType>
@@ -74,9 +76,14 @@ namespace TurnipEmu{
 	protected:
 		MemoryController* controllerForAddress(uint32_t address) const; 
 		
-		const std::vector<MemoryController*> memoryControllers;
+		std::vector<MemoryController*> memoryControllers;
 		// TODO: std::unordered_map<uint32_t, MemoryController*> could be used as a cache? Use FIFO to limit total space taken up?
 
-		ARM7TDMI& cpu; // Memory reads take cycles, and affect the CPU registers.
+		Emulator& emulator;
+		
+		// TODO: Remember to make this happen still, just without using a ref here
+		// ARM7TDMI& cpu; // Memory reads take cycles, and affect the CPU registers.
+
+		const char* const logTag = "MEM";
 	};
 }

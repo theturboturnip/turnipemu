@@ -1,4 +1,5 @@
 #include "turnipemu/display.h"
+#include "turnipemu/emulator.h"
 #include "turnipemu/log.h"
 #include "turnipemu/gl.h"
 
@@ -80,10 +81,10 @@ namespace TurnipEmu{
 			LogLine(logTag, "OpenGL Error: %d", glError);
 	}
 	void Display::registerEmulator(Emulator* emulator){
-		emulators.push_back(emulator);
+		emulators[emulator]; // Insert the key if not already there
 	}
-	void Display::registerCustomWindow(CustomWindow* customWindow){
-		customWindows.push_back(customWindow);
+	void Display::registerCustomWindow(Emulator* parentEmulator, CustomWindow* customWindow){
+		emulators[parentEmulator].push_back(customWindow);
 	}
 
 	void Display::loop(){
@@ -99,8 +100,10 @@ namespace TurnipEmu{
 				if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(sdlWindow))
 					done = true;
 			}
-			for (Emulator* emulator : emulators){
-				emulator->tick();
+			for (auto& emulatorWindowPair : emulators){
+				auto emulator = emulatorWindowPair.first;
+				if (!emulator->isStopped())
+					emulator->tickUntilVSyncOrStopped();
 			}
 			render();
 		}
@@ -110,14 +113,21 @@ namespace TurnipEmu{
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame(sdlWindow);
 		ImGui::NewFrame();
-		
-		for (CustomWindow* customWindow : customWindows){
-			customWindow->draw();
+
+		int windowGroupId = 0;
+		for (auto& emulatorWindowPair : emulators){
+			ImGui::PushID(windowGroupId);
+			for (CustomWindow* customWindow : emulatorWindowPair.second){
+				auto windowSize = customWindow->getSize();
+				ImGui::SetNextWindowSize(windowSize);
+				if (ImGui::Begin(customWindow->getTitle().c_str()))
+					customWindow->drawCustomWindowContents();
+				ImGui::End();
+			}
+			ImGui::PopID();
+			windowGroupId++;
 		}
-		static bool showDemoWindow = true;
-		if (showDemoWindow){
-			ImGui::ShowDemoWindow(&showDemoWindow);
-		}
+		ImGui::ShowDemoWindow(nullptr);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -125,4 +135,7 @@ namespace TurnipEmu{
         glViewport(0, 0, (int)io->DisplaySize.x, (int)io->DisplaySize.y);
 		SDL_GL_SwapWindow(sdlWindow);
 	}
+
+	Display::CustomWindow::CustomWindow(std::string title, unsigned int width, unsigned int height)
+		: title(title), width(width), height(height) {}
 }

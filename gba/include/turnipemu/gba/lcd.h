@@ -277,10 +277,15 @@ namespace TurnipEmu::GBA{
 			uint8_t paletteNumber : 4;
 			
 			inline uint16_t tileNumber(){
-				return tileNumber_high << 2 + tileNumber_low;
+				return (tileNumber_high << 2) + tileNumber_low;
 			}
 		};
 		static_assert(sizeof(TextMapItem) == 2, "LCDEngine::TextMapItem must be 2 bytes"); 
+
+		struct Obj{
+			// TODO: Define
+			uint8_t dummy;
+		};
 		
 		union Vram {
 			byte data[0x18000];

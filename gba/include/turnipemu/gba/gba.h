@@ -6,30 +6,35 @@
 #include "dma.h"
 #include "gamepak.h"
 #include "lcd.h"
+#include "turnipemu/display.h"
+#include "turnipemu/emulator.h"
 
 namespace TurnipEmu::GBA{
-	class GBA{
-		friend class MemoryMap;
+	class GBA : public Emulator {
+	public:
+		GBA(Display& display, GamePak gamePak);
 
-		GBA(GamePak gamePak);
+		void tick() override;
 		
-		void reset();
+		void reset() override;
 		void reset(GamePak newGamePak);
 		
 	protected:
-		ARM7TDMI cpu;
-		
 		MemoryMap memoryMap;
 
+		ARM7TDMI cpu;
+		
 		GamePak gamePak;
-		struct {
-			LCDEngine lcdEngine; // TODO: Define fully, should control both the Internal Display Memory (0x05000000 - 0x07000400) and the LCD Control Registers (0x04000000 - 0x04000060)
-			SoundEngine soundEngine; // TODO: Define
-			DMAEngine dmaEngine; // TODO: Define behaviour
-			Timer timer; // TODO: Define
-			SerialEngine serialEngine; // TODO: Define. Can be a no-op, serial support isn't planned for now
-			Keypad keypad; // TODO: Define
-			MiscControls miscControls; // TODO: Define
-		} io;
+		//struct {
+			//LCDEngine lcdEngine; // TODO: Define fully, should control both the Internal Display Memory (0x05000000 - 0x07000400) and the LCD Control Registers (0x04000000 - 0x04000060)
+			//SoundEngine soundEngine; // TODO: Define
+			//DMAEngine dmaEngine; // TODO: Define behaviour
+			//Timer timer; // TODO: Define
+			//SerialEngine serialEngine; // TODO: Define. Can be a no-op, serial support isn't planned for now
+			//Keypad keypad; // TODO: Define
+			//MiscControls miscControls; // TODO: Define
+		//} io;
+
+		const char* const logTag = "GBA";
 	};
 }

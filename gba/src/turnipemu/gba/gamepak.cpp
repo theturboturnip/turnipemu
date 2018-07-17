@@ -4,8 +4,18 @@
 
 #include <regex>
 
+#include "imgui/imgui.h"
+
 namespace TurnipEmu::GBA{
-	GamePak::GamePak(std::vector<byte>& rom) : rom(rom) {
+	char const * const GamePak::backupTypeStrings[5] = {
+		"EEPROM (Size UNK.)",
+		"SRAM (32KB)",
+		"Flash (64KB)",
+		"Flash (128KB)",
+		"Unknown"
+	};
+	
+	GamePak::GamePak(std::vector<byte>& rom) : MemoryRangeController(0x08000000, 0x0E010000), CustomWindow("GamePak", 0.0f, 0.0f), rom(rom) {
 		assert(rom.size() >= 0x400000 && (rom.size() % 0x100000) == 0);
 		assert(rom[0xB2] == 0x96);
 		
@@ -40,5 +50,22 @@ namespace TurnipEmu::GBA{
 			LogLine("ROM", "Version: %d", gameInfo.version);
 			LogLine("ROM", "Backup Type: %s", backupTypeStrings[(int)backupType]);
 		}
+	}
+
+	void GamePak::drawCustomWindowContents(){
+		ImGui::Text("Title"); ImGui::NextColumn();
+		ImGui::Text("%s", gameInfo.title); ImGui::NextColumn();
+		ImGui::Separator();
+		ImGui::Text("Game Code"); ImGui::NextColumn();
+		ImGui::Text("%s", gameInfo.gameCode); ImGui::NextColumn();
+		ImGui::Separator();
+		ImGui::Text("Maker Code"); ImGui::NextColumn();
+		ImGui::Text("%s", gameInfo.makerCode); ImGui::NextColumn();
+		ImGui::Separator();
+		ImGui::Text("Version"); ImGui::NextColumn();
+		ImGui::Text("%d", gameInfo.version); ImGui::NextColumn();
+		ImGui::Separator();
+		ImGui::Text("Backup Type"); ImGui::NextColumn();
+		ImGui::Text("%s", backupTypeStrings[(int)backupType]); ImGui::NextColumn();
 	}
 }

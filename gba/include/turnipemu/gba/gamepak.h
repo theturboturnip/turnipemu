@@ -5,14 +5,14 @@
 
 #include <vector>
 
+#include "turnipemu/display.h"
+
 namespace TurnipEmu::GBA{
-	class GamePak : public MemoryRangeController {
+	class GamePak : public MemoryRangeController, public Display::CustomWindow {
 	public:
 		GamePak(std::vector<byte>& rom); // TODO: Define
 
 		// TODO: Define memory functions. The cycles will be wrong, and the backup data is writeable
-		//using MemoryRangeController::startAddress = 0x08000000;
-		//using MemoryRangeController::endAddress = 0x0E010000;
 		bool allowRead(uint32_t address) const override {
 			return true;
 		}
@@ -28,6 +28,8 @@ namespace TurnipEmu::GBA{
 				return backup[rel_address - 0x0E000000];
 			}
 		}
+
+		void drawCustomWindowContents() override;
 		
 	protected:
 		struct {
@@ -37,7 +39,7 @@ namespace TurnipEmu::GBA{
 			byte version;
 		} gameInfo;
 		
-		std::vector<byte>& rom; // Max 32MB, commonly 4MB or 8MB
+		std::vector<byte> rom; // Max 32MB, commonly 4MB or 8MB
 
 		enum class BackupType {
 			eEEPROM = 0,   // EEPROM, 512B OR 8KB
@@ -46,13 +48,7 @@ namespace TurnipEmu::GBA{
 			eFlash1M = 3,  // FLASH, 128KB, (i.e. 1Mb)
 			eUnknown = 4
 		};
-		char const* const backupTypeStrings[5] = {
-			"EEPROM (Size UNK.)",
-			"SRAM (32KB)",
-			"Flash (64KB)",
-			"Flash (128KB)",
-			"Unknown"
-		};
+		static char const * const backupTypeStrings[5];
 			
 		BackupType backupType = BackupType::eUnknown;
 		std::vector<byte> backup; 

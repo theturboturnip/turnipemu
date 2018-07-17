@@ -4,6 +4,9 @@
 #include <string>
 
 namespace TurnipEmu{
+	ARM7TDMI::ARM7TDMI(const MemoryMap& memoryMap) : memoryMap(memoryMap)
+	{}
+	
 	ARM7TDMI::Instruction::Instruction(std::string id, InstructionMask mask){
 		LogLine("INST", "Created Instruction with ID %s", id.c_str());
 	}

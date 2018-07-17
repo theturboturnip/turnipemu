@@ -1,3 +1,4 @@
+#include "turnipemu/gba/gba.h"
 #include "turnipemu/gba/gamepak.h"
 #include "turnipemu/display.h"
 
@@ -8,6 +9,8 @@
 
 int main(int argc, char* argv[]){
 	assert(argc >= 2);
+
+	TurnipEmu::Display display("GameBoy Advance", 1280, 720);
 	
 	const char* bios_path = argv[1];
 	std::vector<TurnipEmu::byte> bios;
@@ -33,7 +36,8 @@ int main(int argc, char* argv[]){
 
 	TurnipEmu::GBA::GamePak gamePak(rom);
 
-	TurnipEmu::Display display("GameBoy Advance", 1280, 720);
+	TurnipEmu::GBA::GBA gba(display, gamePak);
+	
 	display.loop();
 	
 	return 0;
