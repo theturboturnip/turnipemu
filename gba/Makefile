@@ -10,9 +10,9 @@ SOURCE_FOLDER = ./src
 SOURCE_HEADER_FOLDER = ./include
 EXTERNAL_FOLDER = ./external
 
-LINK      = clang++
+LINK      = clang++-6.0
 LINKFLAGS = -g -lGL -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
-CPPFLAGS  = -g -Wall -O3 -I/usr/include/SDL2 -std=c++1z -I$(EXTERNAL_FOLDER) -I$(SOURCE_HEADER_FOLDER) -I$(SOURCE_HEADER_FOLDER)/$(PROJECT_NAME)
+CPPFLAGS  = -g -Wall -O3 -I/usr/include/SDL2 -std=c++17 -stdlib=libstdc++ -I$(EXTERNAL_FOLDER) -I$(SOURCE_HEADER_FOLDER) -I$(SOURCE_HEADER_FOLDER)/$(PROJECT_NAME)
 CPP_HEADER_FLAGS = -Wno-pragma-once-outside-header
 
 HEADER_FILES = $(shell find $(SOURCE_HEADER_FOLDER)/ -name "*.h")
@@ -27,7 +27,7 @@ DEPENDS = $(patsubst $(SOURCE_FOLDER)/%.cpp, $(DEPENDS_FOLDER)/%.d, $(CPP_FILES)
 
 EXEC = run
 
-CXX = clang++
+CXX = clang++-6.0
 
 -include $(DEPENDS)
 -include $(HEADER_DEPENDS)
