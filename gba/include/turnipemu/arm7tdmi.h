@@ -2,12 +2,15 @@
 
 #include "types.h"
 #include "memory.h"
+#include "display.h"
+#include "log.h"
 
 #include <string>
 #include <memory>
+#include <functional>
 
 namespace TurnipEmu {
-	class ARM7TDMI{
+	class ARM7TDMI : public Display::CustomWindow {
 	public:
 		union ProgramStatusRegister{
 			word value;
@@ -44,6 +47,8 @@ namespace TurnipEmu {
 		void addCycles(uint32_t cycles);
 
 		void reset();
+
+		void drawCustomWindowContents() override;
 	protected:
 		const MemoryMap& memoryMap;
 		
@@ -114,22 +119,21 @@ namespace TurnipEmu {
 
 		struct InstructionMask {
 			struct MaskRange {
-				uint8_t end;
-				uint8_t start;
-				uint32_t value;
+				const uint8_t end;
+				const uint8_t start;
+				const word mask;
+				const word value;
+
+				MaskRange(uint8_t end, uint8_t start, uint32_t value) : end(end), start(start), mask((word(~0) << start) & (word(~0) >> (32 - end - 1))), value((value << start) & mask)  {
+					assert(start <= end);
+				}
+				MaskRange(uint8_t bit, bool set) : MaskRange(bit, bit, set){}
 				
-			MaskRange(uint8_t end, uint8_t start, uint32_t value) : end(end), start(start), value(value) {
-				assert(start <= end);
-			}
-			MaskRange(uint8_t bit, bool set) : end(bit), start(bit), value(set << bit){}
-				
-				inline void updateMask(word& mask) const {
-					mask |= ((~0) << start) & ((0) << (end + 1)); 
+				inline void updateMask(word& theirMask) const {
+					theirMask |= mask; 
 				}
 				inline void updateExpectedValue(word& expectedValue) const {
-					word maskedValue = value & ((~0) << start) & ((0) << (end + 1));
-					// TODO: This should already be done, this is kinda redundant
-					expectedValue |= maskedValue;
+					expectedValue |= value;
 				}
 			};
 			word mask;
@@ -141,14 +145,29 @@ namespace TurnipEmu {
 		};
 		class Instruction {
 		public:
-			Instruction(std::string category, InstructionMask mask);
+			struct Condition {
+				char name[2];
+				std::string debugString;
+				std::function<bool(ProgramStatusRegister)> fulfilsCondition;
+			};
 			
-			//const InstructionMask mask;
-			//virtual void execute(ARM7TDMI& cpu, RegisterPointers);
+			Instruction(std::string category, InstructionMask mask);
+			virtual ~Instruction(){}
+			
+			const Condition& getCondition(word instructionWord);
+			
+			virtual std::string disassembly(word instructionWord){return "";}
+			virtual void execute(ARM7TDMI& cpu, RegisterPointers, word instructionWord){}
+
+			const std::string category;
+			const InstructionMask mask;
+		protected:
+			const static std::array<const Condition, 15> conditions;
 		};
 		friend class Instruction;
 		// This has to be vector of unique_ptr because Instruction is virtual
 		std::vector<std::unique_ptr<Instruction>> instructions;
 		void setupInstructions();
+		Instruction* matchInstruction(word instructionWord);
 	};
 }
