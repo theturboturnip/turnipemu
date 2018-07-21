@@ -189,27 +189,7 @@ namespace TurnipEmu::ARM7TDMI {
 			if (data.operand2.useImmediate){
 				stream << "Immediate Value " << (int)data.operand2.immediateValue.baseImmediateValue << " rotated by " << (int)data.operand2.immediateValue.rotation;
 			}else{
-				stream << "Register " << (int)data.operand2.registerValue.baseRegister;
-				switch(data.operand2.registerValue.shiftType){
-				case ALUOperand2::RegisterShiftType::LogicalShiftLeft:
-					stream << " logical shift left";
-					break;
-				case ALUOperand2::RegisterShiftType::LogicalShiftRight:
-					stream << " logical shift right";
-					break;
-				case ALUOperand2::RegisterShiftType::ArithmeticShiftRight:
-					stream << " arithmetic shift right";
-					break;
-				case ALUOperand2::RegisterShiftType::RotateRight:
-					stream << " rotate right";
-					break;
-				}
-				stream << " by ";
-				if (data.operand2.registerValue.shiftedByRegister){
-					stream << "Register " << (int)data.operand2.registerValue.shiftRegister;
-				}else{
-					stream << (int)data.operand2.registerValue.shiftAmount;
-				}
+				data.operand2.registerValue.writeDescription(stream);
 			}
 			stream << "\nDestination Register: " << (int)data.destinationRegister;
 			return stream.str();

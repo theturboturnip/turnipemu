@@ -93,7 +93,9 @@ namespace TurnipEmu::ARM7TDMI {
 		const Condition& getCondition(word instructionWord);
 			
 		virtual std::string disassembly(word instructionWord){return "NO DISASSEMBLY PRESENT";}
-		virtual void execute(CPU& cpu, const RegisterPointers, word instructionWord){}
+		virtual void execute(CPU& cpu, const RegisterPointers, word instructionWord){
+			throw std::runtime_error("Instruction is not implemented!");
+		}
 
 		const std::string category;
 		const InstructionMask mask;

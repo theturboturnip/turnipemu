@@ -107,7 +107,7 @@ namespace TurnipEmu::ARM7TDMI{
 		instructions.push_back(std::make_unique<DataProcessingInstruction>("Data Processing", InstructionMask{
 					{27, 26, 0b00}
 				}));
-		instructions.push_back(std::make_unique<Instruction>("Single Data Transfer", InstructionMask{
+		instructions.push_back(std::make_unique<SingleDataTransferInstruction>("Single Data Transfer", InstructionMask{
 					{27, 26, 0b01}
 				}));
 		instructions.push_back(std::make_unique<Instruction>("Block Data Transfer", InstructionMask{
