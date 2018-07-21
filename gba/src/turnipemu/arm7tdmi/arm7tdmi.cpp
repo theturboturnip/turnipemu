@@ -106,7 +106,7 @@ namespace TurnipEmu::ARM7TDMI{
 					ImGui::Indent();
 					ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
 					ImGui::Text("Instruction Category: %s", instruction->category.c_str());
-					ImGui::Text("Instruction Disassembly: %s", instruction->disassembly(instructionWord).c_str());
+					ImGui::TextWrapped("Instruction Disassembly: %s", instruction->disassembly(instructionWord).c_str());
 					ImGui::Unindent();
 				}
 			}else{

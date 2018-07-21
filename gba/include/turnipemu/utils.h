@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#define TURNIPEMU_UINT32_TO_SINT64(VALUE) (int64_t)(int32_t)(VALUE)
+
 #pragma pack(0)
 #if TURNIPEMU_BIG_ENDIAN
 #define TURNIPEMU_WORD_BLOCK(BITS_FROM_0, BITS_FROM_8, BITS_FROM_16, BITS_FROM_24) \
