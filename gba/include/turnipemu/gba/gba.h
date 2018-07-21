@@ -22,7 +22,7 @@ namespace TurnipEmu::GBA{
 	protected:
 		MemoryMap memoryMap;
 
-		ARM7TDMI cpu;
+		ARM7TDMI::CPU cpu;
 		
 		GamePak gamePak;
 		//struct {
