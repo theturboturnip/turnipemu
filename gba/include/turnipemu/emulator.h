@@ -5,11 +5,12 @@
 namespace TurnipEmu{
 	class MemoryMap;
 	
-	class Emulator {
+	class Emulator : public Display::CustomWindow {
 		friend class MemoryMap;
 		
 	public:
-		Emulator(Display& display){
+		Emulator(Display& display, std::string title)
+			: Display::CustomWindow(title, 0, 0){
 			display.registerEmulator(this);
 		}
 		
@@ -29,6 +30,8 @@ namespace TurnipEmu{
 			stopped = false;
 			vsyncReady = false;
 		}
+
+		void drawCustomWindowContents() override;
 	protected:
 		bool paused = false;
 		bool stopped = false;

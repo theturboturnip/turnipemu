@@ -10,12 +10,26 @@
 #include <functional>
 
 namespace TurnipEmu::ARM7TDMI {
+	enum class CPUExecState : bool {
+		ARM = false,
+		Thumb = true
+	};
+	enum class Mode : uint8_t {
+		User       = 0b10000,
+		FIQ        = 0b10001,
+		IRQ        = 0b10010,
+		Supervisor = 0b10011,
+		Abort      = 0b10111,
+		Undefined  = 0b11011,
+		System     = 0b11111,
+	};
+	
 	union ProgramStatusRegister{
 		word value;
 #pragma pack(1) // No Padding
 		struct {
-			uint8_t modeBits : 5; // Bits 0-4
-			uint8_t stateBit : 1; // Bit 5, determines if in Thumb or Arm mode
+			Mode mode : 5; // Bits 0-4
+			CPUExecState state : 1; // Bit 5, determines if in Thumb or Arm mode
 			bool fiqDisable : 1; // Bit 6
 			bool irqDisable : 1; // Bit 7
 			uint32_t reserved : 20; // Bits 8 through 27 inclusive
@@ -78,8 +92,8 @@ namespace TurnipEmu::ARM7TDMI {
 			
 		const Condition& getCondition(word instructionWord);
 			
-		virtual std::string disassembly(word instructionWord){return "";}
-		virtual void execute(CPU& cpu, RegisterPointers, word instructionWord){}
+		virtual std::string disassembly(word instructionWord){return "NO DISASSEMBLY PRESENT";}
+		virtual void execute(CPU& cpu, const RegisterPointers, word instructionWord){}
 
 		const std::string category;
 		const InstructionMask mask;
@@ -103,7 +117,7 @@ namespace TurnipEmu::ARM7TDMI {
 		const MemoryMap& memoryMap;
 		
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
-		const RegisterPointers registersForCurrentState() const;
+		const RegisterPointers registersForCurrentState();
 		
 		struct{
 			word regs[16];
@@ -146,23 +160,6 @@ namespace TurnipEmu::ARM7TDMI {
 				ProgramStatusRegister spsr;
 			} und;
 		} registers;
-
-		// TODO: Store in the CPSR register instead of separately
-		enum class InstructionType{
-			ARM,
-			Thumb
-		};
-		InstructionType instructionType;
-		enum class Mode{
-			System,
-			User,
-			FIQ,
-			Supervisor,
-			Abort,
-			IRQ,
-			Undefined
-		};
-		Mode mode;
 
 		uint32_t cyclesThisTick;
 		uint32_t cyclesTotal;

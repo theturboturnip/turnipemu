@@ -1,5 +1,7 @@
 #include "arm7tdmi.h"
 
+#include <sstream>
+
 namespace TurnipEmu::ARM7TDMI{
 #define CONDITION(NAME, CODE) Instruction::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
 	const std::array<const Instruction::Condition, 15> Instruction::conditions = {
@@ -120,7 +122,27 @@ namespace TurnipEmu::ARM7TDMI{
 	};
 
 	class BranchInstruction : public Instruction {
+		using Instruction::Instruction;
 		
+		struct InstructionData {
+			uint32_t offset : 23;
+			bool link;
+
+			InstructionData(word instructionWord){
+				offset = instructionWord >> 0;
+				link = (instructionWord >> 24) & 1;
+			}
+		};
+		std::string disassembly(word instructionWord) override {
+			InstructionData data(instructionWord);
+			std::stringstream stream;
+			stream << "Branch by " << data.offset << ", link: " << std::boolalpha << data.link;
+			return stream.str();
+		}
+		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
+			InstructionData data(instructionWord);
+			
+		}
 	};
 
 	void CPU::setupInstructions(){
@@ -135,7 +157,7 @@ namespace TurnipEmu::ARM7TDMI{
 		instructions.push_back(std::make_unique<Instruction>("Branch and Exchange", InstructionMask{
 					{27, 4, 0b0'0001'0010'1111'1111'1111'0001}
 				}));
-		instructions.push_back(std::make_unique<Instruction>("Branch", InstructionMask{
+		instructions.push_back(std::make_unique<BranchInstruction>("Branch", InstructionMask{
 					{27, 25, 0b101}
 				}));
 		instructions.push_back(std::make_unique<Instruction>("Multiply", InstructionMask{

@@ -81,7 +81,8 @@ namespace TurnipEmu{
 			LogLine(logTag, "OpenGL Error: %d", glError);
 	}
 	void Display::registerEmulator(Emulator* emulator){
-		emulators[emulator]; // Insert the key if not already there
+		emulators[emulator].clear();
+		emulators[emulator].push_back(emulator);
 	}
 	void Display::registerCustomWindow(Emulator* parentEmulator, CustomWindow* customWindow){
 		emulators[parentEmulator].push_back(customWindow);

@@ -17,8 +17,7 @@ namespace TurnipEmu::GBA{
 		void tick() override;
 		
 		void reset() override;
-		void reset(GamePak newGamePak);
-		
+		void reset(GamePak newGamePak);		
 	protected:
 		MemoryMap memoryMap;
 
