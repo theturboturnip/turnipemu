@@ -104,6 +104,7 @@ namespace TurnipEmu::ARM7TDMI{
 				registerValue.shiftedByRegister = (instructionWord >> 4) & 1;
 				if (registerValue.shiftedByRegister){
 					registerValue.shiftRegister = (instructionWord >> 8) & 0xF;
+					assert(registerValue.shiftRegister != 15);
 				}else{
 					registerValue.shiftAmount = (instructionWord >> 7) & 0b11111;
 				}
@@ -118,7 +119,42 @@ namespace TurnipEmu::ARM7TDMI{
 				hasChangedFlags = true;
 			};
 
-			// TODO: Calculate Value
+			if (useImmediate){
+				return word(immediateValue.baseImmediateValue >> immediateValue.rotation) |
+					word(immediateValue.baseImmediateValue << (32 - immediateValue.rotation));
+			}else{
+				word baseValue = *registers.main[registerValue.baseRegister];
+				word baseShiftAmount = registerValue.shiftedByRegister ? *registers.main[registerValue.shiftRegister] :
+					registerValue.shiftAmount;
+				uint16_t finalShiftAmount = baseShiftAmount & 0b11111;
+
+				switch(registerValue.shiftType){
+				case ALUOperand2::RegisterShiftType::LogicalShiftLeft:
+					// If baseShiftAmount is a multiple of 32 then the carry should be set => don't use the final amount for the if statement
+					if (baseShiftAmount != 0) setCarryIfPossible((baseValue >> (32 - finalShiftAmount)) & 1);
+					return word(baseValue << finalShiftAmount);
+				case ALUOperand2::RegisterShiftType::LogicalShiftRight:
+					if (finalShiftAmount == 0) finalShiftAmount = 32; 
+					setCarryIfPossible((baseValue >> (finalShiftAmount - 1)) & 1);
+					return word(baseValue >> finalShiftAmount);
+				case ALUOperand2::RegisterShiftType::ArithmeticShiftRight:
+					if (finalShiftAmount == 0) finalShiftAmount = 32;
+					setCarryIfPossible((baseValue >> (finalShiftAmount - 1)) & 1);
+					return word( ((int32_t) baseValue) >> finalShiftAmount);
+				case ALUOperand2::RegisterShiftType::RotateRight:
+					if (finalShiftAmount == 0){
+						// RRX, rotate right by 1 using the carry flag
+						setCarryIfPossible(baseValue & 1);
+						return word((registers.cpsr->carry << 31) | (baseValue >> 1));
+					}
+					// ROR, normal rotate right
+					setCarryIfPossible((baseValue >> (finalShiftAmount - 1)) & 1);
+					return word(baseValue >> finalShiftAmount) |
+						word(baseValue << (32 - finalShiftAmount));
+				default:
+					assert(false);
+				}
+			}
 		}
 	};
 
@@ -311,7 +347,7 @@ namespace TurnipEmu::ARM7TDMI{
 			uint8_t operand1Register : 4;
 			uint8_t destinationRegister : 4;
 			ALUOperand2 operand2;
-			bool isTEQP;
+			bool restoreSPSR;
 
 			InstructionData(word instructionWord) : operand2(instructionWord){
 				opcode = (instructionWord >> 21) & 0xF;
@@ -319,14 +355,18 @@ namespace TurnipEmu::ARM7TDMI{
 				operand1Register = (instructionWord >> 16) & 0xF;
 				destinationRegister = (instructionWord >> 12) & 0xF;
 
-				isTEQP = !setFlags && (opcode == 0b1001);
+				restoreSPSR = !setFlags && (opcode == 0b1001); // SPSR restoration via TEQP
+				if (destinationRegister == 15 && setFlags){
+					restoreSPSR = true;
+					setFlags = false;
+				}
 			}
 		};
 
 		std::string disassembly(word instructionWord) override {
 			InstructionData data(instructionWord);
-			if (data.isTEQP){
-				return "TEQP";
+			if (data.restoreSPSR){
+				return "Restores SPSR, ignored in User mode";
 			}
 			
 			const Operation& operation = operations[data.opcode];
@@ -361,6 +401,38 @@ namespace TurnipEmu::ARM7TDMI{
 			}
 			stream << "\nDestination Register: " << (int)data.destinationRegister;
 			return stream.str();
+		}
+		void execute(CPU& cpu, RegisterPointers currentRegisters, word instructionWord) override {
+			InstructionData data(instructionWord);
+			if (data.restoreSPSR){
+				throw std::runtime_error("Implement SPSR restoration!");
+			}
+			
+			const Operation& operation = operations[data.opcode];
+
+			uint8_t pcOffset = 0;
+			if (data.operand1Register == 15 || (!data.operand2.useImmediate && data.operand2.registerValue.baseRegister == 15)){
+				if (!data.operand2.useImmediate && data.operand2.registerValue.shiftedByRegister) 
+					pcOffset = 12;
+				else
+					pcOffset = 8;
+				*currentRegisters.main[data.destinationRegister] += pcOffset;
+			}
+			
+			word arg1 = *currentRegisters.main[data.operand1Register];
+			word arg2 = data.operand2.calculateValue(currentRegisters, data.setFlags);
+			OperationOutput output = operation.execute(arg1, arg2, currentRegisters.cpsr->carry ? 1 : 0);
+			if (operation.writeResult)
+				*currentRegisters.main[data.destinationRegister] = output.result;
+			if (data.setFlags){
+				currentRegisters.cpsr->overflow = output.overflow;
+				currentRegisters.cpsr->carry = output.carry;
+				currentRegisters.cpsr->zero = (output.result == 0);
+				currentRegisters.cpsr->negative = (output.result >> 31) & 1;
+			}
+
+			if (data.destinationRegister == 15)
+				*currentRegisters.main[data.destinationRegister] -= pcOffset;
 		}
 	};
 
