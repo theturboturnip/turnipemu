@@ -106,7 +106,7 @@ namespace TurnipEmu::ARM7TDMI {
 		CPU(const MemoryMap& memoryMap);
 		
 		void executeNextInstruction();
-		void executeInstruction(word instruction);
+		void executeInstruction(word instructionWord);
 
 		void addCycles(uint32_t cycles);
 
@@ -120,7 +120,7 @@ namespace TurnipEmu::ARM7TDMI {
 		const RegisterPointers registersForCurrentState();
 		
 		struct{
-			word regs[16];
+			word main[16];
 
 			ProgramStatusRegister cpsr;
 			

@@ -6,17 +6,41 @@
 #include "imgui/imgui.h"
 
 namespace TurnipEmu::ARM7TDMI{
-	CPU::CPU(const MemoryMap& memoryMap) : Display::CustomWindow("ARM7TDMI Instruction Inspector", 0, 0), memoryMap(memoryMap)
+	CPU::CPU(const MemoryMap& memoryMap) : Display::CustomWindow("ARM7TDMI Instruction Inspector", 450, 0), memoryMap(memoryMap)
 	{
 		setupInstructions();
 		reset();
 	}
 	void CPU::reset(){
 		memset(&registers, 0, sizeof(registers));
-		registers.regs[15] = 0x08000000; // Start at the beginning of ROM
+		registers.main[15] = 0x08000000; // Start at the beginning of ROM
 
 		registers.cpsr.mode = Mode::User;
 		registers.cpsr.state = CPUExecState::ARM;
+	}
+
+	void CPU::executeNextInstruction(){
+		if (auto instructionWordOptional = memoryMap.read<word>(registers.main[15])){
+			executeInstruction(instructionWordOptional.value());
+		}else{
+			throw std::runtime_error("PC is in invalid memory!");
+		}
+	}
+	void CPU::executeInstruction(word instructionWord){
+		const auto currentRegisters = registersForCurrentState();
+		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
+			throw std::runtime_error("Thumb mode is not supported yet!");
+		}
+		
+		Instruction* instruction = matchInstruction(instructionWord);
+		if (instruction){
+			if (instruction->getCondition(instructionWord).fulfilsCondition(*currentRegisters.cpsr)){
+				instruction->execute(*this, currentRegisters, instructionWord);
+			}
+			registers.main[15] += 4;
+		}else{
+			throw std::runtime_error("Couldn't match instructionWord to an actual instruction!");
+		}
 	}
 
 	const RegisterPointers CPU::registersForCurrentState() {
@@ -25,7 +49,7 @@ namespace TurnipEmu::ARM7TDMI{
 		switch (registers.cpsr.mode){
 		case Mode::User:
 			for (int i = 0; i < 16; i++){
-				pointers.main[i] = &registers.regs[i];
+				pointers.main[i] = &registers.main[i];
 			}
 			pointers.cpsr = &registers.cpsr;
 			break;
@@ -37,11 +61,12 @@ namespace TurnipEmu::ARM7TDMI{
 	}
 
 	void CPU::drawCustomWindowContents(){
-		static word interpreting = registers.regs[15];
-		static word lastPC = registers.regs[15];
+		static word interpreting = registers.main[15];
+		static word lastPC = registers.main[15];
 		static char jumpBuf[9] = "00000000";
 		static bool firstRun = true;
-		ImGui::Text("PC: 0x%08x", registers.regs[15]);
+		
+		ImGui::Text("PC: 0x%08x", registers.main[15]);
 		ImGui::Text("Custom Address 0x"); ImGui::SameLine();
 		ImGui::PushItemWidth(8 * 20); // 8 chars * font size?
 		ImGui::InputText("", jumpBuf, 9, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
@@ -50,16 +75,16 @@ namespace TurnipEmu::ARM7TDMI{
 		jumpBuf[8] = '\0';
 		
 		bool shouldInspect = ImGui::Button("Inspect");
-		bool shouldReset = firstRun || (lastPC != registers.regs[15]);
+		bool shouldReset = firstRun || (lastPC != registers.main[15]);
 		
-		if (interpreting != registers.regs[15]) {
+		if (!shouldReset && interpreting != registers.main[15]) {
 			ImGui::SameLine();
 			shouldReset = ImGui::Button("Reset to PC");
 		}
 		shouldInspect |= shouldReset;
 		if (shouldReset){
 			for (int i = 0; i < 8; i++){
-				uint8_t charVal = (registers.regs[15] >> (28 - i * 4)) & 0xF;
+				uint8_t charVal = (registers.main[15] >> (28 - i * 4)) & 0xF;
 				if (charVal <= 9) jumpBuf[i] = '0' + charVal;
 				else jumpBuf[i] = 'A' + (charVal - 0xA);
 			}
@@ -136,6 +161,6 @@ namespace TurnipEmu::ARM7TDMI{
 		}	
 
 		firstRun = false;
-		lastPC = registers.regs[15];
+		lastPC = registers.main[15];
 	}
 }
