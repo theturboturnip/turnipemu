@@ -26,7 +26,7 @@ namespace TurnipEmu::Memory{
 	std::optional<ReadType> Map::read(uint32_t address, bool accessByEmulator) const {
 		if(address % sizeof(ReadType) != 0){
 			// Byte reads MUST be on byte-boundaries, halfwords on 2-byte boundaries, words on 4-byte boundaries.
-			return {}
+			return {};
 		}
 		
 		auto* controller = controllerForAddress(address, accessByEmulator);

@@ -79,6 +79,7 @@ namespace TurnipEmu::ARM7TDMI{
 
 	void CPU::setupInstructions(){
 		instructions = std::vector<std::unique_ptr<Instruction>>();
+		
 		instructions.push_back(std::make_unique<Instruction>("Software Interrupt", InstructionMask{
 					{27, 24, 0b1111}
 				}));
@@ -91,6 +92,18 @@ namespace TurnipEmu::ARM7TDMI{
 				}));
 		instructions.push_back(std::make_unique<BranchInstruction>("Branch", InstructionMask{
 					{27, 25, 0b101}
+				}));
+		instructions.push_back(std::make_unique<Instruction>("MRS (Transfer PSR to Register", InstructionMask{
+					{27, 26, 0b00},
+					{24, 23, 0b10},
+					{21, 16, 0b001111},
+					{11, 0, 0}
+				}));
+		instructions.push_back(std::make_unique<Instruction>("MSR (Transfer Register to PSR", InstructionMask{
+					{27, 26, 0b00},
+					{24, 23, 0b10},
+					{21, 17, 0b10100},
+					{15, 12, 0b1111}
 				}));
 		instructions.push_back(std::make_unique<Instruction>("Multiply", InstructionMask{
 					{27, 23, 0b00000},
