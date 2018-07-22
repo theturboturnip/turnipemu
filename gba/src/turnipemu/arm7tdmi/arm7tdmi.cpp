@@ -13,10 +13,20 @@ namespace TurnipEmu::ARM7TDMI{
 	}
 	void CPU::reset(){
 		memset(&registers, 0, sizeof(registers));
-		registers.main[15] = 0x08000000; // Start at the beginning of ROM
 
-		registers.cpsr.mode = Mode::User;
-		registers.cpsr.state = CPUExecState::ARM;
+		constexpr bool RunBIOS = true;
+		if constexpr (RunBIOS){
+			registers.main[15] = 0x00000000;
+			registers.cpsr.mode = Mode::Supervisor;
+			registers.cpsr.state = CPUExecState::ARM;
+			registers.cpsr.fiqDisable = true;
+			registers.cpsr.irqDisable = true;
+		}else{
+			// TODO: There are more requirements to boot outside of the BIOS
+			registers.main[15] = 0x08000000; // Start at the beginning of ROM
+			registers.cpsr.mode = Mode::System;
+			registers.cpsr.state = CPUExecState::ARM;
+		}
 	}
 
 	void CPU::executeNextInstruction(){

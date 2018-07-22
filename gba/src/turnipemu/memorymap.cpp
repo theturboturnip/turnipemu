@@ -1,6 +1,6 @@
-#include "memory.h"
-#include "emulator.h"
-#include "log.h"
+#include "turnipemu/memory/map.h"
+#include "turnipemu/emulator.h"
+#include "turnipemu/log.h"
 
 namespace TurnipEmu{
 	MemoryMap::MemoryMap(Emulator& emulator) : emulator(emulator){

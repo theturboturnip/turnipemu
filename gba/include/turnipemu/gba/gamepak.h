@@ -1,14 +1,14 @@
 #pragma once
 
 #include "types.h"
-#include "memory.h"
+#include "turnipemu/memory/map.h"
 
 #include <vector>
 
 #include "turnipemu/display.h"
 
 namespace TurnipEmu::GBA{
-	class GamePak : public MemoryRangeController, public Display::CustomWindow {
+	class GamePak : public RangeMemoryController, public Display::CustomWindow {
 	public:
 		GamePak(std::vector<byte>& rom); // TODO: Define
 

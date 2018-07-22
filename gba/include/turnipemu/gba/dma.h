@@ -1,13 +1,13 @@
 #pragma once
 
 #include "types.h"
-#include "memory.h"
+#include "turnipemu/memory/map.h"
 
 namespace TurnipEmu {
 	class ARM7DTMI;
 
 	namespace GBA{
-		class DMAEngine : public MemoryRangeController {
+		class DMAEngine : public RangeMemoryController {
 		public:
 			void execute(ARM7DTMI& cpu);
 			bool canExecute();

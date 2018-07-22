@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.h"
-#include "memory.h"
+#include "turnipemu/memory/map.h"
 #include "arm7tdmi.h"
 #include "dma.h"
 #include "gamepak.h"

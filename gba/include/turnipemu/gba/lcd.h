@@ -3,7 +3,7 @@
 #include <cstddef>
 
 #include "types.h"
-#include "memory.h"
+#include "turnipemu/memory/map.h"
 #include "utils.h"
 
 namespace TurnipEmu::GBA{
