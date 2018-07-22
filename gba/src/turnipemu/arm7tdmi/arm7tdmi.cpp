@@ -7,7 +7,7 @@
 #include "turnipemu/imgui.h"
 
 namespace TurnipEmu::ARM7TDMI{
-	CPU::CPU(const MemoryMap& memoryMap) : Display::CustomWindow("ARM7TDMI Instruction Inspector", 450, 0), memoryMap(memoryMap)
+	CPU::CPU(const Memory::Map& memoryMap) : Display::CustomWindow("ARM7TDMI Instruction Inspector", 450, 0), memoryMap(memoryMap)
 	{
 		setupInstructions();
 		reset();

@@ -7,7 +7,7 @@ namespace TurnipEmu {
 	class ARM7DTMI;
 
 	namespace GBA{
-		class DMAEngine : public RangeMemoryController {
+		class DMAEngine : public Memory::RangeController {
 		public:
 			void execute(ARM7DTMI& cpu);
 			bool canExecute();

@@ -3,15 +3,15 @@
 #include "turnipemu/emulator.h"
 #include "turnipemu/log.h"
 
-namespace TurnipEmu{
-	MemoryMap::MemoryMap(Emulator& emulator) : emulator(emulator){
+namespace TurnipEmu::Memory{
+	Map::Map(Emulator& emulator) : emulator(emulator){
 	}
 	
-	void MemoryMap::registerMemoryController(MemoryController* memoryController){
+	void Map::registerMemoryController(Controller* memoryController){
 		memoryControllers.push_back(memoryController);
 	}
 
-	MemoryController* MemoryMap::controllerForAddress(uint32_t address, bool accessByEmulator) const {
+	Controller* Map::controllerForAddress(uint32_t address, bool accessByEmulator) const {
 		for (auto* controller : memoryControllers){
 			if (controller->ownsAddress(address)) return controller;
 		}
@@ -23,7 +23,7 @@ namespace TurnipEmu{
 	}
 
 	template<typename ReadType>
-	std::optional<ReadType> MemoryMap::read(uint32_t address, bool accessByEmulator) const {
+	std::optional<ReadType> Map::read(uint32_t address, bool accessByEmulator) const {
 		assert(address % sizeof(ReadType) == 0); // Byte reads MUST be on byte-boundaries, halfwords on 2-byte boundaries, words on 4-byte boundaries.
 		
 		auto* controller = controllerForAddress(address, accessByEmulator);
@@ -42,12 +42,12 @@ namespace TurnipEmu{
 			return {};
 		}
 	}
-	template std::optional<byte> MemoryMap::read<byte>(uint32_t, bool) const;
-	template std::optional<halfword> MemoryMap::read<halfword>(uint32_t, bool) const;
-	template std::optional<word> MemoryMap::read<word>(uint32_t, bool) const;
+	template std::optional<byte> Map::read<byte>(uint32_t, bool) const;
+	template std::optional<halfword> Map::read<halfword>(uint32_t, bool) const;
+	template std::optional<word> Map::read<word>(uint32_t, bool) const;
 
 	template<typename WriteType>
-	void MemoryMap::write(uint32_t address, WriteType value, bool accessByEmulator) const {
+	void Map::write(uint32_t address, WriteType value, bool accessByEmulator) const {
 		assert(address % sizeof(WriteType) == 0); // Byte writes MUST be on byte-boundaries, halfwords on 2-byte boundaries, words on 4-byte boundaries.
 		
 		auto* controller = controllerForAddress(address, accessByEmulator);
@@ -62,7 +62,7 @@ namespace TurnipEmu{
 			}
 		}
 	}
-	template void MemoryMap::write<byte>(uint32_t, byte, bool) const;
-	template void MemoryMap::write<halfword>(uint32_t, halfword, bool) const;
-	template void MemoryMap::write<word>(uint32_t, word, bool) const;
+	template void Map::write<byte>(uint32_t, byte, bool) const;
+	template void Map::write<halfword>(uint32_t, halfword, bool) const;
+	template void Map::write<word>(uint32_t, word, bool) const;
 }

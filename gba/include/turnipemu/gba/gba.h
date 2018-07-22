@@ -19,7 +19,7 @@ namespace TurnipEmu::GBA{
 		void reset() override;
 		void reset(GamePak newGamePak);		
 	protected:
-		MemoryMap memoryMap;
+		Memory::Map memoryMap;
 
 		ARM7TDMI::CPU cpu;
 		

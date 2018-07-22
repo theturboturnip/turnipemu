@@ -5,9 +5,9 @@
 
 #include "turnipemu/types.h"
 
-namespace TurnipEmu{
+namespace TurnipEmu::Memory{
     // An interface for reading and writing bytes from memory. 
-	class MemoryController {
+	class Controller {
 	public:
 		virtual bool ownsAddress(uint32_t address) const = 0;
 	
@@ -42,9 +42,9 @@ namespace TurnipEmu{
 		}
 	};
 
-	class RangeMemoryController : public MemoryController {
+	class RangeController : public Controller {
 	public:
-		RangeMemoryController(uint32_t startAddress, uint32_t endAddress) :
+		RangeController(uint32_t startAddress, uint32_t endAddress) :
 			startAddress(startAddress), endAddress(endAddress) {}
 		
 		bool ownsAddress(uint32_t address) const override {
@@ -57,11 +57,11 @@ namespace TurnipEmu{
 	};
 
 	template<typename StorageClass>
-	class StaticDataRangeMemoryController : public RangeMemoryController {
+	class StaticDataRangeController : public RangeController {
 	public:
 		static_assert(std::is_same<byte, typename StorageClass::value_type>::value);
 		
-		StaticDataRangeMemoryController(StorageClass data, uint32_t startAddress) : RangeMemoryController(startAddress, startAddress + data.size()), data(std::move(data)){
+		StaticDataRangeController(StorageClass data, uint32_t startAddress) : RangeController(startAddress, startAddress + data.size()), data(std::move(data)){
 		}
 
 		bool allowRead(uint32_t address) const override {

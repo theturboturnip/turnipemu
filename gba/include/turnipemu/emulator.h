@@ -3,10 +3,12 @@
 #include "display.h"
 
 namespace TurnipEmu{
-	class MemoryMap;
-	
+	namespace Memory{
+		class Map;
+	}
+		
 	class Emulator : public Display::CustomWindow {
-		friend class MemoryMap;
+		friend class Memory::Map;
 		
 	public:
 		Emulator(Display& display, std::string title)

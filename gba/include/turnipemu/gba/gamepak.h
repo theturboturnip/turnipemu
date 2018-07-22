@@ -7,7 +7,7 @@
 #include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
-	class GamePak : public RangeMemoryController, public Display::CustomWindow {
+	class GamePak : public Memory::RangeController, public Display::CustomWindow {
 	public:
 		GamePak(std::vector<byte>& rom); // TODO: Define
 

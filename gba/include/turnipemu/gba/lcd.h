@@ -7,7 +7,7 @@
 #include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
-	class LCDEngine : public MemoryController{
+	class LCDEngine : public Memory::Controller{
 	public:
 		// TODO: Memory stuff, rendering also
 

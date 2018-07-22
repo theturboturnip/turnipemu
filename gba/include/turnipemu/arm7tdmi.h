@@ -1,9 +1,9 @@
 #pragma once
 
-#include "types.h"
+#include "turnipemu/display.h"
+#include "turnipemu/log.h"
+#include "turnipemu/types.h"
 #include "turnipemu/memory/map.h"
-#include "display.h"
-#include "log.h"
 
 #include <string>
 #include <memory>
@@ -105,7 +105,7 @@ namespace TurnipEmu::ARM7TDMI {
 	
 	class CPU : public Display::CustomWindow {
 	public:	   
-		CPU(const MemoryMap& memoryMap);
+		CPU(const Memory::Map& memoryMap);
 		
 		void executeNextInstruction();
 		void executeInstruction(word instructionWord);
@@ -116,7 +116,7 @@ namespace TurnipEmu::ARM7TDMI {
 
 		void drawCustomWindowContents() override;
 	protected:
-		const MemoryMap& memoryMap;
+		const Memory::Map& memoryMap;
 		
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
 		const RegisterPointers registersForCurrentState();
