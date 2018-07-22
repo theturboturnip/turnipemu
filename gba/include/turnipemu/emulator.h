@@ -38,6 +38,7 @@ namespace TurnipEmu{
 		bool paused = false;
 		bool stopped = false;
 		bool vsyncReady = false;
+		std::string stopMessage;
 	};
 	
 }

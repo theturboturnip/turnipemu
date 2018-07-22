@@ -16,7 +16,7 @@ namespace TurnipEmu::ARM7TDMI {
 		};
 		struct Operation {
 			using OperationFunction = std::function<OperationOutput(word arg1, word arg2, int carryIn)>;
-			char mnemonic[3];
+			char mnemonic[4];
 			OperationFunction execute;
 			bool logical;
 			bool writeResult;
@@ -28,6 +28,7 @@ namespace TurnipEmu::ARM7TDMI {
 				mnemonic[0] = mnemonicFromStr[0];
 				mnemonic[1] = mnemonicFromStr[1];
 				mnemonic[2] = mnemonicFromStr[2];
+				mnemonic[3] = '\0';
 			}
 		};
 		

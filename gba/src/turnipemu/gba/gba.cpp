@@ -20,6 +20,7 @@ namespace TurnipEmu::GBA{
 			LogLine(logTag, "Exception encountered, stopping...");
 			LogLine(logTag, "%s", e.what());
 			stopped = true;
+			stopMessage = std::string(e.what());
 		}
 	}
 
@@ -27,6 +28,7 @@ namespace TurnipEmu::GBA{
 		LogLine(logTag, "GBA Reset");
 		Emulator::reset();
 		paused = true;
+		cpu.reset();
 	}
 	void GBA::reset(GamePak newGamePak){
 		gamePak = newGamePak;
