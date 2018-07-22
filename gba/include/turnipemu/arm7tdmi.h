@@ -23,6 +23,17 @@ namespace TurnipEmu::ARM7TDMI {
 		Undefined  = 0b11011,
 		System     = 0b11111,
 	};
+	inline std::string ModeString(Mode m){
+		switch(m){
+		case Mode::User: return "User";
+		case Mode::FIQ: return "FIQ";
+		case Mode::IRQ: return "IRQ";
+		case Mode::Supervisor: return "Supervisor";
+		case Mode::Abort: return "Abort";
+		case Mode::Undefined: return "Undefined";
+		case Mode::System: return "System";
+		}
+	}
 	
 	union ProgramStatusRegister{
 		word value;

@@ -12,7 +12,7 @@
 namespace TurnipEmu::GBA{
 	class GBA : public Emulator {
 	public:
-		GBA(Display& display, GamePak gamePak);
+		GBA(Display& display, std::vector<byte> biosData, GamePak gamePak);
 
 		void tick() override;
 		
@@ -20,9 +20,10 @@ namespace TurnipEmu::GBA{
 		void reset(GamePak newGamePak);		
 	protected:
 		Memory::Map memoryMap;
-
+		
 		ARM7TDMI::CPU cpu;
 		
+		Memory::StaticDataRangeController<std::vector<byte>> bios;
 		GamePak gamePak;
 		//struct {
 			//LCDEngine lcdEngine; // TODO: Define fully, should control both the Internal Display Memory (0x05000000 - 0x07000400) and the LCD Control Registers (0x04000000 - 0x04000060)

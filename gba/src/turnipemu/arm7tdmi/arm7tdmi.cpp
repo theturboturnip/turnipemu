@@ -59,6 +59,7 @@ namespace TurnipEmu::ARM7TDMI{
 			
 		switch (registers.cpsr.mode){
 		case Mode::User:
+		case Mode::Supervisor:
 			for (int i = 0; i < 16; i++){
 				pointers.main[i] = &registers.main[i];
 			}

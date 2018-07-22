@@ -15,7 +15,7 @@ namespace TurnipEmu::GBA{
 		"Unknown"
 	};
 	
-	GamePak::GamePak(std::vector<byte>& rom) : Memory::RangeController(0x08000000, 0x0E010000), CustomWindow("GamePak", 0, 0), rom(rom) {
+	GamePak::GamePak(std::vector<byte> rom) : Memory::RangeController(0x08000000, 0x0E010000), CustomWindow("GamePak", 0, 0), rom(rom) {
 		assert(rom.size() >= 0x400000 && (rom.size() % 0x100000) == 0);
 		assert(rom[0xB2] == 0x96);
 		

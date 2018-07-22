@@ -34,9 +34,9 @@ int main(int argc, char* argv[]){
 			   std::istreambuf_iterator<char>(rom_file),
                std::istreambuf_iterator<char>());
 
-	TurnipEmu::GBA::GamePak gamePak(rom);
+	TurnipEmu::GBA::GamePak gamePak(std::move(rom));
 
-	TurnipEmu::GBA::GBA gba(display, gamePak);
+	TurnipEmu::GBA::GBA gba(display, bios, gamePak);
 	
 	display.loop();
 	

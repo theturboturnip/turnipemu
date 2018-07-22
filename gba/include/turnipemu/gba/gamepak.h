@@ -9,7 +9,7 @@
 namespace TurnipEmu::GBA{
 	class GamePak : public Memory::RangeController, public Display::CustomWindow {
 	public:
-		GamePak(std::vector<byte>& rom); // TODO: Define
+		GamePak(std::vector<byte> rom);
 
 		// TODO: Define memory functions. The cycles will be wrong, and the backup data is writeable
 		bool allowRead(uint32_t address) const override {
