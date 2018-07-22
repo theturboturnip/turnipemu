@@ -29,7 +29,7 @@ namespace TurnipEmu{
 			template<typename ReadType>
 			std::optional<ReadType> read(uint32_t address, bool accessByEmulator = true) const;
 			template<typename WriteType>
-			void write(uint32_t address, WriteType value, bool accessByEmulator = true) const;
+			bool write(uint32_t address, WriteType value, bool accessByEmulator = true) const;
 		protected:
 			Controller* controllerForAddress(uint32_t address, bool accessByEmulator) const;
 
