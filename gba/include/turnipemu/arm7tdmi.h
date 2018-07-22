@@ -53,8 +53,7 @@ namespace TurnipEmu::ARM7TDMI {
 	};
 	static_assert(sizeof(ProgramStatusRegister) == 4, "ProgramStatusRegister must be a single word");
 		
-	// TODO: Does this need to be public?
-	// This is used by the instructions 
+    // This is used by the instructions 
 	struct RegisterPointers{
 		word* main[16] = {nullptr};
 			
@@ -103,7 +102,9 @@ namespace TurnipEmu::ARM7TDMI {
 			
 		const Condition& getCondition(word instructionWord);
 			
-		virtual std::string disassembly(word instructionWord){return "NO DISASSEMBLY PRESENT";}
+		virtual std::string disassembly(word instructionWord){
+			return "NO DISASSEMBLY PRESENT";
+		}
 		virtual void execute(CPU& cpu, const RegisterPointers, word instructionWord){
 			throw std::runtime_error("Instruction is not implemented!");
 		}
@@ -127,9 +128,9 @@ namespace TurnipEmu::ARM7TDMI {
 		void reset();
 
 		void drawCustomWindowContents() override;
-	protected:
+
 		const Memory::Map& memoryMap;
-		
+	protected:		
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
 		const RegisterPointers registersForCurrentState();
 		

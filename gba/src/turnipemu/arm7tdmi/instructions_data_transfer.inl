@@ -6,23 +6,22 @@ namespace TurnipEmu::ARM7TDMI {
 			constexpr static bool Byte = true;
 			constexpr static bool Word = false;
 		};
-		struct InstructionData {
-			DataTransferInfo transferInfo;
+		struct InstructionData : public DataTransferInfo{
 			uint8_t addressRegister : 4;
 			
 			bool useImmediateOffset;
 			union {
-				int immediateValue;
+				word immediateValue;
 				ShiftedRegister registerValue;
 			} offset;
 
 			bool transferSize;
 
-			InstructionData(word instructionWord) : transferInfo(instructionWord) {
+			InstructionData(word instructionWord) : DataTransferInfo(instructionWord) {
 				addressRegister = (instructionWord >> 12) & 0xF;
 				useImmediateOffset = (instructionWord >> 25) & 1;
 				if (useImmediateOffset){
-					offset.immediateValue = (instructionWord & 0xFFF) * (transferInfo.offsetSign);
+					offset.immediateValue = (instructionWord & 0xFFF);
 				}else{
 					offset.registerValue = ShiftedRegister(instructionWord);
 					assert(!offset.registerValue.shiftedByRegister);
@@ -41,22 +40,62 @@ namespace TurnipEmu::ARM7TDMI {
 			}else{
 				stream << "Word ";
 			}
-			if (data.transferInfo.transferMode == DataTransferInfo::TransferMode::Load){
+			if (data.transferMode == DataTransferInfo::TransferMode::Load){
 				stream << "Load\n"; 
 			}else{
 				stream << "Store\n";
 			}
 			stream << "Address Register: " << (int)data.addressRegister << "\n";
-			stream << "Data Register: " << (int)data.transferInfo.baseRegister << "\n";
+			stream << "Data Register: " << (int)data.baseRegister << "\n";
 			stream << "Offset: ";
 			if (data.useImmediateOffset){
 				stream << "Immediate Value " << (int)data.offset.immediateValue;
 			}else{
 				data.offset.registerValue.writeDescription(stream);
 			}
-			stream << "\nWriteback: " << std::boolalpha << data.transferInfo.writeback;
-			stream << "\nIndexing: " << ((data.transferInfo.indexMode == DataTransferInfo::IndexMode::PreIndex) ? "Pre" : "Post");
+			stream << " * " << data.offsetSign;
+			stream << "\nWriteback: " << std::boolalpha << data.writeback;
+			stream << "\nIndexing: " << ((data.indexMode == DataTransferInfo::IndexMode::PreIndex) ? "Pre" : "Post");
 			return stream.str();
+		}
+		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
+			InstructionData data(instructionWord);
+			
+			int finalOffset = (data.useImmediateOffset ? data.offset.immediateValue : data.offset.registerValue.calculateValue(registers, instructionWord)) * data.offsetSign;
+			word address = (*registers.main[data.addressRegister]) + finalOffset;
+			if (data.transferMode == DataTransferInfo::TransferMode::Load){
+				if (data.transferSize == TransferSize::Byte){
+					auto optionalByte = cpu.memoryMap.read<byte>(address);
+					if (optionalByte)
+						*registers.main[data.baseRegister] = optionalByte.value();
+					else{
+						// Memory Exception! Not an actual C++ exception, but something different
+					}
+				}else{
+					auto optionalWord = cpu.memoryMap.read<word>(address);
+					if (optionalWord)
+						*registers.main[data.baseRegister] = optionalWord.value();
+					else{
+						// Memory Exception! Not an actual C++ exception, but something different
+					}
+				}
+			}else{
+				if (data.transferSize == TransferSize::Byte){
+					byte value = (*registers.main[data.baseRegister]) & 0xFF;
+					if (!cpu.memoryMap.write<byte>(address, value)){
+						// Memory Exception! Not an actual C++ exception, but something different
+					}
+				}else{
+					word value = *registers.main[data.baseRegister];
+					if (!cpu.memoryMap.write<word>(address, value)){
+						// Memory Exception! Not an actual C++ exception, but something different
+					}
+				}
+			}
+			// On the original ARM7, if post-indexing and writeback is used then the transfer is performed in user mode. However on the GBA the mode doesn't matter, so we ignore it here.
+			if (data.writeback && (data.indexMode == DataTransferInfo::IndexMode::PreIndex)){
+				*registers.main[data.addressRegister] = address;
+			}
 		}
 	};
 }
