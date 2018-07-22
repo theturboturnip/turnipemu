@@ -1,4 +1,5 @@
 #include "turnipemu/memory/map.h"
+
 #include "turnipemu/emulator.h"
 #include "turnipemu/log.h"
 

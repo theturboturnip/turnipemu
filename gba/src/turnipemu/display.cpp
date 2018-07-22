@@ -1,11 +1,11 @@
 #include "turnipemu/display.h"
+
 #include "turnipemu/emulator.h"
 #include "turnipemu/log.h"
 #include "turnipemu/gl.h"
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_sdl.h"
-#include "imgui/imgui_impl_opengl3.h"
+#define TURNIPEMU_INCLUDE_IMGUI_DISPLAY_EXTENSIONS
+#include "turnipemu/imgui.h"
 
 namespace TurnipEmu{
 	Display::Display(std::string title, unsigned int width, unsigned int height) : width(width), height(height){

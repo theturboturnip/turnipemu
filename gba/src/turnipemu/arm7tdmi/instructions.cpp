@@ -1,7 +1,8 @@
-#include "arm7tdmi.h"
-#include "turnipemu/utils.h"
+#include "turnipemu/arm7tdmi.h"
 
 #include <sstream>
+
+#include "turnipemu/utils.h"
 
 #include "instructions_common.inl"
 #include "instructions_alu.inl"

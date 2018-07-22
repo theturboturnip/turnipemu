@@ -1,10 +1,10 @@
-#include "turnipemu/gba/config.h"
-#include "turnipemu/log.h"
 #include "turnipemu/gba/gamepak.h"
 
 #include <regex>
 
-#include "imgui/imgui.h"
+#include "turnipemu/imgui.h"
+#include "turnipemu/log.h"
+#include "turnipemu/gba/config.h"
 
 namespace TurnipEmu::GBA{
 	char const * const GamePak::backupTypeStrings[5] = {

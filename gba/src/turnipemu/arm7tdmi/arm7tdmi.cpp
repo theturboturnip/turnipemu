@@ -1,9 +1,10 @@
-#include "arm7tdmi.h"
-#include "log.h"
+#include "turnipemu/arm7tdmi.h"
+
 #include <memory>
 #include <string>
 
-#include "imgui/imgui.h"
+#include "turnipemu/log.h"
+#include "turnipemu/imgui.h"
 
 namespace TurnipEmu::ARM7TDMI{
 	CPU::CPU(const MemoryMap& memoryMap) : Display::CustomWindow("ARM7TDMI Instruction Inspector", 450, 0), memoryMap(memoryMap)

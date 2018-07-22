@@ -1,7 +1,6 @@
 #include "turnipemu/gba/gba.h"
-#include "turnipemu/log.h"
 
-#include "imgui/imgui.h"
+#include "turnipemu/log.h"
 
 namespace TurnipEmu::GBA{
 	GBA::GBA(Display& display, GamePak gamePak) : Emulator(display, "GBA"), memoryMap(*this), cpu(memoryMap), gamePak(gamePak) {

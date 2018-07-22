@@ -1,6 +1,6 @@
-#include "emulator.h"
+#include "turnipemu/emulator.h"
 
-#include "imgui/imgui.h"
+#include "turnipemu/imgui.h"
 
 namespace TurnipEmu {
 	void Emulator::drawCustomWindowContents(){
