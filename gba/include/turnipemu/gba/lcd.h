@@ -2,9 +2,9 @@
 
 #include <cstddef>
 
-#include "types.h"
+#include "turnipemu/types.h"
+#include "turnipemu/utils.h"
 #include "turnipemu/memory/map.h"
-#include "utils.h"
 
 namespace TurnipEmu::GBA{
 	class LCDEngine : public MemoryController{

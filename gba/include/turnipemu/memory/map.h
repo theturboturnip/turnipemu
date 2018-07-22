@@ -1,11 +1,11 @@
 #pragma once
 
-#include "types.h"
-#include "controllers.h"
-
 #include <assert.h>
 #include <vector>
 #include <optional>
+
+#include "turnipemu/types.h"
+#include "turnipemu/memory/controllers.h"
 
 namespace TurnipEmu{
 	class Emulator;

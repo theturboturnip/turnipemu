@@ -1,9 +1,9 @@
 #pragma once
 
-#include "types.h"
-
 #include <assert.h>
 #include <memory>
+
+#include "turnipemu/types.h"
 
 namespace TurnipEmu{
     // An interface for reading and writing bytes from memory. 

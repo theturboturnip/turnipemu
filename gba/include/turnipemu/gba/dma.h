@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "turnipemu/types.h"
 #include "turnipemu/memory/map.h"
 
 namespace TurnipEmu {

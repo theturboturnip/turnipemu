@@ -1,13 +1,13 @@
 #pragma once
 
-#include "types.h"
-#include "turnipemu/memory/map.h"
-#include "arm7tdmi.h"
-#include "dma.h"
-#include "gamepak.h"
-#include "lcd.h"
+#include "turnipemu/arm7tdmi.h"
 #include "turnipemu/display.h"
 #include "turnipemu/emulator.h"
+#include "turnipemu/types.h"
+#include "turnipemu/gba/dma.h"
+#include "turnipemu/gba/gamepak.h"
+#include "turnipemu/gba/lcd.h"
+#include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
 	class GBA : public Emulator {

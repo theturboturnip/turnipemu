@@ -1,11 +1,10 @@
 #pragma once
 
-#include "types.h"
-#include "turnipemu/memory/map.h"
-
 #include <vector>
 
 #include "turnipemu/display.h"
+#include "turnipemu/types.h"
+#include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
 	class GamePak : public RangeMemoryController, public Display::CustomWindow {
