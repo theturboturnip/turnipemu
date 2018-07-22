@@ -35,11 +35,12 @@ namespace TurnipEmu::ARM7TDMI {
 		static OperationOutput Add(word arg1, word arg2, int carryIn){
 			uint64_t ulongResult = (uint64_t)arg1 + (uint64_t)arg2 + (WithCarry ? carryIn : 0);
 			int64_t slongResult = TURNIPEMU_UINT32_TO_SINT64(arg1) + TURNIPEMU_UINT32_TO_SINT64(arg2) + (WithCarry ? carryIn : 0);
-			return OperationOutput(
+			OperationOutput output(
 				word(ulongResult),
 				(ulongResult >> 32) & 1,
-				(slongResult > (1 << 31)) | (slongResult < -(1 << 31))
+				(slongResult > std::numeric_limits<int32_t>::max()) || (slongResult < std::numeric_limits<int32_t>::lowest())
 				);
+			return output;
 		}
 		template<bool WithCarry, bool Reverse>
 		static OperationOutput Sub(word arg1, word arg2, int carryIn){
