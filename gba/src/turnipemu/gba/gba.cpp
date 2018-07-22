@@ -15,7 +15,7 @@ namespace TurnipEmu::GBA{
 
 	void GBA::tick(){
 		try {
-			cpu.executeNextInstruction();
+			cpu.tick();
 		} catch (const std::exception& e) {
 			LogLine(logTag, "Exception encountered, stopping...");
 			LogLine(logTag, "%s", e.what());

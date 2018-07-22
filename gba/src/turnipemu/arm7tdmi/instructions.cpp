@@ -51,11 +51,11 @@ namespace TurnipEmu::ARM7TDMI{
 		using Instruction::Instruction;
 		
 		struct InstructionData {
-			int32_t offset;
+			int64_t offset;
 			bool link;
 
 			InstructionData(word instructionWord){
-				offset = ((instructionWord >> 0) & 0xFFFFFF) << 2;
+				offset = (int64_t)(int32_t)((instructionWord >> 0) & 0xFFFFFF) << 2;
 				link = (instructionWord >> 24) & 1;
 			}
 		};
@@ -68,11 +68,12 @@ namespace TurnipEmu::ARM7TDMI{
 		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
 			InstructionData data(instructionWord);
 			if (data.link){
-				word pcForNextInstruction = *registers.main[15] + 4;
+				word pcForNextInstruction = *registers.main[15] + 4 - 8; // PC has been prefetched, the -8 undoes that
 				*registers.main[14] = pcForNextInstruction;
 			}
-			word pcWithPrefetch = *registers.main[15] + 8;
+			word pcWithPrefetch = *registers.main[15];
 			*registers.main[15] = pcWithPrefetch + data.offset;
+			cpu.queuePipelineFlush();
 		}
 	};
 

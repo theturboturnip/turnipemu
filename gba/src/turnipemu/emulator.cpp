@@ -17,5 +17,9 @@ namespace TurnipEmu {
 				}
 			}
 		}
+
+		if (ImGui::Button("Reset")){
+			reset();
+		}
 	}
 }

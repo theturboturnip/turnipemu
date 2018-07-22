@@ -28,32 +28,74 @@ namespace TurnipEmu::ARM7TDMI{
 			registers.cpsr.mode = Mode::System;
 			registers.cpsr.state = CPUExecState::ARM;
 		}
+
+		flushPipeline();
+	}
+	void CPU::queuePipelineFlush(){
+		pipeline.queuedFlush = true;
+	}
+	void CPU::flushPipeline(){
+		pipeline.hasFetchedInstruction = false;
+		pipeline.fetchedInstructionWord = 0x0;
+		pipeline.fetchedInstructionAddress = registers.main[15];
+		
+		pipeline.hasDecodedInstruction = false;
+		pipeline.decodedInstruction = nullptr;
+		pipeline.decodedInstructionWord = 0x0;
+		pipeline.decodedInstructionAddress = 0x0;
+
+		pipeline.hasExecutedInstruction = false;
+
+		pipeline.queuedFlush = false;
 	}
 
-	void CPU::executeNextInstruction(){
-		if (auto instructionWordOptional = memoryMap.read<word>(registers.main[15])){
-			executeInstruction(instructionWordOptional.value());
-		}else{
-			throw std::runtime_error("PC is in invalid memory!");
-		}
+	void CPU::tick(){
+		tickPipeline();
 	}
-	void CPU::executeInstruction(word instructionWord){
+	void CPU::tickPipeline(){
 		const auto currentRegisters = registersForCurrentState();
 		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
 			throw std::runtime_error("Thumb mode is not supported yet!");
 		}
 		
-		Instruction* instruction = matchInstruction(instructionWord);
-		if (instruction){
-			if (instruction->getCondition(instructionWord).fulfilsCondition(*currentRegisters.cpsr)){
-				instruction->execute(*this, currentRegisters, instructionWord);
+		if (pipeline.hasFetchedInstruction){
+			if (pipeline.hasDecodedInstruction){
+				// Execute previously decoded instruction
+				if (pipeline.decodedInstruction->getCondition(pipeline.decodedInstructionWord).fulfilsCondition(*currentRegisters.cpsr)){
+					// This can flush the pipeline. 
+					pipeline.decodedInstruction->execute(*this, currentRegisters, pipeline.decodedInstructionWord);
+				}
+
+				pipeline.hasExecutedInstruction = true;
+				pipeline.executedInstructionAddress = pipeline.decodedInstructionAddress;
 			}
-			registers.main[15] += 4;
+
+			// Decode fetched instruction
+			pipeline.decodedInstructionAddress = pipeline.fetchedInstructionAddress;
+			pipeline.decodedInstructionWord = pipeline.fetchedInstructionWord;
+			pipeline.decodedInstruction = matchInstruction(pipeline.decodedInstructionWord);
+			if (!pipeline.decodedInstruction) throw std::runtime_error("Couldn't decode instruction!");
+			pipeline.hasDecodedInstruction = true;
 		}else{
-			throw std::runtime_error("Couldn't match instructionWord to an actual instruction!");
+			assert(!pipeline.hasDecodedInstruction);
+		}
+
+		// Fetch the instruction
+		if (auto instructionWordOptional = memoryMap.read<word>(registers.main[15])){
+			pipeline.fetchedInstructionAddress = registers.main[15];
+			pipeline.fetchedInstructionWord = instructionWordOptional.value();
+			pipeline.hasFetchedInstruction = true;
+		}else{
+			throw std::runtime_error("PC is in invalid memory!");
+		}
+
+		if (pipeline.queuedFlush){
+			flushPipeline();
+		}else{
+			registers.main[15] += 4; // TODO: Specialize for Thumb
 		}
 	}
-
+	
 	const RegisterPointers CPU::registersForCurrentState() {
 		RegisterPointers pointers;
 			
@@ -73,13 +115,31 @@ namespace TurnipEmu::ARM7TDMI{
 	}
 
 	void CPU::drawCustomWindowContents(){
-		static word interpreting = registers.main[15];
-		static word lastPC = registers.main[15];
-		static char jumpBuf[9] = "00000000";
-		static bool firstRun = true;
+		/*static*/ word interpreting = pipeline.decodedInstructionAddress;
+		//static word lastDecoded = pipeline.decodedInstructionAddress;
+		//static char jumpBuf[9] = "00000000";
+		//static bool firstRun = true;
+
+		ImGui::Text("Pipeline Status");
+		{
+			ImGui::Indent();
+			if (pipeline.hasFetchedInstruction){
+				ImGui::Text("Fetched Address: 0x%08x", pipeline.fetchedInstructionAddress);
+				if (pipeline.hasDecodedInstruction){
+					ImGui::Text("Decoded Address: 0x%08x", pipeline.decodedInstructionAddress);
+					if (pipeline.hasExecutedInstruction){
+						ImGui::Text("Executed Address: 0x%08x", pipeline.executedInstructionAddress);
+					}
+				}
+			}else{
+				ImGui::Text("Pipeline Flushed");
+			}
+			ImGui::Unindent();
+		}
+
+		ImGui::Separator();
 		
-		ImGui::Text("PC: 0x%08x", registers.main[15]);
-		ImGui::Text("Custom Address 0x"); ImGui::SameLine();
+		/*ImGui::Text("Custom Address 0x"); ImGui::SameLine();
 		ImGui::PushItemWidth(8 * 20); // 8 chars * font size?
 		ImGui::InputText("", jumpBuf, 9, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
 		ImGui::PopItemWidth();
@@ -87,47 +147,55 @@ namespace TurnipEmu::ARM7TDMI{
 		jumpBuf[8] = '\0';
 		
 		bool shouldInspect = ImGui::Button("Inspect");
-		bool shouldReset = firstRun || (lastPC != registers.main[15]);
+		bool shouldReset = firstRun || (lastDecoded != pipeline.decodedInstructionAddress);
 		
-		if (!shouldReset && interpreting != registers.main[15]) {
+		if (!shouldReset && interpreting != pipeline.decodedInstructionAddress) {
 			ImGui::SameLine();
 			shouldReset = ImGui::Button("Reset to PC");
 		}
 		shouldInspect |= shouldReset;
 		if (shouldReset){
 			for (int i = 0; i < 8; i++){
-				uint8_t charVal = (registers.main[15] >> (28 - i * 4)) & 0xF;
+				uint8_t charVal = (pipeline.decodedInstructionAddress >> (28 - i * 4)) & 0xF;
 				if (charVal <= 9) jumpBuf[i] = '0' + charVal;
 				else jumpBuf[i] = 'A' + (charVal - 0xA);
 			}
 		}
 		if (shouldInspect){
 			interpreting = std::strtoul(jumpBuf, nullptr, 16);
-		}
+			}*/
 
 		const RegisterPointers currentRegisters = registersForCurrentState();
-		
-		if (auto instructionWordOptional = memoryMap.read<word>(interpreting, false)){
-			word instructionWord = instructionWordOptional.value();
-			Instruction* instruction = matchInstruction(instructionWord);
+
+		if (pipeline.hasDecodedInstruction){
+			ImGui::Text("Just Decoded Instruction");
+			ImGui::Indent();
 			
-			if (instruction){
-				const Instruction::Condition& condition = instruction->getCondition(instructionWord);
-				ImGui::Text("0x%08x: 0x%08x %c%c", interpreting, instructionWord, condition.name[0], condition.name[1]);
-				{
-					ImGui::Indent();
-					ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
-					ImGui::Text("Instruction Category: %s", instruction->category.c_str());
-					ImGui::TextWrapped("Instruction Disassembly: %s", instruction->disassembly(instructionWord).c_str());
-					ImGui::Unindent();
+		
+			if (auto instructionWordOptional = memoryMap.read<word>(interpreting, false)){
+				word instructionWord = instructionWordOptional.value();
+				Instruction* instruction = matchInstruction(instructionWord);
+			
+				if (instruction){
+					const Instruction::Condition& condition = instruction->getCondition(instructionWord);
+					ImGui::Text("0x%08x: 0x%08x %c%c", interpreting, instructionWord, condition.name[0], condition.name[1]);
+					{
+						ImGui::Indent();
+						ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
+						ImGui::Text("Instruction Category: %s", instruction->category.c_str());
+						ImGui::TextWrapped("Instruction Disassembly: %s", instruction->disassembly(instructionWord).c_str());
+						ImGui::Unindent();
+					}
+				}else{
+					ImGui::Text("0x%08x: 0x%08x (Not an instruction)", interpreting, instructionWord);
 				}
 			}else{
-				ImGui::Text("0x%08x: 0x%08x (Not an instruction)", interpreting, instructionWord);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+				ImGui::Text("Not in a valid memory location!");
+				ImGui::PopStyleColor();
 			}
-		}else{
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
-			ImGui::Text("Not in a valid memory location!");
-			ImGui::PopStyleColor();
+
+			ImGui::Unindent();
 		}
 
 		ImGui::Separator();
@@ -172,7 +240,7 @@ namespace TurnipEmu::ARM7TDMI{
 			ImGui::Unindent();
 		}	
 
-		firstRun = false;
-		lastPC = registers.main[15];
+		//firstRun = false;
+		//lastDecoded = pipeline.decodedInstructionAddress;
 	}
 }

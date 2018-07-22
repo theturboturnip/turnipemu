@@ -118,9 +118,10 @@ namespace TurnipEmu::ARM7TDMI {
 	public:	   
 		CPU(const Memory::Map& memoryMap);
 		
-		void executeNextInstruction();
-		void executeInstruction(word instructionWord);
+		void tick();
 
+		void queuePipelineFlush();
+		
 		void addCycles(uint32_t cycles);
 
 		void reset();
@@ -177,6 +178,24 @@ namespace TurnipEmu::ARM7TDMI {
 		uint32_t cyclesThisTick;
 		uint32_t cyclesTotal;
 
+		struct {
+			bool hasFetchedInstruction;
+			word fetchedInstructionWord;
+			word fetchedInstructionAddress;
+			
+			bool hasDecodedInstruction;
+			Instruction* decodedInstruction;
+			word decodedInstructionWord;
+			word decodedInstructionAddress;
+
+			bool hasExecutedInstruction;
+			word executedInstructionAddress;
+
+			bool queuedFlush;
+		} pipeline;
+		void flushPipeline();
+		void tickPipeline();
+		
 		// This has to be vector of unique_ptr because Instruction is virtual
 		std::vector<std::unique_ptr<Instruction>> instructions;
 		void setupInstructions();
