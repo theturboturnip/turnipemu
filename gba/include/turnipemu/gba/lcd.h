@@ -9,16 +9,22 @@
 namespace TurnipEmu::GBA{
 	class LCDEngine : public Memory::Controller{
 	public:
-		// TODO: Memory stuff, rendering also
+		// TODO: Everything else
+		
+		bool ownsAddress(uint32_t address) const override;
+		bool allowRead(uint32_t address) const override;
+		byte read(uint32_t address) const override;
+		bool allowWrite(uint32_t address) const override;
+		void write(uint32_t address, byte value) override;
+		// TODO: Memory cycles
 
 	protected:
+		byte* ownedAddressToByte(uint32_t address);
+		
 #pragma pack(1) // No Padding
 
-		// TODO: VRAM structs
-		// TODO: Check that nested structs get the endian-ness right.
-		// If I have a halfword-sized struct Fred{ byte a; byte b; }, and then I have a struct Bob { Fred one; Fred two; }, it should be laid out as struct Bob { byte one.a; byte one.b; byte two.a; byte two.b }
 		union Control{
-			byte values[4];
+			byte data[4];
 			struct {
 				uint8_t bgMode : 3; // Bits 0-2
 				bool inCgbMode : 1; // Bit 3, should always be false
@@ -43,7 +49,7 @@ namespace TurnipEmu::GBA{
 		static_assert(sizeof(Control) == 4, "LCDEngine::Control must be a full word");
 
 		union Status {
-			byte values[4];
+			byte data[4];
 			struct {
 				bool vblankFlag : 1; // Bit 0 (Read only, use as internal state?)
 				bool hblankFlag : 1; // Bit 1 (Read only, use as internal state?)
@@ -63,10 +69,10 @@ namespace TurnipEmu::GBA{
 			};
 		};
 		static_assert(sizeof(Status) == 4, "LCDEngine::Status must be a full word");
-		constexpr static byte statusFirstButeWriteMask = 0b00111000;
+		constexpr static byte statusFirstByteWriteMask = 0b00111000;
 
 		union BGControl {
-			byte values[2];
+			byte data[2];
 			struct {
 				uint8_t priority : 2; // Bits 0-1, 0 = Highest Priority
 				uint8_t characterStartBlock : 2; // Bits 2-3, units of 16KB, basically BG Tile Data
@@ -139,7 +145,7 @@ namespace TurnipEmu::GBA{
 				return sign * (integerPortion + (fractionalPortion / 256.0f)); // TODO: Are the brackets in the right place?
 			}
 		};
-		static_assert(sizeof(BGDeltaFloat) == 2, "LCDEngine::BGHalfFloat must be a half word");
+		static_assert(sizeof(BGDeltaFloat) == 2, "LCDEngine::BGDeltaFloat must be a half word");
 		struct BGRotationScaleControl {
 			BGDeltaFloat dx;
 			BGDeltaFloat dmx;
@@ -153,7 +159,7 @@ namespace TurnipEmu::GBA{
 
 		// From 0x4000008 to 0x4000040
 		union BGData {
-			byte values[0x40 - 0x08]; // 56 bytes, 14 words
+			byte data[0x40 - 0x08]; // 56 bytes, 14 words
 			struct {
 				// 0x08 - 0x0F
 				BGControl bg0Control;
@@ -230,7 +236,7 @@ namespace TurnipEmu::GBA{
 		static_assert(sizeof(ColorEffectData) == 8, "LCDEngine::ColorEffectCoefficients must be two words");
 		
 		union EffectData {
-			byte values[0x58 - 0x40]; // 0x18 = 16 + 8 = 24 bytes, 6 words
+			byte data[0x18];
 			struct {
 				// 0x40 - 0x47
 				WindowDimension window0HorizDimen;
@@ -252,7 +258,7 @@ namespace TurnipEmu::GBA{
 				ColorEffectData colorEffectData;
 			};
 		};
-		static_assert(sizeof(EffectData) == (0x58 - 0x40), "LCDEngine::EffectData must have the right size");
+		static_assert(sizeof(EffectData) == 0x18, "LCDEngine::EffectData must have the right size");
 
 		struct Tile4 {
 			byte data[32];
@@ -282,39 +288,98 @@ namespace TurnipEmu::GBA{
 		};
 		static_assert(sizeof(TextMapItem) == 2, "LCDEngine::TextMapItem must be 2 bytes"); 
 
-		struct Obj{
-			// TODO: Define
-			uint8_t dummy;
+		struct ObjAttribute {
+			uint8_t yCoordinate : 8;
+
+			bool rotationScaling : 1;
+			bool doubleSizeOrDisable : 1; // If rotatingAndScaling then this is doubleSize, otherwise this is disable
+			uint8_t objMode : 2; // 0 = Normal, 1 = Semitransparent, 2 = OBJ Window, 3 = Prohibited
+			bool objMosaic : 1;
+			bool colorPaletteRatio : 1; // True for 256 color single palette, False for 16 colors/16 palettes
+			uint8_t objShape : 2; // 0 = Square, 1 = Horizontal Rectangle, 2 = Vertical Rectangle, 3 = Prohibited
+
+			uint8_t xCoordinate_high : 8;
+			
+			// Pretty sure unions/structs have to be byte-aligned and stuff, so repeat some information
+			union {
+				struct {
+					uint8_t xCoordinate_low : 1;
+					// Only when rotationScaling
+					uint8_t rotationScalingParameter : 5;
+					// 0 = 8x8 Square/16x8 Rectangle, 1 = 16x16 Sq/32x8 R, 2 = 32x32 Sq/32x16 R, 3 = 64x64 Sq/64x32 R
+					// (The rectangle coords switch depending on objShape)
+					uint8_t objSize : 2; 
+				};
+				struct {
+					uint8_t dummy1 : 4;
+					// When not rotationScaling
+					bool flipHorizontal : 1;
+					bool flipVertical : 1;
+					uint8_t dummy2 : 2;
+				};
+			};
+
+			uint8_t tileNumber_high;
+
+			uint8_t tileNumber_low : 2;
+			uint8_t relativePriority : 2;
+			uint8_t paletteNumber : 4;
+			
+			uint16_t dummy3; // This is used as parts of the rotation/scaling parameters
+
+			inline uint16_t xCoordinate(){
+				return (xCoordinate_high << 1) + xCoordinate_low;
+			}
+			inline uint16_t tileNumber(){
+				return (tileNumber_high << 2) + tileNumber_low;
+			}
 		};
+		static_assert(sizeof(ObjAttribute) == 8);
+
+		union IORegisters {
+			byte data[0x60];
+			struct {
+				Control control; // 0x00 - 0x03
+				Status status; // 0x04 - 0x07
+				BGData bgData; // 0x08 - 0x3F
+				EffectData effectData; // 0x40 - 0x58
+			};
+		} io; // 0x0400'0000 - 0x0400'0060
+		static_assert(sizeof(IORegisters) == 0x60);
+
+		union PaletteRam {
+			byte data[0x400];
+		} paletteRam; // 0x0500'0000 - 0x0500'0400
 		
 		union Vram {
 			byte data[0x18000];
 			struct {
 				union {
-					Tile4 dataAs4BitTiles[0x10000/sizeof(Tile4)];
-					Tile8 dataAs8BitTiles[0x10000/sizeof(Tile8)];
+					Tile4 dataAs4BitBGTiles[0x10000/sizeof(Tile4)];
+					Tile8 dataAs8BitBGTiles[0x10000/sizeof(Tile8)];
 					
 					TextMapItem dataAsTextMapItems[0x10000/sizeof(TextMapItem)];
 					byte dataAsRotScaleMap[0x10000];
 				};
-				Obj objects[0x8000/sizeof(Obj)];
+				Tile8 objectTiles[0x8000/sizeof(Tile8)];
 			} tileModes; // Modes 0, 1, 2
 			struct {
 				byte frame0Buffer[0x14000];
-				Obj objects[0x4000/sizeof(Obj)];
+				Tile8 objectTiles[0x4000/sizeof(Tile8)];
 			} singleBufferedBitmapMode; // Mode 3
 			struct {
 				byte frame0Buffer[0xA000];
 				byte frame1Buffer[0xA000];
-				Obj objects[0x4000/sizeof(Obj)];
+				Tile8 objectTiles[0x4000/sizeof(Tile8)];
 			} doubleBufferedBitmapModes; // Modes 4, 5
-		} vram; // 0x06000000 - 0x06017FFF
+		} vram; // 0x0600'0000 - 0x0601'7FFF
 		static_assert(sizeof(Vram) == 0x18000, "VRam must take exactly 0x18000 bytes");
-		
-#pragma pack() 
-		Control control;
-		Status status;
-		BGData bgData;
-		EffectData effectData;
+
+		union ObjAttributes {
+			byte data[0x400];
+			ObjAttribute attributeData[0x400 / sizeof(ObjAttribute)];
+		} objectAttributes; // 0x0700'0000 - 0x0700'0400
+		static_assert(sizeof(ObjAttributes) == 0x400);
+#pragma pack()
 	};
 }

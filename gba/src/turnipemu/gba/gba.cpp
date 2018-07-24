@@ -9,6 +9,7 @@ namespace TurnipEmu::GBA{
 
 		memoryMap.registerMemoryController(&this->bios);
 		memoryMap.registerMemoryController(&this->gamePak);
+		memoryMap.registerMemoryController(&this->io.lcdEngine);
 
 		reset();
 	}
@@ -19,8 +20,7 @@ namespace TurnipEmu::GBA{
 		} catch (const std::exception& e) {
 			LogLine(logTag, "Exception encountered, stopping...");
 			LogLine(logTag, "%s", e.what());
-			stopped = true;
-			stopMessage = std::string(e.what());
+			stop(std::string(e.what()));
 		}
 	}
 

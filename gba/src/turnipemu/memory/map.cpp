@@ -16,8 +16,7 @@ namespace TurnipEmu::Memory{
 			if (controller->ownsAddress(address)) return controller;
 		}
 		if (accessByEmulator){
-			LogLine(logTag, "Invalid Memory Access at address 0x%08x, stopping", address);
-			emulator.stopped = true;
+			throw std::runtime_error("Invalid Memory Access");// at address 0x%08x, stopping", address);
 		}
 		return nullptr;
 	}

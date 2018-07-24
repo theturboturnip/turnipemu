@@ -68,27 +68,21 @@ namespace TurnipEmu::ARM7TDMI {
 					auto optionalByte = cpu.memoryMap.read<byte>(address);
 					if (optionalByte)
 						*registers.main[data.baseRegister] = optionalByte.value();
-					else{
-						// Memory Exception! Not an actual C++ exception, but something different
-					}
 				}else{
 					auto optionalWord = cpu.memoryMap.read<word>(address);
 					if (optionalWord)
 						*registers.main[data.baseRegister] = optionalWord.value();
-					else{
-						// Memory Exception! Not an actual C++ exception, but something different
-					}
 				}
 			}else{
 				if (data.transferSize == TransferSize::Byte){
 					byte value = (*registers.main[data.baseRegister]) & 0xFF;
 					if (!cpu.memoryMap.write<byte>(address, value)){
-						// Memory Exception! Not an actual C++ exception, but something different
+						// Memory Exception?
 					}
 				}else{
 					word value = *registers.main[data.baseRegister];
 					if (!cpu.memoryMap.write<word>(address, value)){
-						// Memory Exception! Not an actual C++ exception, but something different
+						// Memory Exception?
 					}
 				}
 			}
