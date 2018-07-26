@@ -2,6 +2,7 @@
 
 #include "turnipemu/emulator.h"
 #include "turnipemu/log.h"
+#include "turnipemu/utils.h"
 
 namespace TurnipEmu::Memory{
 	Map::Map(Emulator& emulator) : emulator(emulator){
@@ -16,7 +17,7 @@ namespace TurnipEmu::Memory{
 			if (controller->ownsAddress(address)) return controller;
 		}
 		if (accessByEmulator){
-			throw std::runtime_error("Invalid Memory Access");// at address 0x%08x, stopping", address);
+			throw std::runtime_error(Utils::streamFormat("Invalid Memory Access at 0x", Utils::hexAddressAlpha, address));
 		}
 		return nullptr;
 	}

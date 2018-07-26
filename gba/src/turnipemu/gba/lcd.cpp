@@ -27,7 +27,7 @@ namespace TurnipEmu::GBA{
 	}
 	void LCDEngine::write(uint32_t address, byte value) {
 		if (address == 0x0'0400'0004){
-			value = value & statusFirstByteWriteMask;
+			value = (value & statusFirstByteWriteMask) | (io.status.data[0] & ~statusFirstByteWriteMask);
 			assert(ownedAddressToByte(address) == &io.status.data[0]);
 		}
 		*ownedAddressToByte(address) = value;

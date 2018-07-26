@@ -1,6 +1,41 @@
 #pragma once
 
 #include <cstdint>
+#include <sstream>
+#include <iomanip>
+
+namespace TurnipEmu::Utils{
+	
+	template<typename Arg>
+	inline void streamFormat(std::stringstream& stream, Arg a);
+	
+	// This will call itself with one less argument each time
+	template<typename Arg, typename ...Args>
+	inline void streamFormat(std::stringstream& stream, Arg a, Args... args){
+		stream << a;
+		streamFormat(stream, args...);
+	}
+	
+	// This will be called once there's only one argument left
+	template<typename Arg>
+	inline void streamFormat(std::stringstream& stream, Arg a){
+		stream << a;
+	}
+
+	// This will start the chain
+	template<typename ...Args>
+	inline std::string streamFormat(Args... args){
+		std::stringstream stream;
+		streamFormat(stream, args...);
+		return stream.str();
+	}
+	// If it's called with nothing, this will be used instead
+	inline std::string streamFormat(){
+		return "";
+	}
+
+	std::ostream& hexAddressAlpha(std::ostream& os);
+}
 
 #define TURNIPEMU_UINT32_TO_SINT64(VALUE) (int64_t)(int32_t)(VALUE)
 

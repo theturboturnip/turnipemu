@@ -6,6 +6,8 @@ namespace TurnipEmu::ARM7TDMI {
 			constexpr static bool Byte = true;
 			constexpr static bool Word = false;
 		};
+		// The official ARM7TDMI manual says an immediate value is always used.
+		// However, the older data sheet says a shifted register can be used.
 		struct InstructionData : public DataTransferInfo{
 			uint8_t addressRegister : 4;
 			
@@ -19,7 +21,7 @@ namespace TurnipEmu::ARM7TDMI {
 
 			InstructionData(word instructionWord) : DataTransferInfo(instructionWord) {
 				addressRegister = (instructionWord >> 12) & 0xF;
-				useImmediateOffset = (instructionWord >> 25) & 1;
+				useImmediateOffset = ((instructionWord >> 25) & 1) == 0;
 				if (useImmediateOffset){
 					offset.immediateValue = (instructionWord & 0xFFF);
 				}else{
