@@ -10,6 +10,7 @@ namespace TurnipEmu::GBA{
 		memoryMap.registerMemoryController(&this->bios);
 		memoryMap.registerMemoryController(&this->gamePak);
 		memoryMap.registerMemoryController(&this->io.lcdEngine);
+		memoryMap.registerMemoryController(&this->systemControl);
 
 		reset();
 	}
@@ -29,6 +30,7 @@ namespace TurnipEmu::GBA{
 		Emulator::reset();
 		paused = true;
 		cpu.reset();
+		systemControl.reset();
 	}
 	void GBA::reset(GamePak newGamePak){
 		gamePak = newGamePak;

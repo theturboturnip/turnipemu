@@ -7,6 +7,7 @@
 #include "turnipemu/gba/dma.h"
 #include "turnipemu/gba/gamepak.h"
 #include "turnipemu/gba/lcd.h"
+#include "turnipemu/gba/sys_control.h"
 #include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
@@ -32,8 +33,8 @@ namespace TurnipEmu::GBA{
 			//Timer timer; // TODO: Define
 			//SerialEngine serialEngine; // TODO: Define. Can be a no-op, serial support isn't planned for now
 			//Keypad keypad; // TODO: Define
-			//MiscControls miscControls; // TODO: Define
 		} io;
+		SystemControl systemControl;
 
 		const char* const logTag = "GBA";
 	};
