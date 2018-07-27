@@ -98,6 +98,8 @@ namespace TurnipEmu::ARM7TDMI {
 		
 		void writeDescription(std::stringstream& stream){
 			stream << "Register " << (int)baseRegister;
+			if (!shiftedByRegister && shiftAmount == 0 && shiftType == RegisterShiftType::LogicalShiftLeft) return; // No shift => break out early
+			
 			switch(shiftType){
 			case RegisterShiftType::LogicalShiftLeft:
 				stream << " logical shift left";
@@ -109,7 +111,10 @@ namespace TurnipEmu::ARM7TDMI {
 				stream << " arithmetic shift right";
 				break;
 			case RegisterShiftType::RotateRight:
-				stream << " rotate right";
+				if (!shiftedByRegister && shiftAmount == 0)
+					stream << " rotate right with carry bit";
+				else
+					stream << " rotate right";
 				break;
 			}
 			stream << " by ";
@@ -120,7 +125,6 @@ namespace TurnipEmu::ARM7TDMI {
 			}
 		}
 	};
-	// TODO: No longer common
 	struct ALUOperand2 {
 		bool useImmediate;
 		union {
@@ -135,7 +139,7 @@ namespace TurnipEmu::ARM7TDMI {
 			useImmediate = (instructionWord >> 25) & 1;
 			if (useImmediate){
 				immediateValue.baseImmediateValue = instructionWord & 0xFF;
-				immediateValue.rotation = ((instructionWord >> 8) & 0xF) * 2;
+				immediateValue.rotation = ((instructionWord >> 8) & 0xF) * 2; // Guaranteed to fit in 5 bits
 			}else{
 				registerValue = ShiftedRegister(instructionWord);
 			}

@@ -63,7 +63,7 @@ namespace TurnipEmu::ARM7TDMI {
 		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
 			InstructionData data(instructionWord);
 			
-			int finalOffset = (data.useImmediateOffset ? data.offset.immediateValue : data.offset.registerValue.calculateValue(registers, instructionWord)) * data.offsetSign;
+			int finalOffset = (data.useImmediateOffset ? data.offset.immediateValue : data.offset.registerValue.calculateValue(registers, true)) * data.offsetSign;
 			word address = (*registers.main[data.addressRegister]) + finalOffset;
 			if (data.transferMode == DataTransferInfo::TransferMode::Load){
 				if (data.transferSize == TransferSize::Byte){

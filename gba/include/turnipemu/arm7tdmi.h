@@ -33,6 +33,7 @@ namespace TurnipEmu::ARM7TDMI {
 		case Mode::Undefined: return "Undefined";
 		case Mode::System: return "System";
 		}
+		return "Invalid";
 	}
 
 	// Integer value = priority, lower is better.

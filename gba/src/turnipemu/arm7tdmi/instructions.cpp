@@ -7,6 +7,7 @@
 #include "instructions_common.inl"
 #include "instructions_alu.inl"
 #include "instructions_data_transfer.inl"
+#include "instructions_msr_mrs.inl"
 
 namespace TurnipEmu::ARM7TDMI{
 #define CONDITION(NAME, CODE) Instruction::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
@@ -93,13 +94,13 @@ namespace TurnipEmu::ARM7TDMI{
 		instructions.push_back(std::make_unique<BranchInstruction>("Branch", InstructionMask{
 					{27, 25, 0b101}
 				}));
-		instructions.push_back(std::make_unique<Instruction>("MRS (Transfer PSR to Register)", InstructionMask{
+		instructions.push_back(std::make_unique<MRSInstruction>("MRS (Transfer PSR to Register)", InstructionMask{
 					{27, 26, 0b00},
 					{24, 23, 0b10},
 					{21, 16, 0b001111},
 					{11, 0, 0}
 				}));
-		instructions.push_back(std::make_unique<Instruction>("MSR (Transfer Register to PSR)", InstructionMask{
+		instructions.push_back(std::make_unique<MSRInstruction>("MSR (Transfer Register to PSR)", InstructionMask{
 					{27, 26, 0b00},
 					{24, 23, 0b10},
 					{21, 17, 0b10100},

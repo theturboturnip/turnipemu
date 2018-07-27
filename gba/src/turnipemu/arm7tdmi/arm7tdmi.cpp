@@ -5,6 +5,7 @@
 
 #include "turnipemu/log.h"
 #include "turnipemu/imgui.h"
+#include "turnipemu/utils.h"
 
 namespace TurnipEmu::ARM7TDMI{
 	CPU::CPU(const Memory::Map& memoryMap) : Display::CustomWindow("ARM7TDMI Instruction Inspector", 450, 0), memoryMap(memoryMap)
@@ -101,14 +102,23 @@ namespace TurnipEmu::ARM7TDMI{
 			
 		switch (registers.cpsr.mode){
 		case Mode::User:
-		case Mode::Supervisor:
+		case Mode::System:
 			for (int i = 0; i < 16; i++){
 				pointers.main[i] = &registers.main[i];
 			}
 			pointers.cpsr = &registers.cpsr;
 			break;
+		case Mode::Supervisor:
+			for (int i = 0; i < 16; i++){
+				pointers.main[i] = &registers.main[i];
+			}
+			pointers.cpsr = &registers.cpsr;
+			pointers.main[13] = &registers.svc.r13;
+			pointers.main[14] = &registers.svc.r14;
+			pointers.spsr = &registers.svc.spsr;
+			break;
 		default:
-			assert(false);
+			throw std::runtime_error(Utils::streamFormat("Illegal Mode for CPSR. Value = ", (int)registers.cpsr.mode, " which is '", ModeString(registers.cpsr.mode), "'"));
 		}
 		
 		return pointers;
@@ -213,7 +223,8 @@ namespace TurnipEmu::ARM7TDMI{
 			ImGui::Unindent();
 		}
 		auto showStatusRegister = [](ProgramStatusRegister value) {
-			ImGui::Text("Mode: %hhu", value.mode);
+			ImGui::Text("Actual Value: 0x%08x", value.value);
+			ImGui::Text("Mode: %hhu (%s)", value.mode, ModeString(value.mode).c_str());
 			ImGui::Text("Exec State: %s", (value.state == CPUExecState::ARM) ? "ARM" : "Thumb");
 			ImGui::Text("FIQ: %d", !value.fiqDisable); ImGui::SameLine();
 			ImGui::Text("IRQ: %d", !value.irqDisable);
