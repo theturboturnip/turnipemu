@@ -8,6 +8,7 @@
 #include "turnipemu/gba/gamepak.h"
 #include "turnipemu/gba/lcd.h"
 #include "turnipemu/gba/sys_control.h"
+#include "turnipemu/gba/interrupt_control.h"
 #include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
@@ -35,6 +36,7 @@ namespace TurnipEmu::GBA{
 			//Keypad keypad; // TODO: Define
 		} io;
 		SystemControl systemControl;
+		InterruptControl interruptControl;
 
 		const char* const logTag = "GBA";
 	};

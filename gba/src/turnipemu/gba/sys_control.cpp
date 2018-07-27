@@ -1,4 +1,5 @@
 #include "turnipemu/gba/sys_control.h"
+#include "turnipemu/utils.h"
 
 #include <cstring>
 
@@ -41,12 +42,14 @@ namespace TurnipEmu::GBA{
 			postBootFlag.data = value;
 		}else if (ioDelta == 0x0301){
 			haltControl.data = value;
+			throw std::runtime_error(Utils::streamFormat("Halt register was written to, should be implemented!"));
 		}else if (ioDelta == 0x0410){
 			return;
 		}else if (ioDelta % 0x0800 < 4){
 			internalMemControl.data[ioDelta % 0x0800] = value;
+		}else{
+			assert(false);
 		}
-		assert(false);
 	}
 
 	void SystemControl::reset(){

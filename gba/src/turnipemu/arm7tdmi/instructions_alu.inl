@@ -208,9 +208,9 @@ namespace TurnipEmu::ARM7TDMI {
 			uint8_t pcOffset = 0;
 			if (data.operand1Register == 15 || (!data.operand2.useImmediate && data.operand2.registerValue.baseRegister == 15)){
 				if (!data.operand2.useImmediate && data.operand2.registerValue.shiftedByRegister) 
-					pcOffset = 12;
+					pcOffset = 4;
 				else
-					pcOffset = 8;
+					pcOffset = 0;
 				*currentRegisters.main[data.destinationRegister] += pcOffset;
 			}
 			

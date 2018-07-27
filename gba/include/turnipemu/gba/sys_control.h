@@ -5,7 +5,7 @@
 
 namespace TurnipEmu::GBA{
 	class SystemControl : public Memory::Controller {
-	public:		
+	public:
 		bool ownsAddress(uint32_t address) const override;
 		bool allowRead(uint32_t address) const override;
 		byte read(uint32_t address) const override;
@@ -14,7 +14,7 @@ namespace TurnipEmu::GBA{
 		
 		void reset();
 	protected:
-#pragma pack(0)
+#pragma pack(1)
 		// Access cycle data through public functions, not 
 		union WaitstateControl {
 			byte data[4];

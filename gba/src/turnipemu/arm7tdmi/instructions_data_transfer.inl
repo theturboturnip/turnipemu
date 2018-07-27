@@ -9,7 +9,7 @@ namespace TurnipEmu::ARM7TDMI {
 		// The official ARM7TDMI manual says an immediate value is always used.
 		// However, the older data sheet says a shifted register can be used.
 		struct InstructionData : public DataTransferInfo{
-			uint8_t addressRegister : 4;
+			uint8_t dataRegister : 4;
 			
 			bool useImmediateOffset;
 			union {
@@ -20,7 +20,7 @@ namespace TurnipEmu::ARM7TDMI {
 			bool transferSize;
 
 			InstructionData(word instructionWord) : DataTransferInfo(instructionWord) {
-				addressRegister = (instructionWord >> 12) & 0xF;
+				dataRegister = (instructionWord >> 12) & 0xF;
 				useImmediateOffset = ((instructionWord >> 25) & 1) == 0;
 				if (useImmediateOffset){
 					offset.immediateValue = (instructionWord & 0xFFF);
@@ -48,7 +48,7 @@ namespace TurnipEmu::ARM7TDMI {
 				stream << "Store\n";
 			}
 			stream << "Address Register: " << (int)data.addressRegister << "\n";
-			stream << "Data Register: " << (int)data.baseRegister << "\n";
+			stream << "Data Register: " << (int)data.dataRegister << "\n";
 			stream << "Offset: ";
 			if (data.useImmediateOffset){
 				stream << "Immediate Value " << (int)data.offset.immediateValue;
@@ -69,20 +69,20 @@ namespace TurnipEmu::ARM7TDMI {
 				if (data.transferSize == TransferSize::Byte){
 					auto optionalByte = cpu.memoryMap.read<byte>(address);
 					if (optionalByte)
-						*registers.main[data.baseRegister] = optionalByte.value();
+						*registers.main[data.dataRegister] = optionalByte.value();
 				}else{
 					auto optionalWord = cpu.memoryMap.read<word>(address);
 					if (optionalWord)
-						*registers.main[data.baseRegister] = optionalWord.value();
+						*registers.main[data.dataRegister] = optionalWord.value();
 				}
 			}else{
 				if (data.transferSize == TransferSize::Byte){
-					byte value = (*registers.main[data.baseRegister]) & 0xFF;
+					byte value = (*registers.main[data.dataRegister]) & 0xFF;
 					if (!cpu.memoryMap.write<byte>(address, value)){
 						// Memory Exception?
 					}
 				}else{
-					word value = *registers.main[data.baseRegister];
+					word value = *registers.main[data.dataRegister];
 					if (!cpu.memoryMap.write<word>(address, value)){
 						// Memory Exception?
 					}

@@ -12,14 +12,14 @@ namespace TurnipEmu::ARM7TDMI {
 		int offsetSign; // +1/-1
 		bool writeback;
 		bool transferMode;
-		uint8_t baseRegister : 4;
+		uint8_t addressRegister : 4;
 
 		DataTransferInfo(word instructionWord){
 			indexMode = ((instructionWord >> 24) & 1);
 			offsetSign = ((instructionWord >> 23) & 1) ? +1 : -1;
 			writeback = ((instructionWord >> 21) & 1);
 			transferMode = ((instructionWord >> 20) & 1);
-			baseRegister = (instructionWord >> 16);
+			addressRegister = (instructionWord >> 16) & 0xF;
 		}
 	};
 	struct ShiftedRegister {
