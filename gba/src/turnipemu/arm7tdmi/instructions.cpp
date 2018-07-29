@@ -10,8 +10,8 @@
 #include "instructions_msr_mrs.inl"
 
 namespace TurnipEmu::ARM7TDMI{
-#define CONDITION(NAME, CODE) InstructionCategory::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
-	const std::array<const InstructionCategory::Condition, 15> InstructionCategory::conditions = {
+#define CONDITION(NAME, CODE) ARMInstructionCategory::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
+	const std::array<const ARMInstructionCategory::Condition, 15> ARMInstructionCategory::conditions = {
 		CONDITION("EQ", status.zero),
 		CONDITION("NE", !status.zero),
 		CONDITION("CS", status.carry),
@@ -29,27 +29,18 @@ namespace TurnipEmu::ARM7TDMI{
 		CONDITION("AL", true),
 	};
 #undef CONDITION
-	
-	InstructionCategory::Mask::Mask(std::initializer_list<Range> list){
-		mask = 0;
-		expectedValue = 0;
-		for (const auto& range : list){
-			range.updateMask(mask);
-			range.updateExpectedValue(expectedValue);
-		}
-	}
-	
-	InstructionCategory::InstructionCategory(std::string name, Mask mask)
+
+	ARMInstructionCategory::ARMInstructionCategory(std::string name, Mask<word> mask)
 		: name(name), mask(mask)  {
-		LogLine("INST", "Created InstructionCategory with name %s, mask 0x%08x, value 0x%08x", name.c_str(), mask.mask, mask.expectedValue);
+		LogLine("INST", "Created ARMInstructionCategory with name %s, mask 0x%08x, value 0x%08x", name.c_str(), mask.mask, mask.expectedValue);
 	}
 
-	const InstructionCategory::Condition& InstructionCategory::getCondition(word instructionWord) {
+	const ARMInstructionCategory::Condition& ARMInstructionCategory::getCondition(word instructionWord) {
 		return conditions[(instructionWord >> 28) & 0xF];
 	}
 
-	class BranchInstruction : public InstructionCategory {
-		using InstructionCategory::InstructionCategory;
+	class BranchInstruction : public ARMInstructionCategory {
+		using ARMInstructionCategory::ARMInstructionCategory;
 		
 		struct InstructionData {
 			int64_t offset;
@@ -79,88 +70,88 @@ namespace TurnipEmu::ARM7TDMI{
 	};
 
 	void CPU::setupInstructions(){
-		instructions = std::vector<std::unique_ptr<InstructionCategory>>();
+		armInstructions = std::vector<std::unique_ptr<ARMInstructionCategory>>();
 		
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Software Interrupt",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 24, 0b1111}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Undefined",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 25, 0b011},
 									   {4, 1}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Branch and Exchange",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 4, 0b0'0001'0010'1111'1111'1111'0001}
 								   }));
-		instructions.push_back(std::make_unique<BranchInstruction>(
+		armInstructions.push_back(std::make_unique<BranchInstruction>(
 								   "Branch",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 25, 0b101}
 								   }));
-		instructions.push_back(std::make_unique<MRSInstruction>(
+		armInstructions.push_back(std::make_unique<MRSInstruction>(
 								   "MRS (Transfer PSR to Register)",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 26, 0b00},
 									   {24, 23, 0b10},
 									   {21, 16, 0b001111},
 									   {11, 0, 0}
 								   }));
-		instructions.push_back(std::make_unique<MSRInstruction>(
+		armInstructions.push_back(std::make_unique<MSRInstruction>(
 								   "MSR (Transfer Register to PSR)",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 26, 0b00},
 									   {24, 23, 0b10},
 									   {21, 17, 0b10100},
 									   {15, 12, 0b1111}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Multiply",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 23, 0b00000},
 									   {7, 4, 0b1001}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Single Data Swap",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 23, 0b00010},
 									   {21, 20, 0b00},
 									   {11, 4, 0b0'0000'1001}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Halfword Data Transfer",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 25, 0b000},
 									   {7, 1},
 									   {4, 1}
 								   }));
-		instructions.push_back(std::make_unique<DataProcessingInstruction>(
+		armInstructions.push_back(std::make_unique<DataProcessingInstruction>(
 								   "Data Processing",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 26, 0b00}
 								   }));
-		instructions.push_back(std::make_unique<SingleDataTransferInstruction>(
+		armInstructions.push_back(std::make_unique<SingleDataTransferInstruction>(
 								   "Single Data Transfer",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 26, 0b01}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Block Data Transfer",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 26, 0b10}
 								   }));
-		instructions.push_back(std::make_unique<InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Coprocessor Ops",
-								   InstructionCategory::Mask{
+								   Mask<word>{
 									   {27, 26, 0b11}
 								   }));
 	}
-	InstructionCategory* CPU::matchInstruction(word instructionWord){
-		for (auto& instructionUniquePtr : instructions){
+	ARMInstructionCategory* CPU::matchInstruction(word instructionWord){
+		for (auto& instructionUniquePtr : armInstructions){
 			if (instructionUniquePtr->mask.matches(instructionWord))
 				return instructionUniquePtr.get();
 		}

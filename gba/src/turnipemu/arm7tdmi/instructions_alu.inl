@@ -1,6 +1,6 @@
 namespace TurnipEmu::ARM7TDMI {
-	class DataProcessingInstruction : public InstructionCategory{
-		using InstructionCategory::InstructionCategory;
+	class DataProcessingInstruction : public ARMInstructionCategory{
+		using ARMInstructionCategory::ARMInstructionCategory;
 
 		struct OperationOutput {
 			word result;

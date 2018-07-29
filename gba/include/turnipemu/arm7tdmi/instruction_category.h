@@ -7,43 +7,56 @@
 namespace TurnipEmu::ARM7TDMI {
 	class CPU;
 
-	class InstructionCategory {
-	public:
-		struct Mask {
-			struct Range {
-				const uint8_t end;
-				const uint8_t start;
-				const word mask;
-				const word value;
+	template<typename InstructionType>
+	struct Mask {
+		static_assert(std::is_same<InstructionType, halfword>::value || std::is_same<InstructionType, word>::value);
+		
+		struct Range {
+			const uint8_t end;
+			const uint8_t start;
+			const InstructionType mask;
+			const InstructionType value;
 
-				Range(uint8_t end, uint8_t start, uint32_t value) : end(end), start(start), mask((word(~0) << start) & (word(~0) >> (32 - end - 1))), value((value << start) & mask)  {
-					assert(start <= end);
-				}
-				Range(uint8_t bit, bool set) : Range(bit, bit, set){}
+			Range(uint8_t end, uint8_t start, uint32_t value)
+				: end(end), start(start), mask((InstructionType(~0) << start) & (InstructionType(~0) >> (32 - end - 1))), value((value << start) & mask)  {
+				assert(start <= end);
+			}
+			Range(uint8_t bit, bool set) : Range(bit, bit, set){}
 				
-				inline void updateMask(word& theirMask) const {
-					theirMask |= mask; 
-				}
-				inline void updateExpectedValue(word& expectedValue) const {
-					expectedValue |= value;
-				}
-			};
-			word mask;
-			word expectedValue;
-			Mask(std::initializer_list<Range>);
-			inline bool matches(word input) const {
-				return (input & mask) == expectedValue;
+			inline void updateMask(InstructionType& theirMask) const {
+				theirMask |= mask; 
+			}
+			inline void updateExpectedValue(InstructionType& expectedValue) const {
+				expectedValue |= value;
 			}
 		};
+		InstructionType mask;
+		InstructionType expectedValue;
+
+		Mask(std::initializer_list<Range> list){
+			mask = 0;
+			expectedValue = 0;
+			for (const auto& range : list){
+				range.updateMask(mask);
+				range.updateExpectedValue(expectedValue);
+			}
+		}
 		
+		inline bool matches(InstructionType input) const {
+			return (input & mask) == expectedValue;
+		}
+	};
+	
+	class ARMInstructionCategory {
+	public:
 		struct Condition {
 			char name[2];
 			std::string debugString;
 			std::function<bool(ProgramStatusRegister)> fulfilsCondition;
 		};
 			
-		InstructionCategory(std::string name, Mask mask);
-		virtual ~InstructionCategory(){}
+		ARMInstructionCategory(std::string name, Mask<word> mask);
+		virtual ~ARMInstructionCategory(){}
 			
 		const Condition& getCondition(word instructionWord);
 			
@@ -55,7 +68,7 @@ namespace TurnipEmu::ARM7TDMI {
 		}
 
 		const std::string name;
-		const Mask mask;
+		const Mask<word> mask;
 	protected:
 		const static std::array<const Condition, 15> conditions;
 	};
