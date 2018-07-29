@@ -41,7 +41,7 @@ namespace TurnipEmu::ARM7TDMI{
 		pipeline.fetchedInstructionAddress = registers.main[15];
 		
 		pipeline.hasDecodedInstruction = false;
-		pipeline.decodedInstruction = nullptr;
+		pipeline.decodedArmInstruction = nullptr;
 		pipeline.decodedInstructionWord = 0x0;
 		pipeline.decodedInstructionAddress = 0x0;
 
@@ -57,49 +57,49 @@ namespace TurnipEmu::ARM7TDMI{
 		const auto currentRegisters = registersForCurrentState();
 		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
 			throw std::runtime_error("Thumb mode is not supported yet!");
-		}
-		
-		if (pipeline.hasFetchedInstruction){
-			if (pipeline.hasDecodedInstruction){
-				// Execute previously decoded instruction
-				if (pipeline.decodedInstruction->getCondition(pipeline.decodedInstructionWord).fulfilsCondition(*currentRegisters.cpsr)){
-					// This can flush the pipeline.
-					word oldPC = registers.main[15];
-					pipeline.decodedInstruction->execute(*this, currentRegisters, pipeline.decodedInstructionWord);
-					if (oldPC != registers.main[15] && !pipeline.queuedFlush){
-						LogLine(logTag, "PC was changed, but a flush was not setup! Instruction Word: 0x%08x", pipeline.decodedInstructionWord);
-						LogLine(logTag, "Pipeline will be automatically flushed");
-						queuePipelineFlush();
+		}else{
+			if (pipeline.hasFetchedInstruction){
+				if (pipeline.hasDecodedInstruction){
+					// Execute previously decoded instruction
+					if (pipeline.decodedArmInstruction->getCondition(pipeline.decodedInstructionWord).fulfilsCondition(*currentRegisters.cpsr)){
+						// This can flush the pipeline.
+						word oldPC = registers.pc();
+						pipeline.decodedArmInstruction->execute(*this, currentRegisters, pipeline.decodedInstructionWord);
+						if (oldPC != registers.pc() && !pipeline.queuedFlush){
+							LogLine(logTag, "PC was changed, but a flush was not setup! Instruction Word: 0x%08x", pipeline.decodedInstructionWord);
+							LogLine(logTag, "Pipeline will be automatically flushed");
+							queuePipelineFlush();
+						}
 					}
+
+					pipeline.hasExecutedInstruction = true;
+					pipeline.executedInstructionAddress = pipeline.decodedInstructionAddress;
 				}
 
-				pipeline.hasExecutedInstruction = true;
-				pipeline.executedInstructionAddress = pipeline.decodedInstructionAddress;
-			}
-
-			// Decode fetched instruction
-			pipeline.decodedInstructionAddress = pipeline.fetchedInstructionAddress;
-			pipeline.decodedInstructionWord = pipeline.fetchedInstructionWord;
-			pipeline.decodedInstruction = matchInstruction(pipeline.decodedInstructionWord);
-			if (!pipeline.decodedInstruction) throw std::runtime_error("Couldn't decode instruction!");
-			pipeline.hasDecodedInstruction = true;
-		}else{
-			assert(!pipeline.hasDecodedInstruction);
-		}
-
-		if (pipeline.queuedFlush){
-			flushPipeline();
-		}else{
-            // Fetch the instruction
-			if (auto instructionWordOptional = memoryMap.read<word>(registers.main[15])){
-				pipeline.fetchedInstructionAddress = registers.main[15];
-				pipeline.fetchedInstructionWord = instructionWordOptional.value();
-				pipeline.hasFetchedInstruction = true;
+				// Decode fetched instruction
+				pipeline.decodedInstructionAddress = pipeline.fetchedInstructionAddress;
+				pipeline.decodedInstructionWord = pipeline.fetchedInstructionWord;
+				pipeline.decodedArmInstruction = matchArmInstruction(pipeline.decodedInstructionWord);
+				if (!pipeline.decodedArmInstruction) throw std::runtime_error("Couldn't decode instruction!");
+				pipeline.hasDecodedInstruction = true;
 			}else{
-				throw std::runtime_error("PC is in invalid memory!");
+				assert(!pipeline.hasDecodedInstruction);
 			}
+
+			if (pipeline.queuedFlush){
+				flushPipeline();
+			}else{
+				// Fetch the instruction
+				if (auto instructionWordOptional = memoryMap.read<word>(registers.pc())){
+					pipeline.fetchedInstructionAddress = registers.pc();
+					pipeline.fetchedInstructionWord = instructionWordOptional.value();
+					pipeline.hasFetchedInstruction = true;
+				}else{
+					throw std::runtime_error("PC is in invalid memory!");
+				}
 			
-			registers.main[15] += 4; // TODO: Specialize for Thumb
+				registers.pc() += 4; // TODO: Specialize for Thumb
+			}
 		}
 	}
 	

@@ -61,28 +61,23 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		if (cpu.pipeline.hasDecodedInstruction){
 			ImGui::Text("Just Decoded Instruction");
 			ImGui::Indent();
-			
-			if (auto instructionWordOptional = cpu.memoryMap.read<word>(interpreting, false)){
-				word instructionWord = instructionWordOptional.value();
-				ARMInstructionCategory* instructionCategory = cpu.matchInstruction(instructionWord);
-			
+
+			if (currentRegisters.cpsr->state == CPUExecState::Thumb){
+			}else{
+				ARMInstructionCategory* instructionCategory = cpu.pipeline.decodedArmInstruction;
 				if (instructionCategory){
-					const ARMInstructionCategory::Condition& condition = instructionCategory->getCondition(instructionWord);
-					ImGui::Text("0x%08x: 0x%08x %c%c", interpreting, instructionWord, condition.name[0], condition.name[1]);
+					const auto& condition = instructionCategory->getCondition(cpu.pipeline.decodedInstructionWord);
+					ImGui::Text("0x%08x: 0x%08x %c%c", cpu.pipeline.decodedInstructionAddress, cpu.pipeline.decodedInstructionWord, condition.name[0], condition.name[1]);
 					{
 						ImGui::Indent();
 						ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
 						ImGui::Text("Instruction Category: %s", instructionCategory->name.c_str());
-						ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(instructionWord).c_str());
+						ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(cpu.pipeline.decodedInstructionWord).c_str());
 						ImGui::Unindent();
 					}
 				}else{
-					ImGui::Text("0x%08x: 0x%08x (Not an instruction)", interpreting, instructionWord);
+					ImGui::Text("0x%08x: 0x%08x (Not an instruction)", cpu.pipeline.decodedInstructionAddress, cpu.pipeline.decodedInstructionWord);
 				}
-			}else{
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
-				ImGui::Text("Not in a valid memory location!");
-				ImGui::PopStyleColor();
 			}
 
 			ImGui::Unindent();

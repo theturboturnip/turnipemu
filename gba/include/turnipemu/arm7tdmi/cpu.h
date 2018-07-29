@@ -45,12 +45,21 @@ namespace TurnipEmu::ARM7TDMI {
 
 		struct {
 			bool hasFetchedInstruction;
-			word fetchedInstructionWord;
+			union {
+				word fetchedInstructionWord;
+				halfword fetchedInstructionHalfword;
+			};
 			word fetchedInstructionAddress;
 			
 			bool hasDecodedInstruction;
-			ARMInstructionCategory* decodedInstruction;
-			word decodedInstructionWord;
+			union {
+				ARMInstructionCategory* decodedArmInstruction;
+				ThumbInstructionCategory* decodedThumbInstruction;
+			};
+			union {
+				word decodedInstructionWord;
+				halfword decodedInstructionHalfword;
+			};
 			word decodedInstructionAddress;
 
 			bool hasExecutedInstruction;
@@ -61,10 +70,12 @@ namespace TurnipEmu::ARM7TDMI {
 		void flushPipeline();
 		void tickPipeline();
 		
-		// This has to be vector of unique_ptr because Instruction is virtual
-		std::vector<std::unique_ptr<ARMInstructionCategory>> armInstructions;
 		void setupInstructions();
-		ARMInstructionCategory* matchInstruction(word instructionWord);
+		// These have to be vectors of unique_ptr because InstructionCategory is virtual
+		std::vector<std::unique_ptr<ARMInstructionCategory>> armInstructions;
+		std::vector<std::unique_ptr<ThumbInstructionCategory>> thumbInstructions;
+		ARMInstructionCategory* matchArmInstruction(word instruction);
+		ThumbInstructionCategory* matchThumbInstruction(halfword instruction);
 
 		const char* const logTag = "ARM7";
 	};

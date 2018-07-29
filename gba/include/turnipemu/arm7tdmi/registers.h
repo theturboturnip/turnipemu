@@ -32,13 +32,12 @@ namespace TurnipEmu::ARM7TDMI {
 		ProgramStatusRegister* spsr = nullptr; // Not enabled in System/User mode
 	};
 
-	struct AllRegisters{
-
-		AllRegisters() : pc(main[15]) {}
-		
+	struct AllRegisters{	
 		word main[16];
 
-		word& pc;
+		inline word& pc(){
+			return main[15];
+		}
 		
 		ProgramStatusRegister cpsr;
 			

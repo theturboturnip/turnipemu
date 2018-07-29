@@ -46,8 +46,16 @@ namespace TurnipEmu::ARM7TDMI {
 			return (input & mask) == expectedValue;
 		}
 	};
+
+	class InstructionCategory {
+	public:
+		InstructionCategory(std::string name) : name(name){}
+		virtual ~InstructionCategory() = default;
+		
+		const std::string name;
+	};
 	
-	class ARMInstructionCategory {
+	class ARMInstructionCategory : public InstructionCategory {
 	public:
 		struct Condition {
 			char name[2];
@@ -56,20 +64,34 @@ namespace TurnipEmu::ARM7TDMI {
 		};
 			
 		ARMInstructionCategory(std::string name, Mask<word> mask);
-		virtual ~ARMInstructionCategory(){}
+		~ARMInstructionCategory() override = default;
 			
-		const Condition& getCondition(word instructionWord);
-			
-		virtual std::string disassembly(word instructionWord){
+		const Condition& getCondition(word instruction);
+
+		virtual std::string disassembly(word instruction){
 			return "NO DISASSEMBLY PRESENT";
 		}
-		virtual void execute(CPU& cpu, const RegisterPointers, word instructionWord){
+		virtual void execute(CPU& cpu, const RegisterPointers, word instruction){
 			throw std::runtime_error("Instruction is not implemented!");
 		}
-
-		const std::string name;
+		
 		const Mask<word> mask;
 	protected:
 		const static std::array<const Condition, 15> conditions;
+	};
+
+	class ThumbInstructionCategory : public InstructionCategory {
+	public:
+		ThumbInstructionCategory(std::string name, Mask<halfword> mask);
+		~ThumbInstructionCategory() override = default;
+
+		virtual std::string disassembly(halfword instruction){
+			return "NO DISASSEMBLY PRESENT";
+		}
+		virtual void execute(CPU& cpu, const RegisterPointers, halfword instruction){
+			throw std::runtime_error("Instruction is not implemented!");
+		}
+		
+		const Mask<halfword> mask;
 	};
 }
