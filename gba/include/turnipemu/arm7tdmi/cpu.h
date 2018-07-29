@@ -6,7 +6,7 @@
 
 #include "turnipemu/arm7tdmi/debug_windows.h"
 #include "turnipemu/arm7tdmi/exceptions.h"
-#include "turnipemu/arm7tdmi/instruction.h"
+#include "turnipemu/arm7tdmi/instruction_category.h"
 #include "turnipemu/arm7tdmi/modes.h"
 #include "turnipemu/arm7tdmi/registers.h"
 
@@ -49,7 +49,7 @@ namespace TurnipEmu::ARM7TDMI {
 			word fetchedInstructionAddress;
 			
 			bool hasDecodedInstruction;
-			Instruction* decodedInstruction;
+			InstructionCategory* decodedInstruction;
 			word decodedInstructionWord;
 			word decodedInstructionAddress;
 
@@ -62,9 +62,9 @@ namespace TurnipEmu::ARM7TDMI {
 		void tickPipeline();
 		
 		// This has to be vector of unique_ptr because Instruction is virtual
-		std::vector<std::unique_ptr<Instruction>> instructions;
+		std::vector<std::unique_ptr<InstructionCategory>> instructions;
 		void setupInstructions();
-		Instruction* matchInstruction(word instructionWord);
+		InstructionCategory* matchInstruction(word instructionWord);
 
 		const char* const logTag = "ARM7";
 	};

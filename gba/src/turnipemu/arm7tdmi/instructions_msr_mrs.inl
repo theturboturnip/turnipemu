@@ -1,7 +1,7 @@
 namespace TurnipEmu::ARM7TDMI {
 	// Good Test Instruction: 0x0328f301 (MSR if EQ, from SPSR, flags only, immediate 1 rotated by 6
-	class MSRInstruction : public Instruction {
-		using Instruction::Instruction;
+	class MSRInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 		
 		struct InstructionData {
 			bool writeToSpecialPSR;
@@ -50,8 +50,8 @@ namespace TurnipEmu::ARM7TDMI {
 			*targetRegister = writeValue;
 		}
 	};
-	class MRSInstruction : public Instruction {
-		using Instruction::Instruction;
+	class MRSInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 		
 		struct InstructionData {
 			bool loadFromSpecialPSR;

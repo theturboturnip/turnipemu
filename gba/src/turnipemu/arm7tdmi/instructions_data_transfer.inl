@@ -1,6 +1,6 @@
 namespace TurnipEmu::ARM7TDMI {
-	class SingleDataTransferInstruction : public Instruction {
-		using Instruction::Instruction;
+	class SingleDataTransferInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		struct TransferSize {
 			constexpr static bool Byte = true;

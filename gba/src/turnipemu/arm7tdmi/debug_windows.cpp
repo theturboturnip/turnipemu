@@ -64,16 +64,16 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			
 			if (auto instructionWordOptional = cpu.memoryMap.read<word>(interpreting, false)){
 				word instructionWord = instructionWordOptional.value();
-				Instruction* instruction = cpu.matchInstruction(instructionWord);
+				InstructionCategory* instructionCategory = cpu.matchInstruction(instructionWord);
 			
-				if (instruction){
-					const Instruction::Condition& condition = instruction->getCondition(instructionWord);
+				if (instructionCategory){
+					const InstructionCategory::Condition& condition = instructionCategory->getCondition(instructionWord);
 					ImGui::Text("0x%08x: 0x%08x %c%c", interpreting, instructionWord, condition.name[0], condition.name[1]);
 					{
 						ImGui::Indent();
 						ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
-						ImGui::Text("Instruction Category: %s", instruction->category.c_str());
-						ImGui::TextWrapped("Instruction Disassembly: %s", instruction->disassembly(instructionWord).c_str());
+						ImGui::Text("Instruction Category: %s", instructionCategory->name.c_str());
+						ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(instructionWord).c_str());
 						ImGui::Unindent();
 					}
 				}else{

@@ -10,8 +10,8 @@
 #include "instructions_msr_mrs.inl"
 
 namespace TurnipEmu::ARM7TDMI{
-#define CONDITION(NAME, CODE) Instruction::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
-	const std::array<const Instruction::Condition, 15> Instruction::conditions = {
+#define CONDITION(NAME, CODE) InstructionCategory::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
+	const std::array<const InstructionCategory::Condition, 15> InstructionCategory::conditions = {
 		CONDITION("EQ", status.zero),
 		CONDITION("NE", !status.zero),
 		CONDITION("CS", status.carry),
@@ -30,7 +30,7 @@ namespace TurnipEmu::ARM7TDMI{
 	};
 #undef CONDITION
 	
-	InstructionMask::InstructionMask(std::initializer_list<MaskRange> list){
+	InstructionCategory::Mask::Mask(std::initializer_list<Range> list){
 		mask = 0;
 		expectedValue = 0;
 		for (const auto& range : list){
@@ -39,17 +39,17 @@ namespace TurnipEmu::ARM7TDMI{
 		}
 	}
 	
-	Instruction::Instruction(std::string category, InstructionMask mask)
-		: category(category), mask(mask)  {
-		LogLine("INST", "Created Instruction with category %s, mask 0x%08x, value 0x%08x", category.c_str(), mask.mask, mask.expectedValue);
+	InstructionCategory::InstructionCategory(std::string name, Mask mask)
+		: name(name), mask(mask)  {
+		LogLine("INST", "Created InstructionCategory with name %s, mask 0x%08x, value 0x%08x", name.c_str(), mask.mask, mask.expectedValue);
 	}
 
-	const Instruction::Condition& ARM7TDMI::Instruction::getCondition(word instructionWord) {
+	const InstructionCategory::Condition& InstructionCategory::getCondition(word instructionWord) {
 		return conditions[(instructionWord >> 28) & 0xF];
 	}
 
-	class BranchInstruction : public Instruction {
-		using Instruction::Instruction;
+	class BranchInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 		
 		struct InstructionData {
 			int64_t offset;
@@ -79,61 +79,87 @@ namespace TurnipEmu::ARM7TDMI{
 	};
 
 	void CPU::setupInstructions(){
-		instructions = std::vector<std::unique_ptr<Instruction>>();
+		instructions = std::vector<std::unique_ptr<InstructionCategory>>();
 		
-		instructions.push_back(std::make_unique<Instruction>("Software Interrupt", InstructionMask{
-					{27, 24, 0b1111}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Undefined", InstructionMask{
-					{27, 25, 0b011},
-					{4, 1}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Branch and Exchange", InstructionMask{
-					{27, 4, 0b0'0001'0010'1111'1111'1111'0001}
-				}));
-		instructions.push_back(std::make_unique<BranchInstruction>("Branch", InstructionMask{
-					{27, 25, 0b101}
-				}));
-		instructions.push_back(std::make_unique<MRSInstruction>("MRS (Transfer PSR to Register)", InstructionMask{
-					{27, 26, 0b00},
-					{24, 23, 0b10},
-					{21, 16, 0b001111},
-					{11, 0, 0}
-				}));
-		instructions.push_back(std::make_unique<MSRInstruction>("MSR (Transfer Register to PSR)", InstructionMask{
-					{27, 26, 0b00},
-					{24, 23, 0b10},
-					{21, 17, 0b10100},
-					{15, 12, 0b1111}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Multiply", InstructionMask{
-					{27, 23, 0b00000},
-					{7, 4, 0b1001}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Single Data Swap", InstructionMask{
-					{27, 23, 0b00010},
-					{21, 20, 0b00},
-					{11, 4, 0b0'0000'1001}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Halfword Data Transfer", InstructionMask{
-					{27, 25, 0b000},
-					{7, 1},
-					{4, 1}
-				}));
-		instructions.push_back(std::make_unique<DataProcessingInstruction>("Data Processing", InstructionMask{
-					{27, 26, 0b00}
-				}));
-		instructions.push_back(std::make_unique<SingleDataTransferInstruction>("Single Data Transfer", InstructionMask{
-					{27, 26, 0b01}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Block Data Transfer", InstructionMask{
-					{27, 26, 0b10}
-				}));
-		instructions.push_back(std::make_unique<Instruction>("Coprocessor Ops", InstructionMask{
-					{27, 26, 0b11}
-				}));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Software Interrupt",
+								   InstructionCategory::Mask{
+									   {27, 24, 0b1111}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Undefined",
+								   InstructionCategory::Mask{
+									   {27, 25, 0b011},
+									   {4, 1}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Branch and Exchange",
+								   InstructionCategory::Mask{
+									   {27, 4, 0b0'0001'0010'1111'1111'1111'0001}
+								   }));
+		instructions.push_back(std::make_unique<BranchInstruction>(
+								   "Branch",
+								   InstructionCategory::Mask{
+									   {27, 25, 0b101}
+								   }));
+		instructions.push_back(std::make_unique<MRSInstruction>(
+								   "MRS (Transfer PSR to Register)",
+								   InstructionCategory::Mask{
+									   {27, 26, 0b00},
+									   {24, 23, 0b10},
+									   {21, 16, 0b001111},
+									   {11, 0, 0}
+								   }));
+		instructions.push_back(std::make_unique<MSRInstruction>(
+								   "MSR (Transfer Register to PSR)",
+								   InstructionCategory::Mask{
+									   {27, 26, 0b00},
+									   {24, 23, 0b10},
+									   {21, 17, 0b10100},
+									   {15, 12, 0b1111}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Multiply",
+								   InstructionCategory::Mask{
+									   {27, 23, 0b00000},
+									   {7, 4, 0b1001}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Single Data Swap",
+								   InstructionCategory::Mask{
+									   {27, 23, 0b00010},
+									   {21, 20, 0b00},
+									   {11, 4, 0b0'0000'1001}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Halfword Data Transfer",
+								   InstructionCategory::Mask{
+									   {27, 25, 0b000},
+									   {7, 1},
+									   {4, 1}
+								   }));
+		instructions.push_back(std::make_unique<DataProcessingInstruction>(
+								   "Data Processing",
+								   InstructionCategory::Mask{
+									   {27, 26, 0b00}
+								   }));
+		instructions.push_back(std::make_unique<SingleDataTransferInstruction>(
+								   "Single Data Transfer",
+								   InstructionCategory::Mask{
+									   {27, 26, 0b01}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Block Data Transfer",
+								   InstructionCategory::Mask{
+									   {27, 26, 0b10}
+								   }));
+		instructions.push_back(std::make_unique<InstructionCategory>(
+								   "Coprocessor Ops",
+								   InstructionCategory::Mask{
+									   {27, 26, 0b11}
+								   }));
 	}
-	Instruction* CPU::matchInstruction(word instructionWord){
+	InstructionCategory* CPU::matchInstruction(word instructionWord){
 		for (auto& instructionUniquePtr : instructions){
 			if (instructionUniquePtr->mask.matches(instructionWord))
 				return instructionUniquePtr.get();
