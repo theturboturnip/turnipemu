@@ -1,6 +1,5 @@
 #pragma once
 
-#include "turnipemu/display.h"
 #include "turnipemu/log.h"
 #include "turnipemu/types.h"
 #include "turnipemu/memory/map.h"
@@ -15,7 +14,10 @@
 #include <memory>
 
 namespace TurnipEmu::ARM7TDMI {
-	class CPU : public Display::CustomWindow {
+	class CPU {
+		friend class Debug::CPUStateWindow;
+		friend class Debug::CPUHistoryWindow;
+		
 	public:	   
 		CPU(const Memory::Map& memoryMap);
 		
@@ -27,9 +29,11 @@ namespace TurnipEmu::ARM7TDMI {
 
 		void reset();
 
-		void drawCustomWindowContents() override;
-
 		const Memory::Map& memoryMap;
+
+		// TODO: These should be protected and added through a CPU::registerDebugWindows function
+		Debug::CPUStateWindow debugStateWindow;
+		Debug::CPUHistoryWindow debugHistoryWindow;
 	protected:		
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
 		const RegisterPointers registersForCurrentState();
