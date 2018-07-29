@@ -1,4 +1,4 @@
-#include "turnipemu/arm7tdmi.h"
+#include "turnipemu/arm7tdmi/cpu.h"
 
 #include <memory>
 #include <string>
@@ -63,8 +63,14 @@ namespace TurnipEmu::ARM7TDMI{
 			if (pipeline.hasDecodedInstruction){
 				// Execute previously decoded instruction
 				if (pipeline.decodedInstruction->getCondition(pipeline.decodedInstructionWord).fulfilsCondition(*currentRegisters.cpsr)){
-					// This can flush the pipeline. 
+					// This can flush the pipeline.
+					word oldPC = registers.main[15];
 					pipeline.decodedInstruction->execute(*this, currentRegisters, pipeline.decodedInstructionWord);
+					if (oldPC != registers.main[15] && !pipeline.queuedFlush){
+						LogLine(logTag, "PC was changed, but a flush was not setup! Instruction Word: 0x%08x", pipeline.decodedInstructionWord);
+						LogLine(logTag, "Pipeline will be automatically flushed");
+						queuePipelineFlush();
+					}
 				}
 
 				pipeline.hasExecutedInstruction = true;
@@ -81,18 +87,18 @@ namespace TurnipEmu::ARM7TDMI{
 			assert(!pipeline.hasDecodedInstruction);
 		}
 
-		// Fetch the instruction
-		if (auto instructionWordOptional = memoryMap.read<word>(registers.main[15])){
-			pipeline.fetchedInstructionAddress = registers.main[15];
-			pipeline.fetchedInstructionWord = instructionWordOptional.value();
-			pipeline.hasFetchedInstruction = true;
-		}else{
-			throw std::runtime_error("PC is in invalid memory!");
-		}
-
 		if (pipeline.queuedFlush){
 			flushPipeline();
 		}else{
+            // Fetch the instruction
+			if (auto instructionWordOptional = memoryMap.read<word>(registers.main[15])){
+				pipeline.fetchedInstructionAddress = registers.main[15];
+				pipeline.fetchedInstructionWord = instructionWordOptional.value();
+				pipeline.hasFetchedInstruction = true;
+			}else{
+				throw std::runtime_error("PC is in invalid memory!");
+			}
+			
 			registers.main[15] += 4; // TODO: Specialize for Thumb
 		}
 	}

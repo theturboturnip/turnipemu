@@ -1,9 +1,9 @@
 #pragma once
 
-#include "turnipemu/arm7tdmi.h"
 #include "turnipemu/display.h"
 #include "turnipemu/emulator.h"
 #include "turnipemu/types.h"
+#include "turnipemu/arm7tdmi/cpu.h"
 #include "turnipemu/gba/dma.h"
 #include "turnipemu/gba/gamepak.h"
 #include "turnipemu/gba/lcd.h"

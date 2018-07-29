@@ -1,4 +1,4 @@
-#include "turnipemu/arm7tdmi.h"
+#include "turnipemu/arm7tdmi/cpu.h"
 
 #include <sstream>
 
