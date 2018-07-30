@@ -33,7 +33,7 @@ namespace TurnipEmu::ARM7TDMI {
 			}
 		};
 
-		std::string disassembly(word instructionWord) override {
+		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
 			
 			std::stringstream stream;
@@ -60,7 +60,7 @@ namespace TurnipEmu::ARM7TDMI {
 			stream << "\nIndexing: " << ((data.indexMode == DataTransferInfo::IndexMode::PreIndex) ? "Pre" : "Post");
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
+		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			
 			int finalOffset = (data.useImmediateOffset ? data.offset.immediateValue : data.offset.registerValue.calculateValue(registers, true)) * data.offsetSign;

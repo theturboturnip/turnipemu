@@ -7,9 +7,14 @@
 #include "turnipemu/arm7tdmi/arm/all_instructions.inl"
 
 namespace TurnipEmu::ARM7TDMI{
-
+	bool CPU::instructionsAreSetup = false;
+	std::vector<std::unique_ptr<const ARMInstructionCategory>> CPU::armInstructions;
+	std::vector<std::unique_ptr<const ThumbInstructionCategory>> CPU::thumbInstructions;
+	
 	void CPU::setupInstructions(){
-		armInstructions = std::vector<std::unique_ptr<ARMInstructionCategory>>();
+		if (instructionsAreSetup) return;
+		
+		armInstructions = std::vector<std::unique_ptr<const ARMInstructionCategory>>();
 		
 		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Software Interrupt",
@@ -89,16 +94,18 @@ namespace TurnipEmu::ARM7TDMI{
 									   {27, 26, 0b11}
 								   }));
 
-		thumbInstructions = std::vector<std::unique_ptr<ThumbInstructionCategory>>();
+		thumbInstructions = std::vector<std::unique_ptr<const ThumbInstructionCategory>>();
+
+		instructionsAreSetup = true;
 	}
-	ARMInstructionCategory* CPU::matchArmInstruction(word instruction){
+	const ARMInstructionCategory* CPU::matchArmInstruction(word instruction){
 		for (auto& instructionUniquePtr : armInstructions){
 			if (instructionUniquePtr->mask.matches(instruction))
 				return instructionUniquePtr.get();
 		}
 		return nullptr;
 	}
-	ThumbInstructionCategory* CPU::matchThumbInstruction(halfword instruction){
+	const ThumbInstructionCategory* CPU::matchThumbInstruction(halfword instruction){
 		for (auto& instructionUniquePtr : thumbInstructions){
 			if (instructionUniquePtr->mask.matches(instruction))
 				return instructionUniquePtr.get();

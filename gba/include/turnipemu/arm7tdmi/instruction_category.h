@@ -47,51 +47,52 @@ namespace TurnipEmu::ARM7TDMI {
 		}
 	};
 
+	template<typename InstructionType>
 	class InstructionCategory {
 	public:
-		InstructionCategory(std::string name) : name(name){}
-		virtual ~InstructionCategory() = default;
-		
-		const std::string name;
-	};
-	
-	class ARMInstructionCategory : public InstructionCategory {
-	public:
 		struct Condition {
-			char name[2];
+			char name[3];
 			std::string debugString;
 			std::function<bool(ProgramStatusRegister)> fulfilsCondition;
 		};
+		
+		InstructionCategory(std::string name, Mask<InstructionType> mask) : name(name), mask(mask){}
+		virtual ~InstructionCategory() = default;
+
+		virtual const Condition& getCondition(InstructionType instruction) const = 0;
+		virtual std::string disassembly(InstructionType instruction) const {
+			return "NO DISASSEMBLY PRESENT";
+		}
+		virtual void execute(CPU& cpu, const RegisterPointers, InstructionType instruction) const {
+			throw std::runtime_error("Instruction is not implemented!");
+		}
+		
+		const std::string name;
+		const Mask<InstructionType> mask;
+	};
+	
+	class ARMInstructionCategory : public InstructionCategory<word> {
+	public:
 			
 		ARMInstructionCategory(std::string name, Mask<word> mask);
 		~ARMInstructionCategory() override = default;
 			
-		const Condition& getCondition(word instruction);
+		const Condition& getCondition(word instruction) const override;
 
-		virtual std::string disassembly(word instruction){
-			return "NO DISASSEMBLY PRESENT";
-		}
-		virtual void execute(CPU& cpu, const RegisterPointers, word instruction){
-			throw std::runtime_error("Instruction is not implemented!");
-		}
-		
-		const Mask<word> mask;
 	protected:
 		const static std::array<const Condition, 15> conditions;
 	};
 
-	class ThumbInstructionCategory : public InstructionCategory {
+	class ThumbInstructionCategory : public InstructionCategory<halfword> {
 	public:
 		ThumbInstructionCategory(std::string name, Mask<halfword> mask);
 		~ThumbInstructionCategory() override = default;
 
-		virtual std::string disassembly(halfword instruction){
-			return "NO DISASSEMBLY PRESENT";
+		const Condition& getCondition(halfword instruction) const override {
+			return always;
 		}
-		virtual void execute(CPU& cpu, const RegisterPointers, halfword instruction){
-			throw std::runtime_error("Instruction is not implemented!");
-		}
-		
-		const Mask<halfword> mask;
+
+	protected:
+		const static Condition always;
 	};
 }

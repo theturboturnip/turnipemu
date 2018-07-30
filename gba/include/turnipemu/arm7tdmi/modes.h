@@ -1,5 +1,10 @@
 #pragma once
 
+#include "turnipemu/types.h"
+
+#include <string>
+#include <assert.h>
+
 namespace TurnipEmu::ARM7TDMI {
 	enum class Mode : uint8_t {
 		User       = 0b10000,

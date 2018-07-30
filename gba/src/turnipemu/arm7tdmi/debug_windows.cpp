@@ -5,21 +5,18 @@
 namespace TurnipEmu::ARM7TDMI::Debug {
 	CPUStateWindow::CPUStateWindow(CPU& cpu)
 		: Display::CustomWindow("ARM7TDMI Instruction Inspector", 450, 0), cpu(cpu) {}
-	void CPUStateWindow::drawCustomWindowContents(){
-		/*static*/ word interpreting = cpu.pipeline.decodedInstructionAddress;
-		//static word lastDecoded = pipeline.decodedInstructionAddress;
-		//static char jumpBuf[9] = "00000000";
-		//static bool firstRun = true;
 
+	template<class PipelineType>
+	void displayPipeline(RegisterPointers currentRegisters, PipelineType pipeline){
 		ImGui::Text("Pipeline Status");
 		{
 			ImGui::Indent();
-			if (cpu.pipeline.hasFetchedInstruction){
-				ImGui::Text("Fetched Address: 0x%08x", cpu.pipeline.fetchedInstructionAddress);
-				if (cpu.pipeline.hasDecodedInstruction){
-					ImGui::Text("Decoded Address: 0x%08x", cpu.pipeline.decodedInstructionAddress);
-					if (cpu.pipeline.hasExecutedInstruction){
-						ImGui::Text("Executed Address: 0x%08x", cpu.pipeline.executedInstructionAddress);
+			if (pipeline.hasFetchedInstruction){
+				ImGui::Text("Fetched Address: 0x%08x", pipeline.fetchedInstructionAddress);
+				if (pipeline.hasDecodedInstruction){
+					ImGui::Text("Decoded Address: 0x%08x", pipeline.decodedInstructionAddress);
+					if (pipeline.hasExecutedInstruction){
+						ImGui::Text("Executed Address: 0x%08x", pipeline.executedInstructionAddress);
 					}
 				}
 			}else{
@@ -29,59 +26,40 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		}
 
 		ImGui::Separator();
-		
-		/*ImGui::Text("Custom Address 0x"); ImGui::SameLine();
-		ImGui::PushItemWidth(8 * 20); // 8 chars * font size?
-		ImGui::InputText("", jumpBuf, 9, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
-		ImGui::PopItemWidth();
-		ImGui::SameLine();
-		jumpBuf[8] = '\0';
-		
-		bool shouldInspect = ImGui::Button("Inspect");
-		bool shouldReset = firstRun || (lastDecoded != pipeline.decodedInstructionAddress);
-		
-		if (!shouldReset && interpreting != pipeline.decodedInstructionAddress) {
-			ImGui::SameLine();
-			shouldReset = ImGui::Button("Reset to PC");
-		}
-		shouldInspect |= shouldReset;
-		if (shouldReset){
-			for (int i = 0; i < 8; i++){
-				uint8_t charVal = (pipeline.decodedInstructionAddress >> (28 - i * 4)) & 0xF;
-				if (charVal <= 9) jumpBuf[i] = '0' + charVal;
-				else jumpBuf[i] = 'A' + (charVal - 0xA);
-			}
-		}
-		if (shouldInspect){
-			interpreting = std::strtoul(jumpBuf, nullptr, 16);
-			}*/
 
-		const RegisterPointers currentRegisters = cpu.registersForCurrentState();
-
-		if (cpu.pipeline.hasDecodedInstruction){
+		if (pipeline.hasDecodedInstruction){
 			ImGui::Text("Just Decoded Instruction");
 			ImGui::Indent();
 
-			if (currentRegisters.cpsr->state == CPUExecState::Thumb){
-			}else{
-				ARMInstructionCategory* instructionCategory = cpu.pipeline.decodedArmInstruction;
-				if (instructionCategory){
-					const auto& condition = instructionCategory->getCondition(cpu.pipeline.decodedInstructionWord);
-					ImGui::Text("0x%08x: 0x%08x %c%c", cpu.pipeline.decodedInstructionAddress, cpu.pipeline.decodedInstructionWord, condition.name[0], condition.name[1]);
-					{
-						ImGui::Indent();
-						ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
-						ImGui::Text("Instruction Category: %s", instructionCategory->name.c_str());
-						ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(cpu.pipeline.decodedInstructionWord).c_str());
-						ImGui::Unindent();
-					}
-				}else{
-					ImGui::Text("0x%08x: 0x%08x (Not an instruction)", cpu.pipeline.decodedInstructionAddress, cpu.pipeline.decodedInstructionWord);
+
+			const auto* instructionCategory = pipeline.decodedInstructionCategory;
+			if (instructionCategory){
+				const auto& condition = instructionCategory->getCondition(pipeline.decodedInstruction);
+				ImGui::Text("0x%08x: 0x%08x %c%c", pipeline.decodedInstructionAddress, pipeline.decodedInstruction, condition.name[0], condition.name[1]);
+				{
+					ImGui::Indent();
+					ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
+					ImGui::Text("Instruction Category: %s", instructionCategory->name.c_str());
+					ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(pipeline.decodedInstruction).c_str());
+					ImGui::Unindent();
 				}
+			}else{
+				ImGui::Text("0x%08x: 0x%08x (Not an instruction)", pipeline.decodedInstructionAddress, pipeline.decodedInstruction);
 			}
 
 			ImGui::Unindent();
 			ImGui::Separator();
+		}
+	}
+	
+	void CPUStateWindow::drawCustomWindowContents(){
+
+		const RegisterPointers currentRegisters = cpu.registersForCurrentState();
+
+		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
+			displayPipeline(currentRegisters, cpu.thumbPipeline);
+		}else{
+			displayPipeline(currentRegisters, cpu.armPipeline);
 		}
 
 		ImGui::Text("CPU State");

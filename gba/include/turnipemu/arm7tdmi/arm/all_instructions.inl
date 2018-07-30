@@ -6,7 +6,7 @@
 #include "instructions_msr_mrs.inl"
 
 namespace TurnipEmu::ARM7TDMI {
-#define CONDITION(NAME, CODE) ARMInstructionCategory::Condition{ {NAME[0], NAME[1]}, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
+#define CONDITION(NAME, CODE) ARMInstructionCategory::Condition{ NAME, {#CODE}, [](ProgramStatusRegister status) { return CODE; } }
 	const std::array<const ARMInstructionCategory::Condition, 15> ARMInstructionCategory::conditions = {
 		CONDITION("EQ", status.zero),
 		CONDITION("NE", !status.zero),
@@ -27,11 +27,11 @@ namespace TurnipEmu::ARM7TDMI {
 #undef CONDITION
 
 	ARMInstructionCategory::ARMInstructionCategory(std::string name, Mask<word> mask)
-		: InstructionCategory(name), mask(mask)  {
+		: InstructionCategory(name, mask)  {
 		LogLine("INST", "Created ARMInstructionCategory with name %s, mask 0x%08x, value 0x%08x", name.c_str(), mask.mask, mask.expectedValue);
 	}
 
-	const ARMInstructionCategory::Condition& ARMInstructionCategory::getCondition(word instructionWord) {
+	const ARMInstructionCategory::Condition& ARMInstructionCategory::getCondition(word instructionWord) const {
 		return conditions[(instructionWord >> 28) & 0xF];
 	}
 
@@ -47,13 +47,13 @@ namespace TurnipEmu::ARM7TDMI {
 				link = (instructionWord >> 24) & 1;
 			}
 		};
-		std::string disassembly(word instructionWord) override {
+		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
 			std::stringstream stream;
 			stream << "Branch by " << data.offset << ", link: " << std::boolalpha << data.link;
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
+		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			if (data.link){
 				word pcForNextInstruction = *registers.main[15] + 4 - 8; // PC has been prefetched, the -8 undoes that
@@ -61,7 +61,6 @@ namespace TurnipEmu::ARM7TDMI {
 			}
 			word pcWithPrefetch = *registers.main[15];
 			*registers.main[15] = pcWithPrefetch + data.offset;
-			cpu.queuePipelineFlush();
 		}
 	};
 }

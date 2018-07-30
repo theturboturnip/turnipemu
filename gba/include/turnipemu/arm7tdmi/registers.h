@@ -1,5 +1,8 @@
 #pragma once
 
+#include "modes.h"
+#include "turnipemu/types.h"
+
 namespace TurnipEmu::ARM7TDMI {
 	enum class CPUExecState : bool {
 		ARM = false,
@@ -30,6 +33,10 @@ namespace TurnipEmu::ARM7TDMI {
 			
 		ProgramStatusRegister* cpsr = nullptr;
 		ProgramStatusRegister* spsr = nullptr; // Not enabled in System/User mode
+
+		inline word& pc() const {
+			return *main[15];
+		}
 	};
 
 	struct AllRegisters{	

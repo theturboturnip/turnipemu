@@ -177,7 +177,7 @@ namespace TurnipEmu::ARM7TDMI {
 			}
 		};
 
-		std::string disassembly(word instructionWord) override {
+		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
 			if (data.restoreSPSR){
 				return "Restores SPSR, ignored in User mode";
@@ -196,7 +196,7 @@ namespace TurnipEmu::ARM7TDMI {
 			stream << "\nDestination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, RegisterPointers currentRegisters, word instructionWord) override {
+		void execute(CPU& cpu, RegisterPointers currentRegisters, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			if (data.restoreSPSR){
 				if (currentRegisters.cpsr->mode == Mode::User) return;

@@ -18,7 +18,7 @@ namespace TurnipEmu::ARM7TDMI {
 				}
 			}
 		};
-		std::string disassembly(word instructionWord) override {
+		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
 			std::stringstream stream;
 			stream << "Transfer ";
@@ -38,7 +38,7 @@ namespace TurnipEmu::ARM7TDMI {
 			}
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
+		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 
 			word* targetRegister = data.writeToSpecialPSR ? &registers.spsr->value : &registers.cpsr->value;
@@ -62,7 +62,7 @@ namespace TurnipEmu::ARM7TDMI {
 				destinationRegister = (instructionWord >> 12) & 0xF;
 			}
 		};
-		std::string disassembly(word instructionWord) override {
+		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
 			std::stringstream stream;
 			stream << "Transfer ";
@@ -74,7 +74,7 @@ namespace TurnipEmu::ARM7TDMI {
 			stream << " into Register " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) override {
+		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			if (data.loadFromSpecialPSR){
 				*registers.main[data.destinationRegister] = registers.spsr->value;

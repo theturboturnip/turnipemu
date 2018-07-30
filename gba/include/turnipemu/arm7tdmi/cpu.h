@@ -8,6 +8,7 @@
 #include "turnipemu/arm7tdmi/exceptions.h"
 #include "turnipemu/arm7tdmi/instruction_category.h"
 #include "turnipemu/arm7tdmi/modes.h"
+#include "turnipemu/arm7tdmi/pipeline.h"
 #include "turnipemu/arm7tdmi/registers.h"
 
 #include <string>
@@ -22,8 +23,6 @@ namespace TurnipEmu::ARM7TDMI {
 		CPU(const Memory::Map& memoryMap);
 		
 		void tick();
-
-		void queuePipelineFlush();
 		
 		void addCycles(uint32_t cycles);
 
@@ -43,39 +42,19 @@ namespace TurnipEmu::ARM7TDMI {
 		uint32_t cyclesThisTick;
 		uint32_t cyclesTotal;
 
-		struct {
-			bool hasFetchedInstruction;
-			union {
-				word fetchedInstructionWord;
-				halfword fetchedInstructionHalfword;
-			};
-			word fetchedInstructionAddress;
-			
-			bool hasDecodedInstruction;
-			union {
-				ARMInstructionCategory* decodedArmInstruction;
-				ThumbInstructionCategory* decodedThumbInstruction;
-			};
-			union {
-				word decodedInstructionWord;
-				halfword decodedInstructionHalfword;
-			};
-			word decodedInstructionAddress;
-
-			bool hasExecutedInstruction;
-			word executedInstructionAddress;
-
-			bool queuedFlush;
-		} pipeline;
-		void flushPipeline();
-		void tickPipeline();
+		// Only one of these can be in use at any one time. If it switches, the new one must be flushed to reset the variables
+		union {
+			Pipeline<ARMInstructionCategory, word> armPipeline;
+			Pipeline<ThumbInstructionCategory, halfword> thumbPipeline;
+		};
 		
-		void setupInstructions();
+		static void setupInstructions();
 		// These have to be vectors of unique_ptr because InstructionCategory is virtual
-		std::vector<std::unique_ptr<ARMInstructionCategory>> armInstructions;
-		std::vector<std::unique_ptr<ThumbInstructionCategory>> thumbInstructions;
-		ARMInstructionCategory* matchArmInstruction(word instruction);
-		ThumbInstructionCategory* matchThumbInstruction(halfword instruction);
+		static bool instructionsAreSetup;
+		static std::vector<std::unique_ptr<const ARMInstructionCategory>> armInstructions;
+		static std::vector<std::unique_ptr<const ThumbInstructionCategory>> thumbInstructions;
+		static const ARMInstructionCategory* matchArmInstruction(word instruction);
+		static const ThumbInstructionCategory* matchThumbInstruction(halfword instruction);
 
 		const char* const logTag = "ARM7";
 	};

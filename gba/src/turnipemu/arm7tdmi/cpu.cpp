@@ -30,75 +30,40 @@ namespace TurnipEmu::ARM7TDMI{
 			registers.cpsr.state = CPUExecState::ARM;
 		}
 
-		flushPipeline();
-	}
-	void CPU::queuePipelineFlush(){
-		pipeline.queuedFlush = true;
-	}
-	void CPU::flushPipeline(){
-		pipeline.hasFetchedInstruction = false;
-		pipeline.fetchedInstructionWord = 0x0;
-		pipeline.fetchedInstructionAddress = registers.main[15];
-		
-		pipeline.hasDecodedInstruction = false;
-		pipeline.decodedArmInstruction = nullptr;
-		pipeline.decodedInstructionWord = 0x0;
-		pipeline.decodedInstructionAddress = 0x0;
-
-		pipeline.hasExecutedInstruction = false;
-
-		pipeline.queuedFlush = false;
+		switch(registers.cpsr.state){
+		case CPUExecState::ARM:
+			armPipeline.flush();
+			break;
+		case CPUExecState::Thumb:
+			thumbPipeline.flush();
+			break;
+		default:
+			assert(false);
+		}
 	}
 
+	
 	void CPU::tick(){
-		tickPipeline();
-	}
-	void CPU::tickPipeline(){
 		const auto currentRegisters = registersForCurrentState();
+		const CPUExecState oldExecState = registers.cpsr.state;
+		
 		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
 			throw std::runtime_error("Thumb mode is not supported yet!");
 		}else{
-			if (pipeline.hasFetchedInstruction){
-				if (pipeline.hasDecodedInstruction){
-					// Execute previously decoded instruction
-					if (pipeline.decodedArmInstruction->getCondition(pipeline.decodedInstructionWord).fulfilsCondition(*currentRegisters.cpsr)){
-						// This can flush the pipeline.
-						word oldPC = registers.pc();
-						pipeline.decodedArmInstruction->execute(*this, currentRegisters, pipeline.decodedInstructionWord);
-						if (oldPC != registers.pc() && !pipeline.queuedFlush){
-							LogLine(logTag, "PC was changed, but a flush was not setup! Instruction Word: 0x%08x", pipeline.decodedInstructionWord);
-							LogLine(logTag, "Pipeline will be automatically flushed");
-							queuePipelineFlush();
-						}
-					}
+			armPipeline.tick(*this, currentRegisters, this->matchArmInstruction);
+		}
 
-					pipeline.hasExecutedInstruction = true;
-					pipeline.executedInstructionAddress = pipeline.decodedInstructionAddress;
-				}
-
-				// Decode fetched instruction
-				pipeline.decodedInstructionAddress = pipeline.fetchedInstructionAddress;
-				pipeline.decodedInstructionWord = pipeline.fetchedInstructionWord;
-				pipeline.decodedArmInstruction = matchArmInstruction(pipeline.decodedInstructionWord);
-				if (!pipeline.decodedArmInstruction) throw std::runtime_error("Couldn't decode instruction!");
-				pipeline.hasDecodedInstruction = true;
-			}else{
-				assert(!pipeline.hasDecodedInstruction);
-			}
-
-			if (pipeline.queuedFlush){
-				flushPipeline();
-			}else{
-				// Fetch the instruction
-				if (auto instructionWordOptional = memoryMap.read<word>(registers.pc())){
-					pipeline.fetchedInstructionAddress = registers.pc();
-					pipeline.fetchedInstructionWord = instructionWordOptional.value();
-					pipeline.hasFetchedInstruction = true;
-				}else{
-					throw std::runtime_error("PC is in invalid memory!");
-				}
-			
-				registers.pc() += 4; // TODO: Specialize for Thumb
+		const CPUExecState newExecState = registers.cpsr.state;
+		if (oldExecState != newExecState){
+			switch(newExecState){
+			case CPUExecState::ARM:
+				armPipeline.flush();
+				break;
+			case CPUExecState::Thumb:
+				thumbPipeline.flush();
+				break;
+			default:
+				assert(false);
 			}
 		}
 	}
