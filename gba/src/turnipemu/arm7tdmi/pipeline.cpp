@@ -65,7 +65,7 @@ namespace TurnipEmu::ARM7TDMI {
 				throw std::runtime_error("PC is in invalid memory!");
 			}
 			
-			registers.pc() += sizeof(InstructionType); // TODO: Specialize for Thumb
+			registers.pc() += sizeof(InstructionType);
 		}
 	}
 

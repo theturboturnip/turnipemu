@@ -17,7 +17,6 @@ namespace TurnipEmu::ARM7TDMI{
 		if (instructionsAreSetup) return;
 		
 		armInstructions = std::vector<std::unique_ptr<const ARMInstructionCategory>>();
-		
 		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
 								   "Software Interrupt",
 								   Mask<word>{
@@ -97,6 +96,107 @@ namespace TurnipEmu::ARM7TDMI{
 								   }));
 
 		thumbInstructions = std::vector<std::unique_ptr<const ThumbInstructionCategory>>();
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Add and Subtract",
+										Mask<halfword>{
+											{ 15, 10, 0b000111 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Move Shifted Register",
+										Mask<halfword>{
+											{ 15, 13, 0b000 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Move, Compare, Add and Subtract for Immediate",
+										Mask<halfword>{
+											{ 15, 13, 0b001 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"ALU Operation",
+										Mask<halfword>{
+											{ 15, 10, 0b010000 }
+										}));
+		// TODO: This is v. similar to ALU Operation, and is also a compound. Can we merge this with ALU operation, and maybe create a separate category for BX?
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"High Register Ops, BX", 
+										Mask<halfword>{
+											{ 15, 10, 0b010001 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"PC Relative Load",
+										Mask<halfword>{
+											{ 15, 10, 0b01001 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Load/Store with Relative Offset",
+										Mask<halfword>{
+											{ 15, 12, 0b0101 },
+											{ 9, 0 }
+										}));
+		// TODO: V. similar to previous, merge?
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Load/Store sign-extended with Relative Offset",
+										Mask<halfword>{
+											{ 15, 12, 0b0101 },
+											{ 9, 1 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Load/Store with Immediate offset",
+										Mask<halfword>{
+											{ 15, 13, 0b011 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Load/Store Halfword",
+										Mask<halfword>{
+											{ 15, 12, 0b1000 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Load/Store relative to Stack Pointer",
+										Mask<halfword>{
+											{ 15, 12, 0b1001 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Load Address",
+										Mask<halfword>{
+											{ 15, 12, 0b1010 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Add Offset to Stack Pointer",
+										Mask<halfword>{
+											{ 15, 8, 0b10110000 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Push/Pop Registers",
+										Mask<halfword>{
+											{ 15, 12, 0b1011 },
+											{ 10, 9, 0b10 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Multiple Load/Store",
+										Mask<halfword>{
+											{ 15, 12, 0b1100 }
+										}));
+		// TODO: Override this specific category to include conditions
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Conditional Branch",
+										Mask<halfword>{
+											{ 15, 12, 0b1101 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Software Interrupt",
+										Mask<halfword>{
+											{ 15, 8, 0b11011111 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Unconditional Branch",
+										Mask<halfword>{
+											{ 15, 11, 0b11100 }
+										}));
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"Long Branch w/ Link",
+										Mask<halfword>{
+											{ 15, 12, 0b1111 }
+										}));
 
 		instructionsAreSetup = true;
 	}

@@ -35,11 +35,12 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			const auto* instructionCategory = pipeline.decodedInstructionCategory;
 			if (instructionCategory){
 				const auto& condition = instructionCategory->getCondition(pipeline.decodedInstruction);
-				ImGui::Text("0x%08x: 0x%08x %c%c", pipeline.decodedInstructionAddress, pipeline.decodedInstruction, condition.name[0], condition.name[1]);
+				ImGui::Text(sizeof(PipelineType::decodedInstruction) == 4 ? "0x%08x: 0x%08x %s" : "0x%08x: 0x%04x %s",
+							pipeline.decodedInstructionAddress, pipeline.decodedInstruction, condition.name);
 				{
 					ImGui::Indent();
 					ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
-					ImGui::Text("Instruction Category: %s", instructionCategory->name.c_str());
+					ImGui::TextWrapped("Instruction Category: %s", instructionCategory->name.c_str());
 					ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(pipeline.decodedInstruction).c_str());
 					ImGui::Unindent();
 				}

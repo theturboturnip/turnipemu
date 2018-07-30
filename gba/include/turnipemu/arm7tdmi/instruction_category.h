@@ -18,7 +18,13 @@ namespace TurnipEmu::ARM7TDMI {
 			const InstructionType value;
 
 			Range(uint8_t end, uint8_t start, uint32_t value)
-				: end(end), start(start), mask((InstructionType(~0) << start) & (InstructionType(~0) >> (32 - end - 1))), value((value << start) & mask)  {
+				: end(end),
+				  start(start),
+				  mask(
+					  ( InstructionType(~0) << start ) &
+					  ( InstructionType(~0) >> ( (sizeof(InstructionType) * 8) - end - 1 ) )
+					  ),
+				  value((value << start) & mask)  {
 				assert(start <= end);
 			}
 			Range(uint8_t bit, bool set) : Range(bit, bit, set){}
