@@ -1,6 +1,6 @@
 #pragma once
 
-namespace TurnipEmu::ARM7TDMI {
+namespace TurnipEmu::ARM7TDMI::ARM {
 	class BranchInstruction : public ARMInstructionCategory {
 		using ARMInstructionCategory::ARMInstructionCategory;
 		

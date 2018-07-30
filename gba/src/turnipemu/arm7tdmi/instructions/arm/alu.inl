@@ -1,4 +1,4 @@
-namespace TurnipEmu::ARM7TDMI {
+namespace TurnipEmu::ARM7TDMI::ARM {
 	class DataProcessingInstruction : public ARMInstructionCategory{
 		using ARMInstructionCategory::ARMInstructionCategory;
 

@@ -1,4 +1,4 @@
-namespace TurnipEmu::ARM7TDMI {
+namespace TurnipEmu::ARM7TDMI::ARM {
 	// Good Test Instruction: 0x0328f301 (MSR if EQ, from SPSR, flags only, immediate 1 rotated by 6
 	class MSRInstruction : public ARMInstructionCategory {
 		using ARMInstructionCategory::ARMInstructionCategory;

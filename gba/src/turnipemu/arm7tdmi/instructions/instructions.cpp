@@ -34,12 +34,12 @@ namespace TurnipEmu::ARM7TDMI{
 								   Mask<word>{
 									   {27, 4, 0b0'0001'0010'1111'1111'1111'0001}
 								   }));
-		armInstructions.push_back(std::make_unique<BranchInstruction>(
+		armInstructions.push_back(std::make_unique<ARM::BranchInstruction>(
 								   "Branch",
 								   Mask<word>{
 									   {27, 25, 0b101}
 								   }));
-		armInstructions.push_back(std::make_unique<MRSInstruction>(
+		armInstructions.push_back(std::make_unique<ARM::MRSInstruction>(
 								   "MRS (Transfer PSR to Register)",
 								   Mask<word>{
 									   {27, 26, 0b00},
@@ -47,7 +47,7 @@ namespace TurnipEmu::ARM7TDMI{
 									   {21, 16, 0b001111},
 									   {11, 0, 0}
 								   }));
-		armInstructions.push_back(std::make_unique<MSRInstruction>(
+		armInstructions.push_back(std::make_unique<ARM::MSRInstruction>(
 								   "MSR (Transfer Register to PSR)",
 								   Mask<word>{
 									   {27, 26, 0b00},
@@ -75,12 +75,12 @@ namespace TurnipEmu::ARM7TDMI{
 									   {7, 1},
 									   {4, 1}
 								   }));
-		armInstructions.push_back(std::make_unique<DataProcessingInstruction>(
+		armInstructions.push_back(std::make_unique<ARM::DataProcessingInstruction>(
 								   "Data Processing",
 								   Mask<word>{
 									   {27, 26, 0b00}
 								   }));
-		armInstructions.push_back(std::make_unique<SingleDataTransferInstruction>(
+		armInstructions.push_back(std::make_unique<ARM::SingleDataTransferInstruction>(
 								   "Single Data Transfer",
 								   Mask<word>{
 									   {27, 26, 0b01}
