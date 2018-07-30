@@ -29,7 +29,7 @@ namespace TurnipEmu::ARM7TDMI{
 									   {27, 25, 0b011},
 									   {4, 1}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::BranchExchangeInstruction>(
 								   "Branch and Exchange",
 								   Mask<word>{
 									   {27, 4, 0b0'0001'0010'1111'1111'1111'0001}

@@ -48,7 +48,7 @@ namespace TurnipEmu::ARM7TDMI{
 		const CPUExecState oldExecState = registers.cpsr.state;
 		
 		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
-			throw std::runtime_error("Thumb mode is not supported yet!");
+			thumbPipeline.tick(*this, currentRegisters, this->matchThumbInstruction);
 		}else{
 			armPipeline.tick(*this, currentRegisters, this->matchArmInstruction);
 		}

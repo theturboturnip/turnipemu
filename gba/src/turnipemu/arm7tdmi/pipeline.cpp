@@ -2,6 +2,7 @@
 
 #include "turnipemu/arm7tdmi/cpu.h"
 #include "turnipemu/arm7tdmi/instruction_category.h"
+#include "turnipemu/log.h"
 
 namespace TurnipEmu::ARM7TDMI {
 	
