@@ -4,7 +4,9 @@
 
 #include "turnipemu/utils.h"
 
-#include "turnipemu/arm7tdmi/arm/all_instructions.inl"
+#include "common.inl"
+#include "arm/all.inl"
+#include "thumb/all.inl"
 
 namespace TurnipEmu::ARM7TDMI{
 	bool CPU::instructionsAreSetup = false;
