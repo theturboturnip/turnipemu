@@ -4,6 +4,7 @@
 
 namespace TurnipEmu::ARM7TDMI {
 	class CPU;
+	struct CPUState;
 }
 
 namespace TurnipEmu::ARM7TDMI::Debug {
@@ -13,6 +14,8 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		
 		void drawCustomWindowContents() override;
 	protected:
+		void drawCPUState(CPUState& state);
+		
 		CPU& cpu;
 		char newBreakpointIndex[9];
 	};

@@ -30,15 +30,17 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			ImGui::Text("Just Decoded Instruction");
 			ImGui::Indent();
 
-
 			const auto* instructionCategory = pipeline.decodedInstructionCategory;
 			if (instructionCategory){
 				const auto& condition = instructionCategory->getCondition(pipeline.decodedInstruction);
-				ImGui::Text(sizeof(PipelineType::decodedInstruction) == 4 ? "0x%08x: 0x%08x %s" : "0x%08x: 0x%04x %s",
-							pipeline.decodedInstructionAddress, pipeline.decodedInstruction, condition.name);
+				ImGui::Text(
+					sizeof(PipelineType::decodedInstruction) == 4 ? "0x%08x: 0x%08x %s" : "0x%08x: 0x%04x %s",
+					pipeline.decodedInstructionAddress, pipeline.decodedInstruction, condition.name);
 				{
 					ImGui::Indent();
-					ImGui::Text("Condition Code: %s [Fulfilled: %d]", condition.debugString.c_str(), condition.fulfilsCondition(*currentRegisters.cpsr));
+					ImGui::Text("Condition Code: %s [Fulfilled: %d]",
+								condition.debugString.c_str(),
+								condition.fulfilsCondition(*currentRegisters.cpsr));
 					ImGui::TextWrapped("Instruction Category: %s", instructionCategory->name.c_str());
 					ImGui::TextWrapped("Instruction Disassembly: %s", instructionCategory->disassembly(pipeline.decodedInstruction).c_str());
 					ImGui::Unindent();
@@ -48,6 +50,70 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			}
 
 			ImGui::Unindent();
+		}
+	}
+
+	void CPUStateWindow::drawCPUState(CPUState& state){
+		const RegisterPointers registers = state.usableRegisters();
+		
+		if (registers.cpsr->state == CPUExecState::Thumb){
+			displayPipeline(registers, state.thumbPipeline);
+		}else{
+			displayPipeline(registers, state.armPipeline);
+		}
+			
+		ImGui::Separator();
+
+		ImGui::Text("Registers");
+		{
+			ImGui::Indent();
+			ImGui::Columns(2, "Registers");
+			for (int i = 0; i < 16; i++){
+				ImGui::Text("r%-2d: 0x%08x", i, *registers.main[i]);
+				if (i == 7) ImGui::NextColumn();
+			}
+			ImGui::Columns(1);
+			ImGui::Unindent();
+		}
+		auto showStatusRegister = [](ProgramStatusRegister value) {
+			ImGui::Text("Actual Value: 0x%08x", value.value);
+			ImGui::Text("Mode: %hhu (%s)", value.mode, ModeString(value.mode).c_str());
+			ImGui::Text("Exec State: %s", (value.state == CPUExecState::ARM) ? "ARM" : "Thumb");
+			ImGui::Text("FIQ: %d", !value.fiqDisable); ImGui::SameLine();
+			ImGui::Text("IRQ: %d", !value.irqDisable);
+			ImGui::Text("N Z C V");
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Negative Zero Carry oVerflow");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::Text("%d %d %d %d", value.negative, value.zero, value.carry, value.overflow);
+		};
+			
+		ImGui::Separator();
+			
+		if (registers.spsr){
+			ImGui::BeginChild("CPSR", ImVec2(ImGui::GetContentRegionAvailWidth() / 2, 0));
+		}
+		{
+			ImGui::Text("CPSR");
+			ImGui::Indent();
+			showStatusRegister(*registers.cpsr);
+			ImGui::Unindent();
+		}
+		if (registers.spsr){
+			ImGui::EndChild();
+			ImGui::SameLine();
+			ImGui::BeginChild("SPSR", ImVec2(0, 0));
+			{
+				ImGui::Text("SPSR");
+				ImGui::Indent();
+				showStatusRegister(*registers.spsr);
+				ImGui::Unindent();
+			}
+			ImGui::EndChild();
 		}
 	}
 	
@@ -83,68 +149,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 
 		ImGui::BeginChild("CPU DATA");
 		{
-			const RegisterPointers currentRegisters = cpu.registersForCurrentState();
-		
-			if (currentRegisters.cpsr->state == CPUExecState::Thumb){
-				displayPipeline(currentRegisters, cpu.thumbPipeline);
-			}else{
-				displayPipeline(currentRegisters, cpu.armPipeline);
-			}
-			
-			ImGui::Separator();
-
-			ImGui::Text("Registers");
-			{
-				ImGui::Indent();
-				ImGui::Columns(2, "Registers");
-				for (int i = 0; i < 16; i++){
-					ImGui::Text("r%-2d: 0x%08x", i, *currentRegisters.main[i]);
-					if (i == 7) ImGui::NextColumn();
-				}
-				ImGui::Columns(1);
-				ImGui::Unindent();
-			}
-			auto showStatusRegister = [](ProgramStatusRegister value) {
-				ImGui::Text("Actual Value: 0x%08x", value.value);
-				ImGui::Text("Mode: %hhu (%s)", value.mode, ModeString(value.mode).c_str());
-				ImGui::Text("Exec State: %s", (value.state == CPUExecState::ARM) ? "ARM" : "Thumb");
-				ImGui::Text("FIQ: %d", !value.fiqDisable); ImGui::SameLine();
-				ImGui::Text("IRQ: %d", !value.irqDisable);
-				ImGui::Text("N Z C V");
-				if (ImGui::IsItemHovered())
-				{
-					ImGui::BeginTooltip();
-					ImGui::Text("Negative Zero Carry oVerflow");
-					ImGui::EndTooltip();
-				}
-			
-				ImGui::Text("%d %d %d %d", value.negative, value.zero, value.carry, value.overflow);
-			};
-			
-			ImGui::Separator();
-			
-			if (currentRegisters.spsr){
-				ImGui::BeginChild("CPSR", ImVec2(ImGui::GetContentRegionAvailWidth() / 2, 0));
-			}
-			{
-				ImGui::Text("CPSR");
-				ImGui::Indent();
-				showStatusRegister(*currentRegisters.cpsr);
-				ImGui::Unindent();
-			}
-			if (currentRegisters.spsr){
-				ImGui::EndChild();
-				ImGui::SameLine();
-				ImGui::BeginChild("SPSR", ImVec2(0, 0));
-				{
-					ImGui::Text("SPSR");
-					ImGui::Indent();
-					showStatusRegister(*currentRegisters.spsr);
-					ImGui::Unindent();
-				}
-				ImGui::EndChild();
-			}
-			
+			drawCPUState(cpu.state);
 		}
 		ImGui::EndChild();
 		

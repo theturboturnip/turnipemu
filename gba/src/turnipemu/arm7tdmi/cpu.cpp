@@ -15,30 +15,30 @@ namespace TurnipEmu::ARM7TDMI{
 		reset();
 	}
 	void CPU::reset(){
-		memset(&registers, 0, sizeof(registers));
+		memset(&state.registers, 0, sizeof(state.registers));
 
 		breakpoints = { 0x11c };
 
 		constexpr bool RunBIOS = true;
 		if constexpr (RunBIOS){
-			registers.main[15] = 0x00000000;
-			registers.cpsr.mode = Mode::Supervisor;
-			registers.cpsr.state = CPUExecState::ARM;
-			registers.cpsr.fiqDisable = true;
-			registers.cpsr.irqDisable = true;
+			state.registers.main[15] = 0x00000000;
+			state.registers.cpsr.mode = Mode::Supervisor;
+			state.registers.cpsr.state = CPUExecState::ARM;
+			state.registers.cpsr.fiqDisable = true;
+			state.registers.cpsr.irqDisable = true;
 		}else{
 			// TODO: There are more requirements to boot outside of the BIOS
-			registers.main[15] = 0x08000000; // Start at the beginning of ROM
-			registers.cpsr.mode = Mode::System;
-			registers.cpsr.state = CPUExecState::ARM;
+			state.registers.main[15] = 0x08000000; // Start at the beginning of ROM
+			state.registers.cpsr.mode = Mode::System;
+			state.registers.cpsr.state = CPUExecState::ARM;
 		}
 
-		switch(registers.cpsr.state){
+		switch(state.registers.cpsr.state){
 		case CPUExecState::ARM:
-			armPipeline.flush();
+			state.armPipeline.flush();
 			break;
 		case CPUExecState::Thumb:
-			thumbPipeline.flush();
+			state.thumbPipeline.flush();
 			break;
 		default:
 			assert(false);
@@ -47,26 +47,26 @@ namespace TurnipEmu::ARM7TDMI{
 
 	
 	void CPU::tick(){
-		const auto currentRegisters = registersForCurrentState();
-		const CPUExecState oldExecState = registers.cpsr.state;
+		const auto currentRegisters = state.usableRegisters();
+		const CPUExecState oldExecState = state.registers.cpsr.state;
 
 		word decodedInstructionAddress;
 		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
-			thumbPipeline.tick(*this, currentRegisters, this->matchThumbInstruction);
-			decodedInstructionAddress = thumbPipeline.decodedInstructionAddress;
+			state.thumbPipeline.tick(*this, currentRegisters, CPU::matchThumbInstruction);
+			decodedInstructionAddress = state.thumbPipeline.decodedInstructionAddress;
 		}else{
-			armPipeline.tick(*this, currentRegisters, this->matchArmInstruction);
-			decodedInstructionAddress = armPipeline.decodedInstructionAddress;
+			state.armPipeline.tick(*this, currentRegisters, CPU::matchArmInstruction);
+			decodedInstructionAddress = state.armPipeline.decodedInstructionAddress;
 		}
 
-		const CPUExecState newExecState = registers.cpsr.state;
+		const CPUExecState newExecState = state.registers.cpsr.state;
 		if (oldExecState != newExecState){
 			switch(newExecState){
 			case CPUExecState::ARM:
-				armPipeline.flush();
+				state.armPipeline.flush();
 				break;
 			case CPUExecState::Thumb:
-				thumbPipeline.flush();
+				state.thumbPipeline.flush();
 				break;
 			default:
 				assert(false);
@@ -78,7 +78,7 @@ namespace TurnipEmu::ARM7TDMI{
 		}
 	}
 	
-	const RegisterPointers CPU::registersForCurrentState() {
+	const RegisterPointers CPUState::usableRegisters() {
 		RegisterPointers pointers;
 
 		for (int i = 0; i < 16; i++){

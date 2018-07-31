@@ -19,6 +19,22 @@ namespace TurnipEmu {
 };
 
 namespace TurnipEmu::ARM7TDMI {
+
+	struct CPUState {
+		AllRegisters registers;
+
+		uint32_t cyclesThisTick;
+		uint32_t cyclesTotal;
+			
+		// Only one of these can be in use at any one time. If it switches, the new one must be flushed to reset the variables
+		union {
+			Pipeline<ARMInstructionCategory, word> armPipeline;
+			Pipeline<ThumbInstructionCategory, halfword> thumbPipeline;
+		};
+
+		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
+		const RegisterPointers usableRegisters();
+	};
 	
 	class CPU {
 		friend class Debug::CPUStateWindow;
@@ -40,19 +56,8 @@ namespace TurnipEmu::ARM7TDMI {
 		Debug::CPUStateWindow debugStateWindow;
 		Debug::CPUHistoryWindow debugHistoryWindow;
 	protected:		
-		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
-		const RegisterPointers registersForCurrentState();
-		
-		AllRegisters registers;
 
-		uint32_t cyclesThisTick;
-		uint32_t cyclesTotal;
-
-		// Only one of these can be in use at any one time. If it switches, the new one must be flushed to reset the variables
-		union {
-			Pipeline<ARMInstructionCategory, word> armPipeline;
-			Pipeline<ThumbInstructionCategory, halfword> thumbPipeline;
-		};
+		CPUState state;
 		
 		static void setupInstructions();
 		// These have to be vectors of unique_ptr because InstructionCategory is virtual

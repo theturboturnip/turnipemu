@@ -23,7 +23,6 @@ namespace TurnipEmu::ARM7TDMI {
 		bool hasExecutedInstruction;
 		word executedInstructionAddress;
 
-		Pipeline();
 		void tick(CPU& cpu, RegisterPointers currentRegisters, std::function<const InstructionCategoryType*(InstructionType)> decodeInstructionFunction);
 		void flush();
 	};

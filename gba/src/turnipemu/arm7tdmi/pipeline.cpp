@@ -7,10 +7,6 @@
 namespace TurnipEmu::ARM7TDMI {
 	
 	template<typename InstructionCategoryType, typename InstructionType>
-	Pipeline<InstructionCategoryType, InstructionType>::Pipeline(){
-		flush();
-	}
-	template<typename InstructionCategoryType, typename InstructionType>
 	void Pipeline<InstructionCategoryType, InstructionType>::flush(){
 		hasFetchedInstruction = false;
 		fetchedInstruction = 0x0;
