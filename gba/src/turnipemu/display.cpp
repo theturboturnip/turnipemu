@@ -121,7 +121,7 @@ namespace TurnipEmu{
 			for (CustomWindow* customWindow : emulatorWindowPair.second){
 				auto windowSize = customWindow->getSize();
 				ImGui::SetNextWindowSize(windowSize);
-				if (ImGui::Begin(customWindow->getTitle().c_str()))
+				if (ImGui::Begin(customWindow->getTitle().c_str(), nullptr, ImGuiWindowFlags_NoResize))
 					customWindow->drawCustomWindowContents();
 				ImGui::End();
 			}

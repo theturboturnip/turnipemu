@@ -3,7 +3,7 @@
 #include "turnipemu/log.h"
 
 namespace TurnipEmu::GBA{
-	GBA::GBA(Display& display, std::vector<byte> biosData, GamePak gamePak) : Emulator(display, "GBA"), memoryMap(*this), cpu(memoryMap), bios(biosData, 0x0), gamePak(gamePak) {
+	GBA::GBA(Display& display, std::vector<byte> biosData, GamePak gamePak) : Emulator(display, "GBA"), memoryMap(*this), cpu(*this, memoryMap), bios(biosData, 0x0), gamePak(gamePak) {
 		display.registerCustomWindow(this, &this->gamePak);
 		display.registerCustomWindow(this, &this->cpu.debugStateWindow);
 		display.registerCustomWindow(this, &this->cpu.debugHistoryWindow);

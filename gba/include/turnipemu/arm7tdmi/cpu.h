@@ -14,13 +14,18 @@
 #include <string>
 #include <memory>
 
+namespace TurnipEmu {
+	class Emulator;
+};
+
 namespace TurnipEmu::ARM7TDMI {
+	
 	class CPU {
 		friend class Debug::CPUStateWindow;
 		friend class Debug::CPUHistoryWindow;
 		
 	public:	   
-		CPU(const Memory::Map& memoryMap);
+		CPU(Emulator& emulator, const Memory::Map& memoryMap);
 		
 		void tick();
 		
@@ -28,6 +33,7 @@ namespace TurnipEmu::ARM7TDMI {
 
 		void reset();
 
+		Emulator& emulator;
 		const Memory::Map& memoryMap;
 
 		// TODO: These should be protected and added through a CPU::registerDebugWindows function
@@ -56,6 +62,8 @@ namespace TurnipEmu::ARM7TDMI {
 		static const ARMInstructionCategory* matchArmInstruction(word instruction);
 		static const ThumbInstructionCategory* matchThumbInstruction(halfword instruction);
 
+		std::vector<word> breakpoints;
+		
 		const char* const logTag = "ARM7";
 	};
 }

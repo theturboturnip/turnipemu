@@ -3,18 +3,21 @@
 #include <memory>
 #include <string>
 
-#include "turnipemu/log.h"
+#include "turnipemu/emulator.h"
 #include "turnipemu/imgui.h"
+#include "turnipemu/log.h"
 #include "turnipemu/utils.h"
 
 namespace TurnipEmu::ARM7TDMI{
-	CPU::CPU(const Memory::Map& memoryMap) : memoryMap(memoryMap), debugStateWindow(*this), debugHistoryWindow(*this)
+	CPU::CPU(Emulator& emulator, const Memory::Map& memoryMap) : emulator(emulator), memoryMap(memoryMap), debugStateWindow(*this), debugHistoryWindow(*this)
 	{
 		setupInstructions();
 		reset();
 	}
 	void CPU::reset(){
 		memset(&registers, 0, sizeof(registers));
+
+		breakpoints = { 0x11c };
 
 		constexpr bool RunBIOS = true;
 		if constexpr (RunBIOS){
@@ -46,11 +49,14 @@ namespace TurnipEmu::ARM7TDMI{
 	void CPU::tick(){
 		const auto currentRegisters = registersForCurrentState();
 		const CPUExecState oldExecState = registers.cpsr.state;
-		
+
+		word decodedInstructionAddress;
 		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
 			thumbPipeline.tick(*this, currentRegisters, this->matchThumbInstruction);
+			decodedInstructionAddress = thumbPipeline.decodedInstructionAddress;
 		}else{
 			armPipeline.tick(*this, currentRegisters, this->matchArmInstruction);
+			decodedInstructionAddress = armPipeline.decodedInstructionAddress;
 		}
 
 		const CPUExecState newExecState = registers.cpsr.state;
@@ -65,6 +71,10 @@ namespace TurnipEmu::ARM7TDMI{
 			default:
 				assert(false);
 			}
+		}
+
+		if (std::find(breakpoints.begin(), breakpoints.end(), decodedInstructionAddress) != breakpoints.end()){
+			emulator.pause();
 		}
 	}
 	

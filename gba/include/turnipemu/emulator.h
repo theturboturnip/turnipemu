@@ -24,6 +24,10 @@ namespace TurnipEmu{
 		}
 		virtual void handleInput(SDL_Event event){}
 
+		void pause(){
+			paused = true;
+		}
+		
 		void stop(std::string message){
 			stopped = true;
 			stopMessage = message;
