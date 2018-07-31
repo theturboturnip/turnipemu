@@ -58,7 +58,7 @@ namespace TurnipEmu::ARM7TDMI::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void _execute(CPU& cpu, RegisterPointers registers, halfword instruction) const {
+		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
