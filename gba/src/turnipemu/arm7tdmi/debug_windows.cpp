@@ -103,7 +103,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			ImGui::Indent();
 			showStatusRegister(*currentRegisters.spsr);
 			ImGui::Unindent();
-		}	
+		}
 
 		//firstRun = false;
 		//lastDecoded = pipeline.decodedInstructionAddress;

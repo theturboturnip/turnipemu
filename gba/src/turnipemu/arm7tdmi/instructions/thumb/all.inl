@@ -1,6 +1,6 @@
 #pragma once
 
-#include "turnipemu/arm7tdmi/instruction_category.h"
+#include "alu.inl"
 
 namespace TurnipEmu::ARM7TDMI {
 	const ThumbInstructionCategory::Condition ThumbInstructionCategory::always = {

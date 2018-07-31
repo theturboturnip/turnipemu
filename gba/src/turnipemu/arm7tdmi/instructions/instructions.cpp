@@ -106,19 +106,25 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 13, 0b000 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
-										"Move, Compare, Add and Subtract for Immediate",
+		thumbInstructions.push_back(std::make_unique<Thumb::ALUImmediateInstruction>(
+										"ALU Operation with Immediate",
 										Mask<halfword>{
 											{ 15, 13, 0b001 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
-										"ALU Operation",
+		thumbInstructions.push_back(std::make_unique<Thumb::ALULowRegistersInstruction>(
+										"ALU Operation with Low Registers",
 										Mask<halfword>{
 											{ 15, 10, 0b010000 }
 										}));
-		// TODO: This is v. similar to ALU Operation, and is also a compound. Can we merge this with ALU operation, and maybe create a separate category for BX?
+		// This is a specialization of ALU Op with High Registers (format 5). It doesn't exist in the spec as a separate format.
+		// TODO: This creates a gap with undefined behaviour when bit 7 is high.
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
-										"High Register Ops, BX", 
+										"Branch and eXchange", 
+										Mask<halfword>{
+											{ 15,  7, 0b010001110 }
+										}));	
+		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+										"ALU Operation with High Registers", 
 										Mask<halfword>{
 											{ 15, 10, 0b010001 }
 										}));
@@ -163,7 +169,7 @@ namespace TurnipEmu::ARM7TDMI{
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
 										"Add Offset to Stack Pointer",
 										Mask<halfword>{
-											{ 15, 8, 0b10110000 }
+											{ 15,  8, 0b10110000 }
 										}));
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
 										"Push/Pop Registers",
@@ -185,7 +191,7 @@ namespace TurnipEmu::ARM7TDMI{
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
 										"Software Interrupt",
 										Mask<halfword>{
-											{ 15, 8, 0b11011111 }
+											{ 15,  8, 0b11011111 }
 										}));
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
 										"Unconditional Branch",
