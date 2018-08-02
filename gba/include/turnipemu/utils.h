@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <sstream>
 #include <iomanip>
+#include <bitset>
 
 namespace TurnipEmu::Utils{
 	
@@ -34,7 +35,28 @@ namespace TurnipEmu::Utils{
 		return "";
 	}
 
-	std::ostream& hexAddressAlpha(std::ostream& os);
+	template<typename NumberType>
+	struct HexFormat{
+		HexFormat(NumberType number) : number(number) {}
+		
+		friend std::ostream& operator << (std::ostream &os, const HexFormat<NumberType>& format){
+			os << "0x" << std::setfill('0') << std::setw(sizeof(NumberType) * 2) << std::hex << format.number;
+			return os;
+		}
+	private:
+		NumberType number;
+	};
+	template<typename NumberType>
+	struct BinaryFormat{
+		BinaryFormat(NumberType number) : number(number) {}
+		
+		friend std::ostream& operator << (std::ostream &os, const BinaryFormat<NumberType>& format){
+			os << "0b" << std::bitset<sizeof(NumberType) * 8>(format.number);
+			return os;
+		}
+	private:
+		NumberType number;
+	};
 }
 
 #define TURNIPEMU_UINT32_TO_SINT64(VALUE) (int64_t)(int32_t)(VALUE)

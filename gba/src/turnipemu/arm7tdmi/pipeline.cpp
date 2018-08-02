@@ -43,7 +43,15 @@ namespace TurnipEmu::ARM7TDMI {
 			decodedInstructionAddress = fetchedInstructionAddress;
 			decodedInstruction = fetchedInstruction;
 			decodedInstructionCategory = decodeInstructionFunction(decodedInstruction);
-			if (!decodedInstructionCategory) throw std::runtime_error("Couldn't decode instruction!");
+			if (!decodedInstructionCategory){
+				throw std::runtime_error(
+					Utils::streamFormat(
+						"Couldn't decode instruction ",
+						Utils::HexFormat(decodedInstruction),
+						" (", Utils::BinaryFormat(decodedInstruction), ") "
+						)
+					);
+			}
 			hasDecodedInstruction = true;
 		}else{
 			assert(!hasDecodedInstruction);

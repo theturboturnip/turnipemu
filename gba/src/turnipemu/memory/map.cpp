@@ -17,7 +17,7 @@ namespace TurnipEmu::Memory{
 			if (controller->ownsAddress(address)) return controller;
 		}
 		if (accessByEmulator){
-			throw std::runtime_error(Utils::streamFormat("Invalid Memory Access at 0x", Utils::hexAddressAlpha, address));
+			throw std::runtime_error(Utils::streamFormat("Invalid Memory Access at ", Utils::HexFormat(address)));
 		}
 		return nullptr;
 	}
