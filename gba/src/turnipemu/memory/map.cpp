@@ -26,6 +26,9 @@ namespace TurnipEmu::Memory{
 	std::optional<ReadType> Map::read(uint32_t address, bool accessByEmulator) const {
 		if(address % sizeof(ReadType) != 0){
 			// Byte reads MUST be on byte-boundaries, halfwords on 2-byte boundaries, words on 4-byte boundaries.
+			if (accessByEmulator){
+				throw std::runtime_error(Utils::streamFormat("Misaligned read of ", sizeof(ReadType), " bytes at ", Utils::HexFormat(address)));
+			}
 			return {};
 		}
 		
@@ -52,6 +55,9 @@ namespace TurnipEmu::Memory{
 	bool Map::write(uint32_t address, WriteType value, bool accessByEmulator) const {
 		if(address % sizeof(WriteType) != 0){
 			// Byte writes MUST be on byte-boundaries, halfwords on 2-byte boundaries, words on 4-byte boundaries.
+			if (accessByEmulator){
+				throw std::runtime_error(Utils::streamFormat("Misaligned write of ", sizeof(WriteType), " bytes at ", Utils::HexFormat(address)));
+			}
 			return false;
 		}
 		
