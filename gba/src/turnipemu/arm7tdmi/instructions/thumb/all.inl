@@ -1,6 +1,7 @@
 #pragma once
 
 #include "alu.inl"
+#include "data_transfer.inl"
 
 namespace TurnipEmu::ARM7TDMI {
 	const ThumbInstructionCategory::Condition ThumbInstructionCategory::always = {

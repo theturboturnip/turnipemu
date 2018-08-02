@@ -128,7 +128,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 10, 0b010001 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::PCRelativeLoadInstruction>(
 										"PC Relative Load",
 										Mask<halfword>{
 											{ 15, 11, 0b01001 }
@@ -141,7 +141,7 @@ namespace TurnipEmu::ARM7TDMI{
 										}));
 		// TODO: V. similar to previous, merge?
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
-										"Load/Store sign-extended with Relative Offset",
+										"Load/Store sign-extended with Register Offset",
 										Mask<halfword>{
 											{ 15, 12, 0b0101 },
 											{ 9, 1 }
