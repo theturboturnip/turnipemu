@@ -131,7 +131,7 @@ namespace TurnipEmu::ARM7TDMI{
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
 										"PC Relative Load",
 										Mask<halfword>{
-											{ 15, 10, 0b01001 }
+											{ 15, 11, 0b01001 }
 										}));
 		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
 										"Load/Store with Relative Offset",
