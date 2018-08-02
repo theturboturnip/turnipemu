@@ -11,6 +11,9 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 	class CPUStateWindow : public Display::CustomWindow {
 	public:
 		CPUStateWindow(CPU& cpu);
+
+		void onCPUTick();
+		void reset();
 		
 		void drawCustomWindowContents() override;
 	protected:
@@ -18,15 +21,9 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		
 		CPU& cpu;
 		char newBreakpointIndex[9];
-	};
-	class CPUHistoryWindow : public Display::CustomWindow {
-	public:
-		CPUHistoryWindow(CPU& cpu);
-
-		void addCurrentStateToHistory();
-		
-		void drawCustomWindowContents() override;
-	protected:
-		CPU& cpu;
+		std::vector<CPUState> stateHistory;
+		int selectedStateIndex = 0;
+		bool teleportToSelected = false;
+		constexpr static int maxStateMemory = 100;
 	};
 }

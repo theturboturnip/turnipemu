@@ -9,7 +9,7 @@
 #include "turnipemu/utils.h"
 
 namespace TurnipEmu::ARM7TDMI{
-	CPU::CPU(Emulator& emulator, const Memory::Map& memoryMap) : emulator(emulator), memoryMap(memoryMap), debugStateWindow(*this), debugHistoryWindow(*this)
+	CPU::CPU(Emulator& emulator, const Memory::Map& memoryMap) : emulator(emulator), memoryMap(memoryMap), debugStateWindow(*this)
 	{
 		setupInstructions();
 		reset();
@@ -43,38 +43,60 @@ namespace TurnipEmu::ARM7TDMI{
 		default:
 			assert(false);
 		}
+
+		debugStateWindow.reset();
 	}
 
 	
 	void CPU::tick(){
-		const auto currentRegisters = state.usableRegisters();
-		const CPUExecState oldExecState = state.registers.cpsr.state;
+		try{
+			const auto currentRegisters = state.usableRegisters();
+			const CPUExecState oldExecState = state.registers.cpsr.state;
 
-		word decodedInstructionAddress;
-		if (currentRegisters.cpsr->state == CPUExecState::Thumb){
-			state.thumbPipeline.tick(*this, currentRegisters, CPU::matchThumbInstruction);
-			decodedInstructionAddress = state.thumbPipeline.decodedInstructionAddress;
-		}else{
-			state.armPipeline.tick(*this, currentRegisters, CPU::matchArmInstruction);
-			decodedInstructionAddress = state.armPipeline.decodedInstructionAddress;
-		}
-
-		const CPUExecState newExecState = state.registers.cpsr.state;
-		if (oldExecState != newExecState){
-			switch(newExecState){
-			case CPUExecState::ARM:
-				state.armPipeline.flush();
-				break;
-			case CPUExecState::Thumb:
-				state.thumbPipeline.flush();
-				break;
-			default:
-				assert(false);
+			word decodedInstructionAddress;
+			if (currentRegisters.cpsr->state == CPUExecState::Thumb){
+				state.thumbPipeline.tick(*this, currentRegisters, CPU::matchThumbInstruction);
+				decodedInstructionAddress = state.thumbPipeline.decodedInstructionAddress;
+			}else{
+				state.armPipeline.tick(*this, currentRegisters, CPU::matchArmInstruction);
+				decodedInstructionAddress = state.armPipeline.decodedInstructionAddress;
 			}
-		}
 
-		if (std::find(breakpoints.begin(), breakpoints.end(), decodedInstructionAddress) != breakpoints.end()){
-			emulator.pause();
+			const CPUExecState newExecState = state.registers.cpsr.state;
+			if (oldExecState != newExecState){
+				switch(newExecState){
+				case CPUExecState::ARM:
+					state.armPipeline.flush();
+					break;
+				case CPUExecState::Thumb:
+					state.thumbPipeline.flush();
+					break;
+				default:
+					assert(false);
+				}
+			}
+
+			if (std::find(breakpoints.begin(), breakpoints.end(), decodedInstructionAddress) != breakpoints.end()){
+				emulator.pause();
+			}
+
+			debugStateWindow.onCPUTick();
+		}catch(...){
+			debugStateWindow.onCPUTick();
+			throw;
+		}
+	}
+
+	const PipelineBase* CPUState::currentPipelineBaseData(){
+		switch(registers.cpsr.state){
+		case CPUExecState::ARM:
+			return static_cast<const PipelineBase*>(&armPipeline);
+		case CPUExecState::Thumb:
+			return static_cast<const PipelineBase*>(&thumbPipeline);
+			break;
+		default:
+			assert(false);
+			return nullptr;
 		}
 	}
 	

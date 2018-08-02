@@ -4,7 +4,22 @@
 
 namespace TurnipEmu::ARM7TDMI::Debug {
 	CPUStateWindow::CPUStateWindow(CPU& cpu)
-		: Display::CustomWindow("ARM7TDMI Instruction Inspector", 600, 400), cpu(cpu) {}
+		: Display::CustomWindow("ARM7TDMI Instruction Inspector", 600, 500), cpu(cpu) {
+		stateHistory = std::vector<CPUState>();
+		stateHistory.reserve(maxStateMemory + 1);
+	}
+
+	void CPUStateWindow::onCPUTick(){
+		stateHistory.push_back(cpu.state);
+		if (stateHistory.size() > maxStateMemory) stateHistory.erase(stateHistory.begin());
+		selectedStateIndex = stateHistory.size() - 1;
+		teleportToSelected = true;
+	}
+	void CPUStateWindow::reset(){
+		stateHistory.clear();
+		stateHistory.push_back(cpu.state);
+		selectedStateIndex = 0;
+	}
 
 	template<class PipelineType>
 	void displayPipeline(RegisterPointers currentRegisters, PipelineType pipeline){
@@ -118,7 +133,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 	}
 	
 	void CPUStateWindow::drawCustomWindowContents(){
-		ImGui::BeginChild("Breakpoints", ImVec2(175, 0));
+		ImGui::BeginChild("Sidebar", ImVec2(175, 0));
 		{
 			ImGui::Text("Breakpoints");
 			ImGui::Indent();
@@ -142,6 +157,33 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 				cpu.breakpoints.push_back(std::strtoul(newBreakpointIndex, nullptr, 16));
 			}
 			ImGui::Unindent();
+
+			ImGui::BeginChild("CPU History", ImVec2(0,0), true);
+			for (int i = 0; i < stateHistory.size(); i++){
+				const auto* statePipelineBaseData = stateHistory[i].currentPipelineBaseData();
+
+				if (!statePipelineBaseData->hasDecodedInstruction && i != stateHistory.size() - 1) continue;
+				
+				char buf[15];
+				sprintf(buf, "0x%08x %c%c%c",
+						statePipelineBaseData->decodedInstructionAddress,
+						statePipelineBaseData->hasFetchedInstruction ? 'F' : '/',
+						statePipelineBaseData->hasDecodedInstruction ? 'D' : '/',
+						statePipelineBaseData->hasExecutedInstruction ? 'E' : '/'
+					);
+				bool selected = selectedStateIndex == i;
+
+				ImGui::PushID(i);
+				if (ImGui::Selectable(buf, &selected)){
+					selectedStateIndex = i;
+				}
+				if (selected && teleportToSelected){
+					ImGui::SetScrollHere();
+					teleportToSelected = false;
+				}
+				ImGui::PopID();
+			}
+			ImGui::EndChild();
 		}
 		ImGui::EndChild();
 
@@ -149,20 +191,17 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 
 		ImGui::BeginChild("CPU DATA");
 		{
-			drawCPUState(cpu.state);
+			if (selectedStateIndex != stateHistory.size() - 1){
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+				ImGui::TextWrapped("Warning: This is based on a previous CPU state. Any memory values this uses may have changed.");
+				ImGui::PopStyleColor();
+				ImGui::Separator();
+			}
+			drawCPUState(stateHistory[selectedStateIndex]);
 		}
 		ImGui::EndChild();
 		
 		//firstRun = false;
 		//lastDecoded = pipeline.decodedInstructionAddress;
-	}
-
-	CPUHistoryWindow::CPUHistoryWindow(CPU& cpu)
-		: Display::CustomWindow("ARM7TDMI History", 450, 0), cpu(cpu) {}
-	void CPUHistoryWindow::addCurrentStateToHistory(){
-		// TODO: Define
-	}
-	void CPUHistoryWindow::drawCustomWindowContents(){
-		// TODO: Define
 	}
 }

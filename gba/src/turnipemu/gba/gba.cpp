@@ -6,7 +6,6 @@ namespace TurnipEmu::GBA{
 	GBA::GBA(Display& display, std::vector<byte> biosData, GamePak gamePak) : Emulator(display, "GBA"), memoryMap(*this), cpu(*this, memoryMap), bios(biosData, 0x0), gamePak(gamePak) {
 		display.registerCustomWindow(this, &this->gamePak);
 		display.registerCustomWindow(this, &this->cpu.debugStateWindow);
-		display.registerCustomWindow(this, &this->cpu.debugHistoryWindow);
 
 		memoryMap.registerMemoryController(&this->bios);
 		memoryMap.registerMemoryController(&this->gamePak);

@@ -7,21 +7,26 @@
 namespace TurnipEmu::ARM7TDMI {
 
 	class CPU;
-	
-	template<typename InstructionCategoryType, typename InstructionType>
-	class Pipeline {		
+
+	class PipelineBase {
 	public:
 		bool hasFetchedInstruction;
-		InstructionType fetchedInstruction;
 		word fetchedInstructionAddress;
-			
+
 		bool hasDecodedInstruction;
-		const InstructionCategoryType* decodedInstructionCategory;
-		InstructionType decodedInstruction;
 		word decodedInstructionAddress;
 
 		bool hasExecutedInstruction;
 		word executedInstructionAddress;
+	};
+	
+	template<typename InstructionCategoryType, typename InstructionType>
+	class Pipeline : public PipelineBase {		
+	public:
+		InstructionType fetchedInstruction;
+			
+		const InstructionCategoryType* decodedInstructionCategory;
+		InstructionType decodedInstruction;
 
 		void tick(CPU& cpu, RegisterPointers currentRegisters, std::function<const InstructionCategoryType*(InstructionType)> decodeInstructionFunction);
 		void flush();

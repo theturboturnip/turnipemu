@@ -31,6 +31,7 @@ namespace TurnipEmu::ARM7TDMI {
 			Pipeline<ARMInstructionCategory, word> armPipeline;
 			Pipeline<ThumbInstructionCategory, halfword> thumbPipeline;
 		};
+		const PipelineBase* currentPipelineBaseData();
 
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
 		const RegisterPointers usableRegisters();
@@ -38,7 +39,6 @@ namespace TurnipEmu::ARM7TDMI {
 	
 	class CPU {
 		friend class Debug::CPUStateWindow;
-		friend class Debug::CPUHistoryWindow;
 		
 	public:	   
 		CPU(Emulator& emulator, const Memory::Map& memoryMap);
@@ -52,9 +52,8 @@ namespace TurnipEmu::ARM7TDMI {
 		Emulator& emulator;
 		const Memory::Map& memoryMap;
 
-		// TODO: These should be protected and added through a CPU::registerDebugWindows function
+		// TODO: This should be protected and added through a CPU::registerDebugWindows function
 		Debug::CPUStateWindow debugStateWindow;
-		Debug::CPUHistoryWindow debugHistoryWindow;
 	protected:		
 
 		CPUState state;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "turnipemu/arm7tdmi/registers.h"
+#include "turnipemu/utils.h"
 
 #include <functional>
 
@@ -70,7 +71,7 @@ namespace TurnipEmu::ARM7TDMI {
 			return "NO DISASSEMBLY PRESENT";
 		}
 		virtual void execute(CPU& cpu, const RegisterPointers, InstructionType instruction) const {
-			throw std::runtime_error("Instruction is not implemented!");
+			throw std::runtime_error(Utils::streamFormat("Instruction '", name ,"' is not implemented!"));
 		}
 		
 		const std::string name;
