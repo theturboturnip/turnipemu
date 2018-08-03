@@ -3,7 +3,7 @@
 #include "turnipemu/log.h"
 
 namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
-	class PCRelativeLoadInstruction : public InstructionCategory {
+	class LoadPCRelativeInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
 		struct InstructionData {
@@ -37,6 +37,55 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			if (auto dataOptional = cpu.memoryMap.read<word>(address))
 				*registers.main[data.destinationRegister] = dataOptional.value();
+		}
+	};
+
+	class LoadStoreSPRelativeInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		enum class TransferMode : bool {
+			Load = true,
+			Store = false
+		};			
+		struct InstructionData {
+			uint16_t immediateValue : 10;
+
+			union {
+				uint8_t sourceRegister : 3;
+				uint8_t destinationRegister : 3;
+			};
+			
+			TransferMode transferMode;
+			
+			InstructionData(halfword instruction){
+				immediateValue = (instruction & 0xFF) << 2;
+				destinationRegister = (instruction >> 8) & 0b111;
+
+				transferMode = static_cast<TransferMode>((instruction >> 11) & 1);
+			}
+		};
+
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			std::stringstream os;
+			bool loading = (data.transferMode == TransferMode::Load);
+			os << (loading ? "Load from " : "Store to ");
+			os << "SP + " << Utils::HexFormat(data.immediateValue);
+			os << (loading ? " to " : " from ");
+			os << "Register " << (int)data.destinationRegister;
+			return os.str();
+		}
+		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			word address = registers.sp() + data.immediateValue;
+			if (data.transferMode == TransferMode::Load){
+				*registers.main[data.destinationRegister] = cpu.memoryMap.read<word>(address).value();
+			}else{
+				cpu.memoryMap.write<word>(address, *registers.main[data.sourceRegister]);
+			}
 		}
 	};
 

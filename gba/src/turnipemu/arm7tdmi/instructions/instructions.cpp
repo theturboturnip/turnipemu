@@ -128,7 +128,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 10, 0b010001 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::PCRelativeLoadInstruction>(
+		thumbInstructions.push_back(std::make_unique<Thumb::LoadPCRelativeInstruction>(
 										"F6: PC Relative Load",
 										Mask<halfword>{
 											{ 15, 11, 0b01001 }
@@ -148,7 +148,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 12, 0b1000 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::LoadStoreSPRelativeInstruction>(
 										"F11: Load/Store relative to Stack Pointer",
 										Mask<halfword>{
 											{ 15, 12, 0b1001 }
