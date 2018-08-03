@@ -8,6 +8,7 @@
 #include "turnipemu/gba/gamepak.h"
 #include "turnipemu/gba/lcd.h"
 #include "turnipemu/gba/sys_control.h"
+#include "turnipemu/gba/internal_ram.h"
 #include "turnipemu/gba/interrupt_control.h"
 #include "turnipemu/memory/map.h"
 
@@ -37,6 +38,8 @@ namespace TurnipEmu::GBA{
 		} io;
 		SystemControl systemControl;
 		InterruptControl interruptControl;
+
+		InternalRam iram;
 
 		const char* const logTag = "GBA";
 	};

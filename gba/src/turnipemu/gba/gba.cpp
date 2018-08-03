@@ -12,6 +12,7 @@ namespace TurnipEmu::GBA{
 		memoryMap.registerMemoryController(&this->io.lcdEngine);
 		memoryMap.registerMemoryController(&this->systemControl);
 		memoryMap.registerMemoryController(&this->interruptControl);
+		memoryMap.registerMemoryController(&this->iram);
 
 		reset();
 	}
