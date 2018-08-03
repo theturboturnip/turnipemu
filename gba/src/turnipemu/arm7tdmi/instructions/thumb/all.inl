@@ -4,6 +4,7 @@
 #include "branch.inl"
 #include "data_transfer.inl"
 #include "push_pop.inl"
+#include "misc.inl"
 
 namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 	const Condition InstructionCategory::always = {

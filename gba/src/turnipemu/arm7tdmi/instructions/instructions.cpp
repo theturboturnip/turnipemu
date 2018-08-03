@@ -158,7 +158,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 12, 0b1010 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::OffsetStackPointerInstruction>(
 										"F13: Add Offset to Stack Pointer",
 										Mask<halfword>{
 											{ 15,  8, 0b10110000 }
