@@ -37,6 +37,12 @@ namespace TurnipEmu::ARM7TDMI {
 		inline word& pc() const {
 			return *main[15];
 		}
+		inline word& lr() const {
+			return *main[14];
+		}
+		inline word& sp() const {
+			return *main[13];
+		}
 	};
 
 	struct AllRegisters{	

@@ -40,11 +40,11 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			os << (popping ? "Pop (Load) " : "Push (Store) ");
 			bool hasPrevious = false;
 			for (int i = 0; i < 8; i++){
-				if (data.registerList[i]){
-					if (hasPrevious) os << ", ";
-					os << "R" << i;
-					hasPrevious = true;
-				}
+				if (!data.registerList[i]) continue;
+
+				if (hasPrevious) os << ", ";
+				os << "R" << i;
+				hasPrevious = true;
 			}
 			if (popping && data.loadProgramCounter){
 				if (hasPrevious) os << ", ";
@@ -61,6 +61,32 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return os.str();
 		}
-		//void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {}
+		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			if (data.transferMode == TransferMode::Load){
+				auto pop = [&](int registerIndex){
+					*registers.main[registerIndex] = cpu.memoryMap.read<word>(registers.sp()).value();
+					registers.sp() += 4;
+				};
+				if (data.loadProgramCounter) pop(15);
+				for (int i = 7; i >= 0; i--){
+					if (!data.registerList[i]) continue;
+
+					pop(i);
+				}
+			}else{
+				auto push = [&](int registerIndex){
+					registers.sp() -= 4;
+					cpu.memoryMap.write<word>(registers.sp(), *registers.main[registerIndex]);
+				};
+				for (int i = 0; i < 8; i++){
+					if (!data.registerList[i]) continue;
+
+					push(i);
+				}
+				if (data.storeLinkRegister) push(13);
+			}
+		}
 	};
 }
