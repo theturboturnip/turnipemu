@@ -39,4 +39,98 @@ namespace TurnipEmu::ARM7TDMI::Thumb {
 				*registers.main[data.destinationRegister] = dataOptional.value();
 		}
 	};
+
+	class LoadStoreRegisterOffsetInstruction : public ThumbInstructionCategory {
+		using ThumbInstructionCategory::ThumbInstructionCategory;
+
+		enum class TransferMode : bool {
+			Load = true,
+			Store = false
+		};
+		enum class TransferSize : uint8_t {
+			Byte = 1,
+			HalfWord = 2,
+			Word = 4
+		};
+		struct InstructionData {
+			TransferMode transferMode;
+			TransferSize transferSize;
+			bool signExtended;
+
+			uint8_t baseRegister : 3;
+			uint8_t offsetRegister : 3;
+			union {
+				uint8_t destinationRegister : 3;
+				uint8_t sourceRegister : 3;
+			};
+				
+			InstructionData(halfword instruction){
+				baseRegister = (instruction >> 3) & 0b111;
+				offsetRegister = (instruction >> 6) & 0b111;
+				destinationRegister = (instruction >> 0) & 0b111;
+
+				if ((instruction >> 9) & 1){
+					// Instruction is Format 8
+					switch ((instruction >> 10) & 0b11){
+					case 0b00:
+						transferMode = TransferMode::Store;
+						transferSize = TransferSize::HalfWord;
+						signExtended = false;
+						break;
+					case 0b01:
+						transferMode = TransferMode::Load;
+						transferSize = TransferSize::HalfWord;
+						signExtended = false;
+						break;
+					case 0b10:
+						transferMode = TransferMode::Load;
+						transferSize = TransferSize::Byte;
+						signExtended = true;
+						break;
+					case 0b11:
+						transferMode = TransferMode::Load;
+						transferSize = TransferSize::HalfWord;
+						signExtended = true;
+						break;
+					default:
+						assert(false); // Something went *REALLY* wrong here
+					}
+				}else{
+					// Instruction is Format 7
+					transferMode = static_cast<TransferMode>(((instruction >> 11) & 1) == 1);
+					transferSize = ((instruction >> 10) & 1) ? TransferSize::Byte : TransferSize::Word;
+					signExtended = false;
+				}
+			}
+		};
+		
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			std::stringstream os;
+			bool loading = (data.transferMode == TransferMode::Load);
+			os << (loading ? "Load " : "Store ");
+			os << (data.signExtended ? "sign-extended " : "");
+			switch (data.transferSize) {
+			case TransferSize::Byte:
+				os << "byte";
+				break;
+			case TransferSize::HalfWord:
+				os << "halfword";
+				break;
+			case TransferSize::Word:
+				os << "word";
+				break;
+			}
+			os << (loading ? " from " : " to ");
+			os << "address at [Register " << (int)data.baseRegister << " + Register " << (int)data.offsetRegister << "]";
+			os << (loading ? " to " : " from ");
+			os << "Register " << (int)data.destinationRegister;
+
+			return os.str();
+		}
+		//void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		//}
+	};
 }
