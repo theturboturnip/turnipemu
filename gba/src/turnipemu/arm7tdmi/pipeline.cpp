@@ -73,6 +73,6 @@ namespace TurnipEmu::ARM7TDMI {
 		}
 	}
 
-	template class Pipeline<ARMInstructionCategory, word>;
-	template class Pipeline<ThumbInstructionCategory, halfword>;
+	template class Pipeline<ARM::InstructionCategory, word>;
+	template class Pipeline<Thumb::InstructionCategory, halfword>;
 }

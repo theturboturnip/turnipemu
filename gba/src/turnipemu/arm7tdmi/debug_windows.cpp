@@ -53,7 +53,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 					pipeline.decodedInstructionAddress, pipeline.decodedInstruction, condition.name);
 				{
 					ImGui::Indent();
-					ImGui::Text("Condition Code: %s [Fulfilled: %d]",
+					ImGui::TextWrapped("Condition Code: %s [Fulfilled: %d]",
 								condition.debugString.c_str(),
 								condition.fulfilsCondition(*currentRegisters.cpsr));
 					ImGui::TextWrapped("Instruction Category: %s", instructionCategory->name.c_str());

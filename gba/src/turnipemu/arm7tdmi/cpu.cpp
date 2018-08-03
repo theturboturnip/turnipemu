@@ -83,6 +83,7 @@ namespace TurnipEmu::ARM7TDMI{
 			debugStateWindow.onCPUTick();
 		}catch(...){
 			debugStateWindow.onCPUTick();
+			
 			throw;
 		}
 	}

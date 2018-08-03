@@ -1,10 +1,10 @@
 #include "turnipemu/arm7tdmi/alu.h"
 
-namespace TurnipEmu::ARM7TDMI::ARM {
+namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 	using namespace TurnipEmu::ARM7TDMI::ALU;
 	
-	class DataProcessingInstruction : public ARMInstructionCategory{
-		using ARMInstructionCategory::ARMInstructionCategory;
+	class DataProcessingInstruction : public InstructionCategory{
+		using InstructionCategory::InstructionCategory;
 		
 		const std::array<const Operation, 16> operations = {{
 			{

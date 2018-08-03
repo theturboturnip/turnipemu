@@ -20,6 +20,8 @@ namespace TurnipEmu {
 
 namespace TurnipEmu::ARM7TDMI {
 
+	using namespace Instructions;
+	
 	struct CPUState {
 		AllRegisters registers;
 
@@ -28,8 +30,8 @@ namespace TurnipEmu::ARM7TDMI {
 			
 		// Only one of these can be in use at any one time. If it switches, the new one must be flushed to reset the variables
 		union {
-			Pipeline<ARMInstructionCategory, word> armPipeline;
-			Pipeline<ThumbInstructionCategory, halfword> thumbPipeline;
+			Pipeline<ARM::InstructionCategory, word> armPipeline;
+			Pipeline<Thumb::InstructionCategory, halfword> thumbPipeline;
 		};
 		const PipelineBase* currentPipelineBaseData();
 
@@ -61,10 +63,10 @@ namespace TurnipEmu::ARM7TDMI {
 		static void setupInstructions();
 		// These have to be vectors of unique_ptr because InstructionCategory is virtual
 		static bool instructionsAreSetup;
-		static std::vector<std::unique_ptr<const ARMInstructionCategory>> armInstructions;
-		static std::vector<std::unique_ptr<const ThumbInstructionCategory>> thumbInstructions;
-		static const ARMInstructionCategory* matchArmInstruction(word instruction);
-		static const ThumbInstructionCategory* matchThumbInstruction(halfword instruction);
+		static std::vector<std::unique_ptr<const ARM::InstructionCategory>> armInstructions;
+		static std::vector<std::unique_ptr<const Thumb::InstructionCategory>> thumbInstructions;
+		static const ARM::InstructionCategory* matchArmInstruction(word instruction);
+		static const Thumb::InstructionCategory* matchThumbInstruction(halfword instruction);
 
 		std::vector<word> breakpoints;
 		

@@ -1,9 +1,9 @@
 #include "turnipemu/arm7tdmi/alu.h"
 #include "turnipemu/arm7tdmi/instruction_category.h"
 
-namespace TurnipEmu::ARM7TDMI::Thumb {
-	class ALUAddSub : public ThumbInstructionCategory {
-		using ThumbInstructionCategory::ThumbInstructionCategory;
+namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
+	class ALUAddSub : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		const std::array<const ALU::Operation, 2> operations = {{
 				{
@@ -72,8 +72,8 @@ namespace TurnipEmu::ARM7TDMI::Thumb {
 		}
 	};
 
-	class ALUImmediateInstruction : public ThumbInstructionCategory {
-		using ThumbInstructionCategory::ThumbInstructionCategory;
+	class ALUImmediateInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		const std::array<const ALU::Operation, 4> operations = {{
 				{
@@ -142,8 +142,8 @@ namespace TurnipEmu::ARM7TDMI::Thumb {
 		}
 	};
 	
-	class ALULowRegistersInstruction : public ThumbInstructionCategory {
-		using ThumbInstructionCategory::ThumbInstructionCategory;
+	class ALULowRegistersInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		const std::array<const ALU::Operation, 16> operations = {{
 				{

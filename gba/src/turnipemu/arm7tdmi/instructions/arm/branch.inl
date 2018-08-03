@@ -1,8 +1,8 @@
 #pragma once
 
-namespace TurnipEmu::ARM7TDMI::ARM {
-	class BranchInstruction : public ARMInstructionCategory {
-		using ARMInstructionCategory::ARMInstructionCategory;
+namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
+	class BranchInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 		
 		struct InstructionData {
 			int64_t offset;
@@ -30,8 +30,8 @@ namespace TurnipEmu::ARM7TDMI::ARM {
 		}
 	};
 
-	class BranchExchangeInstruction : public ARMInstructionCategory {
-		using ARMInstructionCategory::ARMInstructionCategory;
+	class BranchExchangeInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		struct InstructionData {
 			bool link;

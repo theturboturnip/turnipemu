@@ -7,6 +7,9 @@
 
 namespace TurnipEmu::ARM7TDMI {
 	class CPU;
+}
+
+namespace TurnipEmu::ARM7TDMI::Instructions {
 
 	template<typename InstructionType>
 	struct Mask {
@@ -54,17 +57,18 @@ namespace TurnipEmu::ARM7TDMI {
 		}
 	};
 
+	
+	struct Condition {
+		char name[3];
+		std::string debugString;
+		std::function<bool(ProgramStatusRegister)> fulfilsCondition;
+	};
+
 	template<typename InstructionType>
-	class InstructionCategory {
-	public:
-		struct Condition {
-			char name[3];
-			std::string debugString;
-			std::function<bool(ProgramStatusRegister)> fulfilsCondition;
-		};
-		
-		InstructionCategory(std::string name, Mask<InstructionType> mask) : name(name), mask(mask){}
-		virtual ~InstructionCategory() = default;
+	class BaseInstructionCategory {
+	public:		
+		BaseInstructionCategory(std::string name, Mask<InstructionType> mask) : name(name), mask(mask){}
+		virtual ~BaseInstructionCategory() = default;
 
 		virtual const Condition& getCondition(InstructionType instruction) const = 0;
 		virtual std::string disassembly(InstructionType instruction) const {
@@ -77,29 +81,31 @@ namespace TurnipEmu::ARM7TDMI {
 		const std::string name;
 		const Mask<InstructionType> mask;
 	};
-	
-	class ARMInstructionCategory : public InstructionCategory<word> {
-	public:
+
+	namespace ARM {
+		class InstructionCategory : public BaseInstructionCategory<word> {
+		public:
 			
-		ARMInstructionCategory(std::string name, Mask<word> mask);
-		~ARMInstructionCategory() override = default;
+			InstructionCategory(std::string name, Mask<word> mask);
+			~InstructionCategory() override = default;
 			
-		const Condition& getCondition(word instruction) const override;
+			const Condition& getCondition(word instruction) const override;
 
-	protected:
-		const static std::array<const Condition, 15> conditions;
-	};
+			const static std::array<const Condition, 15> conditions;
+		};
+	}
+	namespace Thumb {
+		class InstructionCategory : public BaseInstructionCategory<halfword> {
+		public:
+			InstructionCategory(std::string name, Mask<halfword> mask);
+			~InstructionCategory() override = default;
 
-	class ThumbInstructionCategory : public InstructionCategory<halfword> {
-	public:
-		ThumbInstructionCategory(std::string name, Mask<halfword> mask);
-		~ThumbInstructionCategory() override = default;
+			const Condition& getCondition(halfword instruction) const override {
+				return always;
+			}
 
-		const Condition& getCondition(halfword instruction) const override {
-			return always;
-		}
-
-	protected:
-		const static Condition always;
-	};
+		protected:
+			const static Condition always;
+		};
+	}
 }

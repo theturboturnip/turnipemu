@@ -1,10 +1,11 @@
 #pragma once
 
 #include "alu.inl"
+#include "branch.inl"
 #include "data_transfer.inl"
 
-namespace TurnipEmu::ARM7TDMI {
-	const ThumbInstructionCategory::Condition ThumbInstructionCategory::always = {
+namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
+	const Condition InstructionCategory::always = {
 		"AL",
 		"true",
 		[](ProgramStatusRegister status) {
@@ -12,8 +13,8 @@ namespace TurnipEmu::ARM7TDMI {
 		}
 	};
 	
-	ThumbInstructionCategory::ThumbInstructionCategory(std::string name, Mask<halfword> mask)
-		: InstructionCategory(name, mask)  {
+	InstructionCategory::InstructionCategory(std::string name, Mask<halfword> mask)
+		: BaseInstructionCategory(name, mask)  {
 		LogLine("INST", "Created ThumbInstructionCategory with name %s, mask 0x%04x, value 0x%04x", name.c_str(), mask.mask, mask.expectedValue);
 	}
 }

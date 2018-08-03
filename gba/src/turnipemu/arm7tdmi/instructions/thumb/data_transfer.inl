@@ -2,9 +2,9 @@
 #include "turnipemu/utils.h"
 #include "turnipemu/log.h"
 
-namespace TurnipEmu::ARM7TDMI::Thumb {
-	class PCRelativeLoadInstruction : public ThumbInstructionCategory {
-		using ThumbInstructionCategory::ThumbInstructionCategory;
+namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
+	class PCRelativeLoadInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		struct InstructionData {
 			uint16_t immediateValue : 10;
@@ -40,8 +40,8 @@ namespace TurnipEmu::ARM7TDMI::Thumb {
 		}
 	};
 
-	class LoadStoreRegisterOffsetInstruction : public ThumbInstructionCategory {
-		using ThumbInstructionCategory::ThumbInstructionCategory;
+	class LoadStoreRegisterOffsetInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
 
 		enum class TransferMode : bool {
 			Load = true,

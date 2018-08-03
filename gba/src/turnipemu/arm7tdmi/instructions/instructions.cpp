@@ -10,19 +10,19 @@
 
 namespace TurnipEmu::ARM7TDMI{
 	bool CPU::instructionsAreSetup = false;
-	std::vector<std::unique_ptr<const ARMInstructionCategory>> CPU::armInstructions;
-	std::vector<std::unique_ptr<const ThumbInstructionCategory>> CPU::thumbInstructions;
+	std::vector<std::unique_ptr<const ARM::InstructionCategory>> CPU::armInstructions;
+	std::vector<std::unique_ptr<const Thumb::InstructionCategory>> CPU::thumbInstructions;
 	
 	void CPU::setupInstructions(){
 		if (instructionsAreSetup) return;
 		
-		armInstructions = std::vector<std::unique_ptr<const ARMInstructionCategory>>();
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions = std::vector<std::unique_ptr<const ARM::InstructionCategory>>();
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Software Interrupt",
 								   Mask<word>{
 									   {27, 24, 0b1111}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Undefined",
 								   Mask<word>{
 									   {27, 25, 0b011},
@@ -54,20 +54,20 @@ namespace TurnipEmu::ARM7TDMI{
 									   {21, 17, 0b10100},
 									   {15, 12, 0b1111}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Multiply",
 								   Mask<word>{
 									   {27, 23, 0b00000},
 									   {7, 4, 0b1001}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Single Data Swap",
 								   Mask<word>{
 									   {27, 23, 0b00010},
 									   {21, 20, 0b00},
 									   {11, 4, 0b0'0000'1001}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Halfword Data Transfer",
 								   Mask<word>{
 									   {27, 25, 0b000},
@@ -84,24 +84,24 @@ namespace TurnipEmu::ARM7TDMI{
 								   Mask<word>{
 									   {27, 26, 0b01}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Block Data Transfer",
 								   Mask<word>{
 									   {27, 26, 0b10}
 								   }));
-		armInstructions.push_back(std::make_unique<ARMInstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
 								   "Coprocessor Ops",
 								   Mask<word>{
 									   {27, 26, 0b11}
 								   }));
 
-		thumbInstructions = std::vector<std::unique_ptr<const ThumbInstructionCategory>>();
+		thumbInstructions = std::vector<std::unique_ptr<const Thumb::InstructionCategory>>();
 		thumbInstructions.push_back(std::make_unique<Thumb::ALUAddSub>(
 										"F2: Add and Subtract",
 										Mask<halfword>{
 											{ 15, 11, 0b00011 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F1: Move Shifted Register",
 										Mask<halfword>{
 											{ 15, 13, 0b000 }
@@ -118,12 +118,12 @@ namespace TurnipEmu::ARM7TDMI{
 										}));
 		// This is a specialization of ALU Op with High Registers (format 5). It doesn't exist in the spec as a separate format.
 		// TODO: This creates a gap with undefined behaviour when bit 7 is high.
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F4.5: Branch and eXchange", 
 										Mask<halfword>{
 											{ 15,  7, 0b010001110 }
 										}));	
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F5: ALU Operation with High Registers", 
 										Mask<halfword>{
 											{ 15, 10, 0b010001 }
@@ -138,59 +138,58 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 12, 0b0101 },
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F9: Load/Store with Immediate offset",
 										Mask<halfword>{
 											{ 15, 13, 0b011 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F10: Load/Store Halfword",
 										Mask<halfword>{
 											{ 15, 12, 0b1000 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F11: Load/Store relative to Stack Pointer",
 										Mask<halfword>{
 											{ 15, 12, 0b1001 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F12: Load Address",
 										Mask<halfword>{
 											{ 15, 12, 0b1010 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F13: Add Offset to Stack Pointer",
 										Mask<halfword>{
 											{ 15,  8, 0b10110000 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F14: Push/Pop Registers",
 										Mask<halfword>{
 											{ 15, 12, 0b1011 },
 											{ 10, 9, 0b10 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F15: Multiple Load/Store",
 										Mask<halfword>{
 											{ 15, 12, 0b1100 }
 										}));
-		// TODO: Override this specific category to include conditions
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::ConditionalBranchInstruction>(
 										"F16: Conditional Branch",
 										Mask<halfword>{
 											{ 15, 12, 0b1101 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F17: Software Interrupt",
 										Mask<halfword>{
 											{ 15,  8, 0b11011111 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F18: Unconditional Branch",
 										Mask<halfword>{
 											{ 15, 11, 0b11100 }
 										}));
-		thumbInstructions.push_back(std::make_unique<ThumbInstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
 										"F19: Long Branch w/ Link",
 										Mask<halfword>{
 											{ 15, 12, 0b1111 }
@@ -198,14 +197,14 @@ namespace TurnipEmu::ARM7TDMI{
 
 		instructionsAreSetup = true;
 	}
-	const ARMInstructionCategory* CPU::matchArmInstruction(word instruction){
+	const ARM::InstructionCategory* CPU::matchArmInstruction(word instruction){
 		for (auto& instructionUniquePtr : armInstructions){
 			if (instructionUniquePtr->mask.matches(instruction))
 				return instructionUniquePtr.get();
 		}
 		return nullptr;
 	}
-	const ThumbInstructionCategory* CPU::matchThumbInstruction(halfword instruction){
+	const Thumb::InstructionCategory* CPU::matchThumbInstruction(halfword instruction){
 		for (auto& instructionUniquePtr : thumbInstructions){
 			if (instructionUniquePtr->mask.matches(instruction))
 				return instructionUniquePtr.get();
