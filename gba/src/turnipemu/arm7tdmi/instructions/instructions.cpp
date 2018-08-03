@@ -118,8 +118,8 @@ namespace TurnipEmu::ARM7TDMI{
 										}));
 		// This is a specialization of ALU Op with High Registers (format 5). It doesn't exist in the spec as a separate format.
 		// TODO: This creates a gap with undefined behaviour when bit 7 is high.
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
-										"F4.5: Branch and eXchange", 
+		thumbInstructions.push_back(std::make_unique<Thumb::BranchExchangeInstruction>(
+										"F5.5: Branch and eXchange", 
 										Mask<halfword>{
 											{ 15,  7, 0b010001110 }
 										}));	

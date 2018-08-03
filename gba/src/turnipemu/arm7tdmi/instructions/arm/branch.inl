@@ -45,7 +45,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 			std::stringstream stream;
-			stream << "Branch to location in Register " << (int)data.baseRegister << ", if bottom bit is 1 continue in Thumb, else continue in ARM. links: " << std::boolalpha << data.link;
+			stream << "Branch to location [Register " << (int)data.baseRegister << "], if bottom bit is 1 continue in Thumb, else continue in ARM. links: " << std::boolalpha << data.link;
 			return stream.str();
 		}
 		void execute(CPU& cpu, const RegisterPointers registers, word instruction) const override {
