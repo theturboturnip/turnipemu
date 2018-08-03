@@ -2,6 +2,76 @@
 #include "turnipemu/arm7tdmi/instruction_category.h"
 
 namespace TurnipEmu::ARM7TDMI::Thumb {
+	class ALUAddSub : public ThumbInstructionCategory {
+		using ThumbInstructionCategory::ThumbInstructionCategory;
+
+		const std::array<const ALU::Operation, 2> operations = {{
+				{
+					"ADD",
+					ALU::Add<false>,
+					ALU::OperationType::Arithmetic
+				},
+				{
+					"SUB",
+					ALU::Sub<false, false>,
+					ALU::OperationType::Arithmetic
+				}
+			}};
+		
+		struct InstructionData {
+			uint8_t opcode : 1;
+			uint8_t operand1Register : 3;
+			uint8_t destinationRegister : 3;
+
+			bool useImmediate;
+			union {
+				uint8_t immediateValue : 3;
+				uint8_t operand2Register : 3;
+			};
+
+			InstructionData(halfword instruction){
+				opcode = (instruction >> 9) & 0b1;
+				operand1Register = (instruction >> 3) & 0b111;
+				destinationRegister = (instruction >> 0) & 0b111;
+
+				useImmediate = (instruction >> 10) & 1;
+				immediateValue = (instruction >> 6) & 0b111; // Will set operand2Register
+			}
+		};
+			
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			const ALU::Operation& operation = operations[data.opcode];
+			std::stringstream stream;
+			stream << "ALU OP " << operation.mnemonic << "\n";
+			stream << "Operand 1: Register " << (int)data.operand1Register << "\n";
+			if (data.useImmediate)
+				stream << "Operand 2: Immediate Value " << (int)data.immediateValue << "\n";
+			else
+				stream << "Operand 2: Register " << (int)data.operand2Register << "\n";
+			stream << "Destination Register: " << (int)data.destinationRegister;
+			return stream.str();
+		}
+		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			const ALU::Operation& operation = operations[data.opcode];
+
+			word arg1 = *registers.main[data.operand1Register];
+			word arg2;
+			if (data.useImmediate)
+				arg2 = data.immediateValue;
+			else
+				arg2 = *registers.main[data.operand2Register];
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
+			if (operation.writeResult)
+				*registers.main[data.destinationRegister] = output.result;
+			output.applyToPSR(registers.cpsr);
+		}
+	};
+
 	class ALUImmediateInstruction : public ThumbInstructionCategory {
 		using ThumbInstructionCategory::ThumbInstructionCategory;
 
