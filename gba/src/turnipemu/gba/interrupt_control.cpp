@@ -5,8 +5,8 @@
 
 namespace TurnipEmu::GBA{  
 	bool InterruptControl::ownsAddress(uint32_t address) const {
-		return (0x0'0400'0200 <= address || address < 0x0'0400'0204) ||
-			(0x0'0400'0208 <= address || address < 0x0'0400'0212);
+		return (0x0'0400'0200 <= address && address < 0x0'0400'0204) ||
+			(0x0'0400'0208 <= address && address < 0x0'0400'0212);
 	}
 	bool InterruptControl::allowRead(uint32_t address) const {
 		return true;

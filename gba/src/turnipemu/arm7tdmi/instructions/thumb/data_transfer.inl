@@ -130,7 +130,44 @@ namespace TurnipEmu::ARM7TDMI::Thumb {
 
 			return os.str();
 		}
-		//void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
-		//}
+		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			word address = *registers.main[data.baseRegister] + *registers.main[data.offsetRegister];
+			if (data.transferMode == TransferMode::Load){
+				word loadedValue = 0;
+				switch (data.transferSize) {
+				case TransferSize::Byte:
+					loadedValue = cpu.memoryMap.read<byte>(address).value();
+					if (data.signExtended) loadedValue = loadedValue | (-((loadedValue >> 7) & 1));
+					break;
+				case TransferSize::HalfWord:
+					loadedValue = cpu.memoryMap.read<halfword>(address).value();
+					if (data.signExtended) loadedValue = loadedValue | (-((loadedValue >> 15) & 1));
+					break;
+				case TransferSize::Word:
+					loadedValue = cpu.memoryMap.read<word>(address).value();
+					assert(!data.signExtended);
+					break;
+				}
+
+				*registers.main[data.destinationRegister] = loadedValue;
+			}else{
+				assert(!data.signExtended);
+
+				word value = *registers.main[data.sourceRegister];
+				switch (data.transferSize) {
+				case TransferSize::Byte:
+					cpu.memoryMap.write<byte>(address, value);
+					break;
+				case TransferSize::HalfWord:
+					cpu.memoryMap.write<halfword>(address, value);
+					break;
+				case TransferSize::Word:
+					cpu.memoryMap.write<word>(address, value);
+					break;
+				}
+			}
+		}
 	};
 }
