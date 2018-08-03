@@ -163,7 +163,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15,  8, 0b10110000 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::PushPopInstruction>(
 										"F14: Push/Pop Registers",
 										Mask<halfword>{
 											{ 15, 12, 0b1011 },
