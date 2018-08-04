@@ -7,106 +7,22 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 		using InstructionCategory::InstructionCategory;
 		
 		const std::array<const Operation, 16> operations = {{
-			{
-				"AND",
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg1 & arg2);
-				},
-				OperationType::Logical
-			},
-			{
-				"EOR", // XOR
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg1 ^ arg2);
-				},
-				OperationType::Logical
-			},
-			{
-				"SUB",
-				Sub<false, false>,
-				OperationType::Arithmetic
-			},
-			{
-				"RSB",
-				Sub<false, true>,
-				OperationType::Arithmetic
-			},
-			{
-				"ADD",
-				Add<false>,
-				OperationType::Arithmetic
-			},
-			{
-				"ADC",
-				Add<true>,
-				OperationType::Arithmetic
-			},
-			{
-				"SBC",
-				Sub<true, false>,
-				OperationType::Arithmetic
-			},
-			{
-				"RSC",
-				Sub<true, true>,
-				OperationType::Arithmetic
-			},
-			{
-				"TST", // AND without result
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg1 & arg2);
-				},
-				OperationType::Logical,
-				false
-			},
-			{
-				"TEQ", // XOR without result
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg1 ^ arg2);
-				},
-				OperationType::Logical,
-				false
-			},
-			{
-				"CMP", // SUB without result
-				Sub<false, false>,
-				OperationType::Arithmetic,
-				false
-			},
-			{
-				"CMN", // ADD without result
-				Add<false>,
-				OperationType::Arithmetic,
-				false
-			},
-			{
-				"ORR", // OR
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg1 | arg2);
-				},
-				OperationType::Logical,
-			},
-			{
-				"MOV",
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg2);
-				},
-				OperationType::Logical
-			},
-			{
-				"BIC",
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(arg1 & ~arg2);
-				},
-				OperationType::Logical,
-			},
-			{
-				"MVN",
-				[](word arg1, word arg2, int carryIn){
-					return OperationOutput(~arg2);
-				},
-				OperationType::Logical
-			},
+				ALU::AND,
+				ALU::EOR,
+				ALU::SUB,
+				ALU::RSB,
+				ALU::ADD,
+				ALU::ADC,
+				ALU::SBC,
+				ALU::RSC,
+				ALU::TST,
+				ALU::TEQ,
+				ALU::CMP,
+				ALU::CMN,
+				ALU::ORR,
+				ALU::MOV,
+				ALU::BIC,
+				ALU::MVN,
 			}};
 		
 		struct InstructionData {

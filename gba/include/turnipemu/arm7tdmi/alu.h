@@ -3,6 +3,8 @@
 #include "turnipemu/types.h"
 #include "turnipemu/arm7tdmi/registers.h"
 
+#include <functional>
+
 namespace TurnipEmu::ARM7TDMI::ALU {
 	struct OperationOutput {
 		word result;
@@ -40,24 +42,38 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 			mnemonic[3] = '\0';
 		}
 	};
-		
-	template<bool WithCarry>
-	static OperationOutput Add(word arg1, word arg2, int carryIn){
-		uint64_t ulongResult = (uint64_t)arg1 + (uint64_t)arg2 + (WithCarry ? carryIn : 0);
-		int64_t slongResult = TURNIPEMU_UINT32_TO_SINT64(arg1) + TURNIPEMU_UINT32_TO_SINT64(arg2) + (WithCarry ? carryIn : 0);
-		OperationOutput output(
-			word(ulongResult),
-			(ulongResult >> 32) & 1,
-			(slongResult > std::numeric_limits<int32_t>::max()) || (slongResult < std::numeric_limits<int32_t>::lowest())
-			);
-		return output;
-	}
-	template<bool WithCarry, bool Reverse>
-	static OperationOutput Sub(word arg1, word arg2, int carryIn){
-		if (!WithCarry) carryIn = 1;
-		if (Reverse)
-			return Add<true>(arg2, ~arg1, carryIn);
-		else
-			return Add<true>(arg1, ~arg2, carryIn);
+
+	// Arithmetic Ops
+	const extern ALU::Operation ADD;
+	const extern ALU::Operation ADC;
+	const extern ALU::Operation SUB;
+	const extern ALU::Operation SBC;
+	const extern ALU::Operation RSB;
+	const extern ALU::Operation RSC;
+
+	// Logical Ops
+	const extern ALU::Operation AND;
+	const extern ALU::Operation EOR; // XOR
+	const extern ALU::Operation ORR; // OR
+	const extern ALU::Operation MOV;
+	const extern ALU::Operation BIC; // A AND NOT B
+	const extern ALU::Operation MVN; // NOT B
+
+	// Test Ops (only sets flags)
+	const extern ALU::Operation TST; // AND without result
+	const extern ALU::Operation TEQ; // XOR without result
+	const extern ALU::Operation CMP; // SUB without result
+	const extern ALU::Operation CMN; // ADD without result
+
+	namespace Thumb {
+		// Logical Shifts: A shifted by B
+		const extern ALU::Operation LSL; // Logical Shift Left
+		const extern ALU::Operation LSR; // Logical Shift Right
+		const extern ALU::Operation ASR; // Arithmetic Shift Right (sign extended)
+		const extern ALU::Operation ROR; // Rotate Right
+
+		// Misc. Ops
+		const extern ALU::Operation MUL; // Multiply
+		const extern ALU::Operation NEG; // Negate
 	}
 }

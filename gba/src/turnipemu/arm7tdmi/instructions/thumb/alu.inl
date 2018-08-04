@@ -6,16 +6,8 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		using InstructionCategory::InstructionCategory;
 
 		const std::array<const ALU::Operation, 2> operations = {{
-				{
-					"ADD",
-					ALU::Add<false>,
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"SUB",
-					ALU::Sub<false, false>,
-					ALU::OperationType::Arithmetic
-				}
+				ALU::ADD,
+				ALU::SUB
 			}};
 		
 		struct InstructionData {
@@ -76,29 +68,10 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		using InstructionCategory::InstructionCategory;
 
 		const std::array<const ALU::Operation, 4> operations = {{
-				{
-					"MOV",
-					[](word arg1, word arg2, int carryFlag){
-						return ALU::OperationOutput(arg2 & 0xFF);
-					},
-					ALU::OperationType::Logical
-				},
-				{
-					"CMP", // SUB without result
-					ALU::Sub<false, false>,
-					ALU::OperationType::Arithmetic,
-					false
-				},
-				{
-					"ADD",
-					ALU::Add<false>,
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"SUB",
-					ALU::Sub<false, false>,
-					ALU::OperationType::Arithmetic
-				}
+				ALU::MOV,
+				ALU::CMP,
+				ALU::ADD,
+				ALU::SUB,
 			}};
 		
 		struct InstructionData {
@@ -134,7 +107,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			const ALU::Operation& operation = operations[data.opcode];
 
 			word arg1 = *registers.main[data.operand1Register];
-			word arg2 = data.immediateValue;
+			byte arg2 = data.immediateValue;
 			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
 			if (operation.writeResult)
 				*registers.main[data.destinationRegister] = output.result;
@@ -146,119 +119,22 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		using InstructionCategory::InstructionCategory;
 
 		const std::array<const ALU::Operation, 16> operations = {{
-				{
-					"AND",
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 & arg2);
-					},
-					ALU::OperationType::Logical
-				},
-				{
-					"EOR", // XOR
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 ^ arg2);
-					},
-					ALU::OperationType::Logical
-				},
-				{
-					"LSL",
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 << arg2);
-					},
-					ALU::OperationType::Logical
-				},
-				{
-					"LSR",
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 >> arg2);
-					},
-					ALU::OperationType::Logical
-				},
-				{
-					"ASR", // Arithmetic Shift Right
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 >> arg2);
-					},
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"ADC", // Add with Carry
-					ALU::Add<true>,
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"SBC", // Sub with Carry
-					ALU::Sub<true, false>,
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"ROR", // Rotate Right (no carry)
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(
-							arg1 >> arg2 |
-							((arg1 << (32 - arg2)) & word(~0))
-							);
-					},
-					ALU::OperationType::Logical
-				},
-				{
-					"TST", // AND without result
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 & arg2);
-					},
-					ALU::OperationType::Logical,
-					false
-				},
-				{
-					"NEG", // Negate
-					[](word arg1, word arg2, int carryIn){
-						// Use ALU::Sub to make sure the flags will be correct
-						return ALU::Sub<false, false>(0, arg2, carryIn);
-					},
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"CMP", // SUB without result
-					ALU::Sub<false, false>,
-					ALU::OperationType::Arithmetic,
-					false
-				},
-				{
-					"CMN", // ADD without result
-					ALU::Add<false>,
-					ALU::OperationType::Arithmetic,
-					false
-				},
-				{
-					"ORR", // OR
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 | arg2);
-					},
-					ALU::OperationType::Logical,
-				},
-				{
-					"MUL", // Multiply
-					[](word arg1, word arg2, int carryIn){
-						// TODO: Flags
-						throw std::runtime_error("Thumb MUL doesn't have the correct flags implemented");
-						return ALU::OperationOutput(arg1 * arg2);
-					},
-					ALU::OperationType::Arithmetic
-				},
-				{
-					"BIC", // A AND NOT B
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(arg1 & ~arg2);
-					},
-					ALU::OperationType::Logical,
-				},
-				{
-					"MVN", // NOT B
-					[](word arg1, word arg2, int carryIn){
-						return ALU::OperationOutput(~arg2);
-					},
-					ALU::OperationType::Logical
-				},
+				ALU::AND,
+				ALU::EOR,
+				ALU::Thumb::LSL,
+				ALU::Thumb::LSR,
+				ALU::Thumb::ASR,
+				ALU::ADC,
+				ALU::SBC,
+				ALU::Thumb::ROR,
+				ALU::TST,
+				ALU::Thumb::NEG,
+				ALU::CMP,
+				ALU::CMN,
+				ALU::ORR,
+				ALU::Thumb::MUL,
+				ALU::BIC,
+				ALU::MVN,
 			}};
 
 		struct InstructionData {
