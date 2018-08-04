@@ -96,12 +96,12 @@ namespace TurnipEmu::ARM7TDMI{
 								   }));
 
 		thumbInstructions = std::vector<std::unique_ptr<const Thumb::InstructionCategory>>();
-		thumbInstructions.push_back(std::make_unique<Thumb::ALUAddSub>(
+		thumbInstructions.push_back(std::make_unique<Thumb::ALUAddSubInstruction>(
 										"F2: Add and Subtract",
 										Mask<halfword>{
 											{ 15, 11, 0b00011 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::ALUMoveShiftedRegisterInstruction>(
 										"F1: Move Shifted Register",
 										Mask<halfword>{
 											{ 15, 13, 0b000 }
