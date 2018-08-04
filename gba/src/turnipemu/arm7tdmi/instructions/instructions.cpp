@@ -189,7 +189,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 11, 0b11100 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::LongBranchLinkInstruction>(
 										"F19: Long Branch w/ Link",
 										Mask<halfword>{
 											{ 15, 12, 0b1111 }

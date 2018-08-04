@@ -288,9 +288,17 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		/*void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
-		  InstructionData data(instruction);
-			
-		  }*/
+		void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+		  
+			const ALU::Operation& operation = operations[data.opcode];
+		  
+			word arg1 = *registers.main[data.operand1Register];
+			word arg2 = *registers.main[data.operand2Register];
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
+			if (operation.writeResult)
+				*registers.main[data.destinationRegister] = output.result;
+			output.applyToPSR(registers.cpsr);
+		}
 	};
 }

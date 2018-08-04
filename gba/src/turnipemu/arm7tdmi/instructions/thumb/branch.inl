@@ -29,6 +29,47 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		}
 	};
 
+	class LongBranchLinkInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		struct InstructionData {
+			uint8_t instructionPart : 1; // This instruction is in two 'parts' that have to be executed consecutively
+			uint32_t offset;
+			
+			InstructionData(halfword instruction){
+				instructionPart = (instruction >> 11) & 1;
+				uint16_t baseOffset = instruction & (0xFFF >> 1); // to get 11 bits take 12 bits (0xFFF) and shift right 1
+
+				if (instructionPart == 0){
+					offset = baseOffset << 12;
+					if ((offset >> 22) & 1){
+						// Sign bit set, extend to the left
+						offset |= word(~0) << 23;
+					}
+				}else{
+					offset = baseOffset << 1;
+				}
+			}
+		};
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			return Utils::streamFormat("Long Branch with Link part #", data.instructionPart + 1, ": offset to apply = ", Utils::HexFormat(data.offset));
+		}
+		void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			if (data.instructionPart == 0){
+				registers.lr() = registers.pc() + data.offset;
+			}else{
+				word jumpingTo = registers.lr() + data.offset;
+				registers.lr() = registers.pc() - 4 + 2; // -4 to take prefetch into account, +2 to get the next executed instruction
+				registers.pc() = jumpingTo;
+			}
+		}
+	};
+
 	class BranchExchangeInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
