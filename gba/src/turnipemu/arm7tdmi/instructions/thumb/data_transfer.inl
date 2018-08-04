@@ -3,6 +3,57 @@
 #include "turnipemu/log.h"
 
 namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
+	class LoadStoreHalfwordInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		enum class TransferMode : bool {
+			Load = true,
+			Store = false
+		};
+		struct InstructionData {
+			TransferMode transferMode;
+			
+			uint8_t immediateValue : 5;
+
+			union {
+				uint8_t sourceRegister : 3;
+				uint8_t destinationRegister : 3;
+			};
+			uint8_t baseRegister : 3;
+			
+			InstructionData(halfword instruction){
+				transferMode = static_cast<TransferMode>((instruction >> 11) & 1);
+
+				immediateValue = (instruction >> 6) & 0b11111;
+				sourceRegister = (instruction >> 0) & 0b111;
+				baseRegister = (instruction >> 3) & 0b111;
+			}
+		};
+
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			std::stringstream os;
+			bool loading = (data.transferMode == TransferMode::Load);
+			os << (loading ? "Load halfword from " : "Store halfword to ");
+			os << "Register " << (int)data.baseRegister << " + " << (int)data.immediateValue;
+			os << (loading ? " to " : " from ");
+			os << "Register " << (int)data.destinationRegister;
+			return os.str();
+		}
+		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			word address = *registers.main[data.baseRegister] + data.immediateValue;
+			if (data.transferMode == TransferMode::Load){
+				*registers.main[data.destinationRegister] = cpu.memoryMap.read<halfword>(address).value();
+			}else{
+				cpu.memoryMap.write<halfword>(address, *registers.main[data.sourceRegister]);
+			}
+		}
+	};
+
 	class LoadPCRelativeInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 

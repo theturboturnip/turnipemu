@@ -143,7 +143,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 13, 0b011 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::LoadStoreHalfwordInstruction>(
 										"F10: Load/Store Halfword",
 										Mask<halfword>{
 											{ 15, 12, 0b1000 }

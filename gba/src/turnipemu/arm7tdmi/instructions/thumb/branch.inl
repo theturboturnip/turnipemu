@@ -64,6 +64,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 				registers.lr() = registers.pc() + data.offset;
 			}else{
 				word jumpingTo = registers.lr() + data.offset;
+				jumpingTo |= 1; // Set bit 0 to 1 so that any jumps to the link register will go into thumb mode
 				registers.lr() = registers.pc() - 4 + 2; // -4 to take prefetch into account, +2 to get the next executed instruction
 				registers.pc() = jumpingTo;
 			}
