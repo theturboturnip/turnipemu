@@ -61,13 +61,14 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return os.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
 			if (data.transferMode == TransferMode::Load){
 				auto pop = [&](int registerIndex){
-					*registers.main[registerIndex] = cpu.memoryMap.read<word>(registers.sp()).value();
-					registers.sp() += 4;
+					word sp = registers.get(registers.SP);
+					registers.set(registerIndex, cpu.memoryMap.read<word>(sp).value());
+					registers.set(registers.SP, sp + 4);
 				};
 				if (data.loadProgramCounter) pop(15);
 				for (int i = 7; i >= 0; i--){
@@ -77,8 +78,9 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 				}
 			}else{
 				auto push = [&](int registerIndex){
-					registers.sp() -= 4;
-					cpu.memoryMap.write<word>(registers.sp(), *registers.main[registerIndex]);
+					word sp = registers.get(registers.SP) - 4;
+					registers.set(registers.SP, sp);
+					cpu.memoryMap.write<word>(sp, registers.get(registerIndex));
 				};
 				for (int i = 0; i < 8; i++){
 					if (!data.registerList[i]) continue;

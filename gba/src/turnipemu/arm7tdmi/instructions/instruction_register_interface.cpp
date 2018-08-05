@@ -5,7 +5,7 @@
 
 namespace TurnipEmu::ARM7TDMI::Instructions {
 	word InstructionRegisterInterface::getNextInstructionAddress() const {
-		assert(pipeline->decodedInstructionAddress + pipeline->instructionTypeSize == *registers.main[15] + pipeline->instructionTypeSize - 8);
+		assert(pipeline->decodedInstructionAddress + pipeline->instructionTypeSize == *registers.main[15] - pipeline->instructionTypeSize);
 		return pipeline->decodedInstructionAddress + pipeline->instructionTypeSize;
 	}
 	

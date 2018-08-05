@@ -22,10 +22,10 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return Utils::streamFormat("Branch by ", (int)data.offset);
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			registers.pc() += data.offset;
+			registers.set(registers.PC, registers.get(registers.PC) + data.offset);
 		}
 	};
 
@@ -57,16 +57,15 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return Utils::streamFormat("Long Branch with Link part #", data.instructionPart + 1, ": offset to apply = ", Utils::HexFormat(data.offset));
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
 			if (data.instructionPart == 0){
-				registers.lr() = registers.pc() + data.offset;
+				registers.set(registers.LR, registers.get(registers.PC) + data.offset);
 			}else{
-				word jumpingTo = registers.lr() + data.offset;
-				jumpingTo |= 1; // Set bit 0 to 1 so that any jumps to the link register will go into thumb mode
-				registers.lr() = registers.pc() - 4 + 2; // -4 to take prefetch into account, +2 to get the next executed instruction
-				registers.pc() = jumpingTo;
+				word jumpingTo = registers.get(registers.LR) + data.offset;
+				registers.set(registers.LR, registers.getNextInstructionAddress() | 1); // Set bit 0 to 1 so that any jumps to the link register will go into thumb mode
+				registers.set(registers.PC, jumpingTo);
 			}
 		}
 	};
@@ -90,14 +89,14 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return Utils::streamFormat("Branch to [Register ", (int)data.baseRegister, "], if bottom bit is 1 then continue in Thumb else continue in ARM");
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			word newAddress = *registers.main[data.baseRegister];
+			word newAddress = registers.get(data.baseRegister);
 			CPUExecState newState = (newAddress & 1) ? CPUExecState::Thumb : CPUExecState::ARM;
 			newAddress = newAddress - (newAddress % 2);
-			registers.pc() = newAddress;
-			registers.cpsr->state = newState;
+			registers.set(registers.PC, newAddress);
+			registers.cpsr().state = newState;
 		}
 	};
 }

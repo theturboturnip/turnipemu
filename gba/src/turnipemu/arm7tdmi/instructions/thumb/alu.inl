@@ -41,17 +41,17 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
 
-			word arg1 = *registers.main[data.operand1Register];
+			word arg1 = registers.get(data.operand1Register);
 			word arg2 = data.operand2Immediate;
-			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr().carry ? 1 : 0);
 			if (operation.writeResult)
-				*registers.main[data.destinationRegister] = output.result;
-			output.applyToPSR(registers.cpsr);
+				registers.set(data.destinationRegister, output.result);
+			output.applyToPSR(registers.cpsr());
 		}
 	};
 	
@@ -99,21 +99,21 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
 
-			word arg1 = *registers.main[data.operand1Register];
+			word arg1 = registers.get(data.operand1Register);
 			word arg2;
 			if (data.useImmediate)
 				arg2 = data.immediateValue;
 			else
-				arg2 = *registers.main[data.operand2Register];
-			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
+				arg2 = registers.get(data.operand2Register);
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr().carry ? 1 : 0);
 			if (operation.writeResult)
-				*registers.main[data.destinationRegister] = output.result;
-			output.applyToPSR(registers.cpsr);
+				registers.set(data.destinationRegister, output.result);
+			output.applyToPSR(registers.cpsr());
 		}
 	};
 
@@ -154,17 +154,17 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
 
-			word arg1 = *registers.main[data.operand1Register];
+			word arg1 = registers.get(data.operand1Register);
 			byte arg2 = data.immediateValue;
-			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr().carry ? 1 : 0);
 			if (operation.writeResult)
-				*registers.main[data.destinationRegister] = output.result;
-			output.applyToPSR(registers.cpsr);
+				registers.set(data.destinationRegister, output.result);
+			output.applyToPSR(registers.cpsr());
 		}
 	};
 	
@@ -217,17 +217,17 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 		  
 			const ALU::Operation& operation = operations[data.opcode];
 		  
-			word arg1 = *registers.main[data.operand1Register];
-			word arg2 = *registers.main[data.operand2Register];
-			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr->carry ? 1 : 0);
+			word arg1 = registers.get(data.operand1Register);
+			word arg2 = registers.get(data.operand2Register);
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr().carry ? 1 : 0);
 			if (operation.writeResult)
-				*registers.main[data.destinationRegister] = output.result;
-			output.applyToPSR(registers.cpsr);
+				registers.set(data.destinationRegister, output.result);
+			output.applyToPSR(registers.cpsr());
 		}
 	};
 }

@@ -42,14 +42,14 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			os << "Register " << (int)data.destinationRegister;
 			return os.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			word address = *registers.main[data.baseRegister] + data.immediateValue;
+			word address = registers.get(data.baseRegister) + data.immediateValue;
 			if (data.transferMode == TransferMode::Load){
-				*registers.main[data.destinationRegister] = cpu.memoryMap.read<halfword>(address).value();
+				registers.set(data.destinationRegister, cpu.memoryMap.read<halfword>(address).value());
 			}else{
-				cpu.memoryMap.write<halfword>(address, *registers.main[data.sourceRegister]);
+				cpu.memoryMap.write<halfword>(address, registers.get(data.sourceRegister));
 			}
 		}
 	};
@@ -79,15 +79,15 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 				". The PC is forced to be word-aligned by zeroing bit 0."
 				);
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			word address = registers.pc();
+			word address = registers.get(registers.PC);
 			address = address & (word(~0) << 2); // Set bits 0 and 1 to 0, to make sure it's a multiple of 4
 			address += data.immediateValue;
 
 			if (auto dataOptional = cpu.memoryMap.read<word>(address))
-				*registers.main[data.destinationRegister] = dataOptional.value();
+				registers.set(data.destinationRegister, dataOptional.value());
 		}
 	};
 
@@ -128,14 +128,14 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			os << "Register " << (int)data.destinationRegister;
 			return os.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			word address = registers.sp() + data.immediateValue;
+			word address = registers.get(registers.SP) + data.immediateValue;
 			if (data.transferMode == TransferMode::Load){
-				*registers.main[data.destinationRegister] = cpu.memoryMap.read<word>(address).value();
+				registers.set(data.destinationRegister, cpu.memoryMap.read<word>(address).value());
 			}else{
-				cpu.memoryMap.write<word>(address, *registers.main[data.sourceRegister]);
+				cpu.memoryMap.write<word>(address, registers.get(data.sourceRegister));
 			}
 		}
 	};
@@ -230,10 +230,10 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return os.str();
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			word address = *registers.main[data.baseRegister] + *registers.main[data.offsetRegister];
+			word address = registers.get(data.baseRegister) + registers.get(data.offsetRegister);
 			if (data.transferMode == TransferMode::Load){
 				word loadedValue = 0;
 				switch (data.transferSize) {
@@ -251,11 +251,11 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 					break;
 				}
 
-				*registers.main[data.destinationRegister] = loadedValue;
+				registers.set(data.destinationRegister, loadedValue);
 			}else{
 				assert(!data.signExtended);
 
-				word value = *registers.main[data.sourceRegister];
+				word value = registers.get(data.sourceRegister);
 				switch (data.transferSize) {
 				case TransferSize::Byte:
 					cpu.memoryMap.write<byte>(address, value);

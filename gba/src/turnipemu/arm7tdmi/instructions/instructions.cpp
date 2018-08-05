@@ -6,7 +6,7 @@
 
 #include "common.inl"
 #include "arm/all.inl"
-//#include "thumb/all.inl"
+#include "thumb/all.inl"
 
 namespace TurnipEmu::ARM7TDMI{
 	bool CPU::instructionsAreSetup = false;
@@ -96,7 +96,6 @@ namespace TurnipEmu::ARM7TDMI{
 								   }));
 
 		thumbInstructions = std::vector<std::unique_ptr<const Thumb::InstructionCategory>>();
-		/*
 		thumbInstructions.push_back(std::make_unique<Thumb::ALUAddSubInstruction>(
 										"F2: Add and Subtract",
 										Mask<halfword>{
@@ -195,7 +194,6 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 12, 0b1111 }
 										}));
-		*/
 
 		instructionsAreSetup = true;
 	}

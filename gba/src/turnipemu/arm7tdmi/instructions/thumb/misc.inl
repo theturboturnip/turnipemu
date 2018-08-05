@@ -19,10 +19,10 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return Utils::streamFormat("Offset the Stack Pointer by ", data.offset);
 		}
-		void execute(CPU& cpu, RegisterPointers registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
 			InstructionData data(instruction);
 
-			registers.sp() += data.offset;
+			registers.set(registers.SP, registers.get(registers.SP) + data.offset);
 		}
 	};
 }
