@@ -57,6 +57,17 @@ namespace TurnipEmu::Utils{
 	private:
 		NumberType number;
 	};
+
+	template<typename InputNumberType, typename TargetNumberType, int StartingBit>
+	TargetNumberType SignExtend(InputNumberType number){
+		TargetNumberType result;
+		if ((number >> StartingBit) & 1){
+			result = number | ((unsigned long long)(~0) << StartingBit);
+		}else{
+			result = number;
+		}
+		return result;
+	}
 }
 
 #define TURNIPEMU_UINT32_TO_SINT64(VALUE) (int64_t)(int32_t)(VALUE)

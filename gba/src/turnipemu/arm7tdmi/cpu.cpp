@@ -17,7 +17,7 @@ namespace TurnipEmu::ARM7TDMI{
 	void CPU::reset(){
 		memset(&state.registers, 0, sizeof(state.registers));
 
-		breakpoints = { 0x9cc };
+		breakpoints = { 0xbc4 };
 
 		constexpr bool RunBIOS = true;
 		if constexpr (RunBIOS){

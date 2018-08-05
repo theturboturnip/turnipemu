@@ -84,7 +84,7 @@ namespace TurnipEmu::ARM7TDMI{
 								   Mask<word>{
 									   {27, 26, 0b01}
 								   }));
-		armInstructions.push_back(std::make_unique<ARM::InstructionCategory>(
+		armInstructions.push_back(std::make_unique<ARM::BlockDataTransferInstruction>(
 								   "Block Data Transfer",
 								   Mask<word>{
 									   {27, 26, 0b10}

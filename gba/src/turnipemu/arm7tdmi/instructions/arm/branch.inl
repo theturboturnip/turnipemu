@@ -9,7 +9,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			bool link;
 
 			InstructionData(word instruction){
-				offset = (int64_t)(int32_t)((instruction >> 0) & 0xFFFFFF) << 2;
+				offset = Utils::SignExtend<uint32_t, int64_t, 23>(instruction & 0xFFFFFF) << 2;
 				link = (instruction >> 24) & 1;
 			}
 		};

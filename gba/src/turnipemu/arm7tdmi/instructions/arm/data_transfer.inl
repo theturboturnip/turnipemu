@@ -33,6 +33,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			}
 		};
 
+	public:
 		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
 			
@@ -91,6 +92,82 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			// On the original ARM7, if post-indexing and writeback is used then the transfer is performed in user mode. However on the GBA the mode doesn't matter, so we ignore it here.
 			if (data.writeback && (data.indexMode == DataTransferInfo::IndexMode::PreIndex)){
 				registers.set(data.addressRegister, address);
+			}
+		}
+	};
+
+	class BlockDataTransferInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		struct InstructionData : public DataTransferInfo{
+			std::bitset<16> registerList;
+			
+			union {
+				bool loadPSR;
+				bool forceUser;
+			};
+
+			InstructionData(word instructionWord) : 
+				DataTransferInfo(instructionWord), registerList(instructionWord & 0xFFFF) {
+				loadPSR = (instructionWord >> 22) & 1;
+			}
+		};
+	public:
+		std::string disassembly(word instructionWord) const override {
+			InstructionData data(instructionWord);
+			
+			std::stringstream stream;
+			stream << "Block ";
+			if (data.transferMode == DataTransferInfo::TransferMode::Load){
+				stream << "Load\n"; 
+			}else{
+				stream << "Store\n";
+			}
+			stream << "Registers:";
+			for (int i = 0; i < 16; i++){
+				if (data.registerList[i]){
+					stream << " R" << i;
+				}
+			}
+			stream << "\nAddress Register: " << (int)data.addressRegister;
+			stream << "\nDirection: " << ((data.offsetSign == 1) ? "Increment" : "Decrement") << " from register";
+			stream << "\nWriteback: " << std::boolalpha << data.writeback;
+			stream << "\nIndexing: " << ((data.indexMode == DataTransferInfo::IndexMode::PreIndex) ? "Pre" : "Post");
+			return stream.str();
+		}
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instructionWord) const override {
+			InstructionData data(instructionWord);
+
+			if (data.loadPSR){
+				throw std::runtime_error("TODO: Implement S bit for Block Data Transfer");
+			}
+
+			// As stated by the docs:
+			// The registers must be read from lowest to highest (excluding the address)
+			// The lowest register must be written to the lowest point
+			word baseAddress = registers.get(data.addressRegister);
+			word address = baseAddress;
+			if (data.offsetSign < 0){
+				address -= sizeof(word) * data.registerList.count();
+			}
+
+			const bool preindex = data.indexMode == DataTransferInfo::IndexMode::PreIndex;
+			const bool load = data.transferMode == DataTransferInfo::TransferMode::Load;
+			for (int i = 0; i < 16; i++){
+				if (!data.registerList[i]) continue;
+				
+				if (preindex) address += data.offsetSign * sizeof(word);
+				
+				if (load)
+					registers.set(i, cpu.memoryMap.read<word>(address).value());
+				else
+					cpu.memoryMap.write<word>(address, registers.get(i));
+					
+				if (!preindex) address += data.offsetSign * sizeof(word);
+			}
+
+			if (data.writeback){
+				registers.set(data.addressRegister, baseAddress + data.offsetSign * sizeof(word) * data.registerList.count());
 			}
 		}
 	};
