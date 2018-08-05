@@ -184,7 +184,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15,  8, 0b11011111 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::UnconditionalBranchInstruction>(
 										"F18: Unconditional Branch",
 										Mask<halfword>{
 											{ 15, 11, 0b11100 }

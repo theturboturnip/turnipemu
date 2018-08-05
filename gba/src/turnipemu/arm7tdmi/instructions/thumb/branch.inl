@@ -29,6 +29,29 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		}
 	};
 
+	class UnconditionalBranchInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		struct InstructionData {
+			int16_t offset : 12;
+
+			InstructionData(halfword instruction){
+				offset = (instruction & (0xFFF >> 1)) << 1;
+			}
+		};
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			return Utils::streamFormat("Branch by ", (int)data.offset);
+		}
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+			InstructionData data(instruction);
+
+			registers.set(registers.PC, registers.get(registers.PC) + data.offset);
+		}
+	};
+	
 	class LongBranchLinkInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
