@@ -123,7 +123,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15,  7, 0b010001110 }
 										}));	
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::ALUHighRegistersInstruction>(
 										"F5: ALU Operation with High Registers", 
 										Mask<halfword>{
 											{ 15, 10, 0b010001 }

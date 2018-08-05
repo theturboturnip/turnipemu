@@ -230,4 +230,59 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			output.applyToPSR(registers.cpsr());
 		}
 	};
+
+	class ALUHighRegistersInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		const std::array<const ALU::Operation, 3> operations = {{
+				ALU::ADD,
+				ALU::CMP,
+				ALU::MOV,
+			}};
+
+		struct InstructionData {
+			uint8_t opcode : 2;
+			union {
+				uint8_t destinationRegister : 4;
+				uint8_t operand1Register : 4;
+			};
+			uint8_t operand2Register : 4;
+
+			InstructionData(halfword instruction){
+				opcode = (instruction >> 8) & 0b11;
+				
+				operand1Register = (instruction >> 0) & 0b111;
+				operand1Register |= ((instruction >> 7) & 1) << 3;
+
+				operand2Register = (instruction >> 3) & 0b111;
+				operand2Register |= ((instruction >> 6) & 1) << 3;
+			}
+		};
+
+	public:
+		std::string disassembly(halfword instruction) const override {
+			InstructionData data(instruction);
+
+			const ALU::Operation& operation = operations[data.opcode];
+			std::stringstream stream;
+			stream << "ALU OP " << operation.mnemonic << "\n";
+			stream << "Operand 1: Register " << (int)data.operand1Register << "\n";
+			stream << "Operand 2: Register " << (int)data.operand2Register << "\n";
+			stream << "Destination Register: " << (int)data.destinationRegister;
+			return stream.str();
+		}
+		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+			InstructionData data(instruction);
+		  
+			const ALU::Operation& operation = operations[data.opcode];
+		  
+			word arg1 = registers.get(data.operand1Register);
+			word arg2 = registers.get(data.operand2Register);
+			ALU::OperationOutput output = operation.execute(arg1, arg2, registers.cpsr().carry ? 1 : 0);
+			if (operation.writeResult)
+				registers.set(data.destinationRegister, output.result);
+			if (data.opcode == 0b01)
+				output.applyToPSR(registers.cpsr()); // Only CMP sets the flags in this mode
+		}
+	};
 }
