@@ -18,10 +18,18 @@ namespace TurnipEmu::ARM7TDMI {
 
 		bool hasExecutedInstruction;
 		word executedInstructionAddress;
+
+		size_t instructionTypeSize;
+		
+		inline void queueFlushFromInstruction(){
+			flushQueuedByInstruction = true;
+		}
+	protected:
+		bool flushQueuedByInstruction;
 	};
 	
 	template<typename InstructionCategoryType, typename InstructionType>
-	class Pipeline : public PipelineBase {		
+	class Pipeline : public PipelineBase {
 	public:
 		InstructionType fetchedInstruction;
 			

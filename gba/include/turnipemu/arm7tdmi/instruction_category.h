@@ -7,6 +7,7 @@
 
 namespace TurnipEmu::ARM7TDMI {
 	class CPU;
+	class PipelineBase;
 }
 
 namespace TurnipEmu::ARM7TDMI::Instructions {
@@ -57,6 +58,26 @@ namespace TurnipEmu::ARM7TDMI::Instructions {
 		}
 	};
 
+	struct InstructionRegisterInterface {
+		InstructionRegisterInterface(PipelineBase* pipeline, RegisterPointers rp)
+			: pipeline(pipeline), registers(rp), reads(0){}
+		
+		const int SP = 13;
+		const int LR = 14;
+		const int PC = 15;
+
+		word getNextInstructionAddress() const;
+
+		word get(int index);
+		void set(int index, word value) const;
+		ProgramStatusRegister& cpsr() const;
+		ProgramStatusRegister& spsr() const;
+	private:
+	    PipelineBase* const pipeline;
+		const RegisterPointers registers;
+
+		int reads = 0;
+	};
 	
 	struct Condition {
 		char name[3];
@@ -74,7 +95,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions {
 		virtual std::string disassembly(InstructionType instruction) const {
 			return "NO DISASSEMBLY PRESENT";
 		}
-		virtual void execute(CPU& cpu, const RegisterPointers, InstructionType instruction) const {
+		virtual void execute(CPU& cpu, InstructionRegisterInterface, InstructionType instruction) const {
 			throw std::runtime_error(Utils::streamFormat("Instruction '", name ,"' is not implemented!"));
 		}
 		

@@ -54,17 +54,17 @@ namespace TurnipEmu::ARM7TDMI {
 			}
 		}
 
-		word calculateValue(const RegisterPointers registers, bool allowChangeFlags){
+		word calculateValue(InstructionRegisterInterface registers, bool allowChangeFlags){
 			auto setCarryIfPossible = [&](bool set) {
 				if (!allowChangeFlags) return;
 
 				assert(!hasChangedFlags);
-				registers.cpsr->carry = set;
+				registers.cpsr().carry = set;
 				hasChangedFlags = true;
 			};
 			
-			word baseValue = *registers.main[baseRegister];
-			word baseShiftAmount = shiftedByRegister ? *registers.main[shiftRegister] :
+			word baseValue = registers.get(baseRegister);
+			word baseShiftAmount = shiftedByRegister ? registers.get(shiftRegister) :
 				shiftAmount;
 			uint16_t finalShiftAmount = baseShiftAmount & 0b11111;
 
@@ -85,7 +85,7 @@ namespace TurnipEmu::ARM7TDMI {
 				if (finalShiftAmount == 0){
 					// RRX, rotate right by 1 using the carry flag
 					setCarryIfPossible(baseValue & 1);
-					return word((registers.cpsr->carry << 31) | (baseValue >> 1));
+					return word((registers.cpsr().carry << 31) | (baseValue >> 1));
 				}
 				// ROR, normal rotate right
 				setCarryIfPossible((baseValue >> (finalShiftAmount - 1)) & 1);
@@ -144,7 +144,7 @@ namespace TurnipEmu::ARM7TDMI {
 				registerValue = ShiftedRegister(instructionWord);
 			}
 		}
-		word calculateValue(const RegisterPointers registers, bool allowChangeFlags){
+		word calculateValue(InstructionRegisterInterface registers, bool allowChangeFlags){
 			if (useImmediate){
 				return word(immediateValue.baseImmediateValue >> immediateValue.rotation) |
 					word(immediateValue.baseImmediateValue << (32 - immediateValue.rotation));

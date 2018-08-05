@@ -60,29 +60,29 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			stream << "\nIndexing: " << ((data.indexMode == DataTransferInfo::IndexMode::PreIndex) ? "Pre" : "Post");
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			
 			int finalOffset = (data.useImmediateOffset ? data.offset.immediateValue : data.offset.registerValue.calculateValue(registers, true)) * data.offsetSign;
-			word address = (*registers.main[data.addressRegister]) + finalOffset;
+			word address = registers.get(data.addressRegister) + finalOffset;
 			if (data.transferMode == DataTransferInfo::TransferMode::Load){
 				if (data.transferSize == TransferSize::Byte){
 					auto optionalByte = cpu.memoryMap.read<byte>(address);
 					if (optionalByte)
-						*registers.main[data.dataRegister] = optionalByte.value();
+						registers.set(data.dataRegister, optionalByte.value());
 				}else{
 					auto optionalWord = cpu.memoryMap.read<word>(address);
 					if (optionalWord)
-						*registers.main[data.dataRegister] = optionalWord.value();
+						registers.set(data.dataRegister, optionalWord.value());
 				}
 			}else{
 				if (data.transferSize == TransferSize::Byte){
-					byte value = (*registers.main[data.dataRegister]) & 0xFF;
+					byte value = registers.get(data.dataRegister) & 0xFF;
 					if (!cpu.memoryMap.write<byte>(address, value)){
 						// Memory Exception?
 					}
 				}else{
-					word value = *registers.main[data.dataRegister];
+					word value = registers.get(data.dataRegister);
 					if (!cpu.memoryMap.write<word>(address, value)){
 						// Memory Exception?
 					}
@@ -90,7 +90,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			}
 			// On the original ARM7, if post-indexing and writeback is used then the transfer is performed in user mode. However on the GBA the mode doesn't matter, so we ignore it here.
 			if (data.writeback && (data.indexMode == DataTransferInfo::IndexMode::PreIndex)){
-				*registers.main[data.addressRegister] = address;
+				registers.set(data.addressRegister, address);
 			}
 		}
 	};

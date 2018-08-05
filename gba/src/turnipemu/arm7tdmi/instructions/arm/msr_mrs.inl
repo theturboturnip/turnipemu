@@ -38,10 +38,10 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			}
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 
-			word* targetRegister = data.writeToSpecialPSR ? &registers.spsr->value : &registers.cpsr->value;
+			word* targetRegister = data.writeToSpecialPSR ? &registers.spsr().value : &registers.cpsr().value;
 			word writeValue = data.operand.calculateValue(registers, true);
 			if (data.writeFlagBitsOnly){
 				word flagMask = (0xF << 28);
@@ -74,12 +74,12 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			stream << " into Register " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, const RegisterPointers registers, word instructionWord) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			if (data.loadFromSpecialPSR){
-				*registers.main[data.destinationRegister] = registers.spsr->value;
+				registers.set(data.destinationRegister, registers.spsr().value);
 			}else{
-				*registers.main[data.destinationRegister] = registers.cpsr->value;
+				registers.set(data.destinationRegister, registers.cpsr().value);
 			}
 		}
 	};

@@ -19,12 +19,14 @@ namespace TurnipEmu::ARM7TDMI {
 
 		hasExecutedInstruction = false;
 		executedInstructionAddress = 0x0;
+
+		instructionTypeSize = sizeof(InstructionType);
 	}
 
 	template<typename InstructionCategoryType, typename InstructionType>
 	void Pipeline<InstructionCategoryType, InstructionType>::tick(CPU& cpu, const RegisterPointers registers, std::function<const InstructionCategoryType*(InstructionType)> decodeInstructionFunction){
 
-		const word oldPC = registers.pc();
+		flushQueuedByInstruction = false;
 		
 		if (hasFetchedInstruction){
 			if (hasDecodedInstruction){
@@ -32,7 +34,9 @@ namespace TurnipEmu::ARM7TDMI {
 				const auto& condition = decodedInstructionCategory->getCondition(decodedInstruction);
 				if (condition.fulfilsCondition(*registers.cpsr)){
                     // This can flush the pipeline.
-					decodedInstructionCategory->execute(cpu, registers, decodedInstruction);
+					decodedInstructionCategory->execute(cpu,
+														InstructionRegisterInterface{this, registers},
+														decodedInstruction);
 				}
 
 				hasExecutedInstruction = true;
@@ -57,7 +61,7 @@ namespace TurnipEmu::ARM7TDMI {
 			assert(!hasDecodedInstruction);
 		}
 
-		if (oldPC != registers.pc()){
+		if (flushQueuedByInstruction){
 			flush();
 		}else{
 			// Fetch the instruction

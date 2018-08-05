@@ -24,6 +24,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		std::vector<CPUState> stateHistory;
 		int selectedStateIndex = 0;
 		bool teleportToSelected = false;
+		bool showPartialPipelineStates = false;
 		constexpr static int maxStateMemory = 100;
 	};
 }

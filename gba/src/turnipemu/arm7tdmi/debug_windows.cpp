@@ -158,11 +158,13 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			}
 			ImGui::Unindent();
 
+			ImGui::Checkbox("Show All Stages", &showPartialPipelineStates);
+			
 			ImGui::BeginChild("CPU History", ImVec2(0,0), true);
 			for (int i = 0; i < stateHistory.size(); i++){
 				const auto* statePipelineBaseData = stateHistory[i].currentPipelineBaseData();
 
-				if (!statePipelineBaseData->hasDecodedInstruction && i != stateHistory.size() - 1) continue;
+				if (!showPartialPipelineStates && !statePipelineBaseData->hasDecodedInstruction && i != stateHistory.size() - 1) continue;
 				
 				char buf[15];
 				sprintf(buf, "0x%08x %c%c%c",

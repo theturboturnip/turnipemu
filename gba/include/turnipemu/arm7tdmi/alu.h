@@ -14,11 +14,11 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 		constexpr OperationOutput(word result) : result(result), carry(false), overflow(false){}
 		constexpr OperationOutput(word result, bool carry, bool overflow) : result(result), carry(carry), overflow(overflow) {}
 
-		inline void applyToPSR(ProgramStatusRegister* psr){
-			psr->overflow = overflow;
-			psr->carry = carry;
-			psr->zero = (result == 0);
-			psr->negative = (result >> 31) & 1;
+		inline void applyToPSR(ProgramStatusRegister& psr){
+			psr.overflow = overflow;
+			psr.carry = carry;
+			psr.zero = (result == 0);
+			psr.negative = (result >> 31) & 1;
 		}
 	};
 	struct OperationType {

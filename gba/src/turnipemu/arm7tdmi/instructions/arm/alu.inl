@@ -66,36 +66,23 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			stream << "\nDestination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, RegisterPointers currentRegisters, word instructionWord) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface currentRegisters, word instructionWord) const override {
 			InstructionData data(instructionWord);
 			if (data.restoreSPSR){
-				if (currentRegisters.cpsr->mode == Mode::User) return;
+				if (currentRegisters.cpsr().mode == Mode::User) return;
 				throw std::runtime_error("Implement SPSR restoration!");
 			}
 			
 			const Operation& operation = operations[data.opcode];
-
-			uint8_t pcOffset = 0;
-			if (data.operand1Register == 15 || (!data.operand2.useImmediate && data.operand2.registerValue.baseRegister == 15)){
-				if (!data.operand2.useImmediate && data.operand2.registerValue.shiftedByRegister) 
-					pcOffset = 4;
-				else
-					pcOffset = 0;
-				*currentRegisters.main[data.destinationRegister] += pcOffset;
-			}
 			
-			word arg1 = *currentRegisters.main[data.operand1Register];
+			word arg1 = currentRegisters.get(data.operand1Register);
 			word arg2 = data.operand2.calculateValue(currentRegisters, data.setFlags);
-			OperationOutput output = operation.execute(arg1, arg2, currentRegisters.cpsr->carry ? 1 : 0);
+			OperationOutput output = operation.execute(arg1, arg2, currentRegisters.cpsr().carry ? 1 : 0);
 			if (operation.writeResult)
-				*currentRegisters.main[data.destinationRegister] = output.result;
+				currentRegisters.set(data.destinationRegister, output.result);
 			if (data.setFlags){ // TODO: Does it matter whether the instruction is arithmetic or logical?
-				output.applyToPSR(currentRegisters.cpsr);
+				output.applyToPSR(currentRegisters.cpsr());
 			}
-
-			// TODO: This doesn't look right...
-			//if (data.destinationRegister == 15)
-			//	*currentRegisters.main[data.destinationRegister] -= pcOffset;
 		}
 	};
 }

@@ -49,7 +49,6 @@ namespace TurnipEmu::ARM7TDMI{
 
 	
 	void CPU::tick(){
-		throw std::runtime_error("Add a 'Set PC' function for instructions to use to force flush the pipeline instead of trying to detect it, which won't work for branch by 0");
 		try{
 			const auto currentRegisters = state.usableRegisters();
 			const CPUExecState oldExecState = state.registers.cpsr.state;
