@@ -9,12 +9,15 @@ namespace TurnipEmu::Memory{
 	}
 	
 	void Map::registerMemoryController(Controller* memoryController){
+		assert(memoryController);
 		memoryControllers.push_back(memoryController);
 	}
 
 	Controller* Map::controllerForAddress(uint32_t address, bool accessByEmulator) const {
 		for (auto* controller : memoryControllers){
-			if (controller->ownsAddress(address)) return controller;
+			if (controller->ownsAddress(address)){
+				return controller;
+			}
 		}
 		if (accessByEmulator){
 			throw std::runtime_error(Utils::streamFormat("Invalid Memory Access at ", Utils::HexFormat(address)));

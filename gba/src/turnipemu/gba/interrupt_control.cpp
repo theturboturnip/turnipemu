@@ -1,12 +1,12 @@
 #include "turnipemu/gba/interrupt_control.h"
+#include "turnipemu/log.h"
 #include "turnipemu/utils.h"
 
 #include <cstring>
 
 namespace TurnipEmu::GBA{  
 	bool InterruptControl::ownsAddress(uint32_t address) const {
-		return (0x0'0400'0200 <= address && address < 0x0'0400'0204) ||
-			(0x0'0400'0208 <= address && address < 0x0'0400'0212);
+		return (0x0'0400'0200 <= address && address < 0x0'0500'0000);
 	}
 	bool InterruptControl::allowRead(uint32_t address) const {
 		return true;
@@ -23,7 +23,6 @@ namespace TurnipEmu::GBA{
 		}else if (address >= 0x0'0400'0208){
 			return interruptsMasterEnable.data[address - 0x0'0400'0208];
 		}
-		assert(false);
 		return 0x0;
 	}
 	bool InterruptControl::allowWrite(uint32_t address) const {
@@ -38,10 +37,8 @@ namespace TurnipEmu::GBA{
 			flaggedInterrupts.data[0] = value;
 		}else if (address == 0x0'0400'0203){
 			flaggedInterrupts.data[1] = value;
-		}else if (address >= 0x0'0400'0208){
+		}else if (address >= 0x0'0400'0208 && address < 0x0'0400'020C){
 			interruptsMasterEnable.data[address - 0x0'0400'0208] = value;
-		}else{
-			assert(false);
 		}
 	}
 
