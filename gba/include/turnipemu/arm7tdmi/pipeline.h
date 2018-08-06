@@ -7,7 +7,10 @@
 namespace TurnipEmu::ARM7TDMI {
 
 	class CPU;
-
+	namespace Instructions {
+		class BaseInstructionCategory;
+	};
+		
 	class PipelineBase {
 	public:
 		bool hasFetchedInstruction;
@@ -15,6 +18,7 @@ namespace TurnipEmu::ARM7TDMI {
 
 		bool hasDecodedInstruction;
 		word decodedInstructionAddress;
+		const Instructions::BaseInstructionCategory* decodedInstructionCategory;
 
 		bool hasExecutedInstruction;
 		word executedInstructionAddress;
@@ -33,7 +37,6 @@ namespace TurnipEmu::ARM7TDMI {
 	public:
 		InstructionType fetchedInstruction;
 			
-		const InstructionCategoryType* decodedInstructionCategory;
 		InstructionType decodedInstruction;
 
 		void tick(CPU& cpu, RegisterPointers currentRegisters, std::function<const InstructionCategoryType*(InstructionType)> decodeInstructionFunction);

@@ -15,7 +15,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		}
 	};
 	
-	InstructionCategory::InstructionCategory(std::string name, Mask<halfword> mask)
+	InstructionCategory::InstructionCategory(std::string name, Mask<word> mask)
 		: BaseInstructionCategory(name, mask)  {
 		LogLine("INST", "Created ThumbInstructionCategory with name %s, mask 0x%04x, value 0x%04x", name.c_str(), mask.mask, mask.expectedValue);
 	}

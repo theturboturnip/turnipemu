@@ -52,6 +52,10 @@ namespace TurnipEmu::ARM7TDMI::Instructions {
 				range.updateExpectedValue(expectedValue);
 			}
 		}
+		Mask<word>(Mask<halfword> base){
+			mask = base.mask | (halfword(~0) << 16);
+			expectedValue = base.expectedValue;
+		}
 		
 		inline bool matches(InstructionType input) const {
 			return (input & mask) == expectedValue;
@@ -85,26 +89,25 @@ namespace TurnipEmu::ARM7TDMI::Instructions {
 		std::function<bool(ProgramStatusRegister)> fulfilsCondition;
 	};
 
-	template<typename InstructionType>
 	class BaseInstructionCategory {
 	public:		
-		BaseInstructionCategory(std::string name, Mask<InstructionType> mask) : name(name), mask(mask){}
+		BaseInstructionCategory(std::string name, Mask<word> mask) : name(name), mask(mask){}
 		virtual ~BaseInstructionCategory() = default;
 
-		virtual const Condition& getCondition(InstructionType instruction) const = 0;
-		virtual std::string disassembly(InstructionType instruction) const {
+		virtual const Condition& getCondition(word instruction) const = 0;
+		virtual std::string disassembly(word instruction) const {
 			return "NO DISASSEMBLY PRESENT";
 		}
-		virtual void execute(CPU& cpu, InstructionRegisterInterface, InstructionType instruction) const {
+		virtual void execute(CPU& cpu, InstructionRegisterInterface, word instruction) const {
 			throw std::runtime_error(Utils::streamFormat("Instruction '", name ,"' is not implemented!"));
 		}
-		
+
 		const std::string name;
-		const Mask<InstructionType> mask;
+		const Mask<word> mask;
 	};
 
 	namespace ARM {
-		class InstructionCategory : public BaseInstructionCategory<word> {
+		class InstructionCategory : public BaseInstructionCategory {
 		public:
 			
 			InstructionCategory(std::string name, Mask<word> mask);
@@ -116,12 +119,12 @@ namespace TurnipEmu::ARM7TDMI::Instructions {
 		};
 	}
 	namespace Thumb {
-		class InstructionCategory : public BaseInstructionCategory<halfword> {
+		class InstructionCategory : public BaseInstructionCategory {
 		public:
-			InstructionCategory(std::string name, Mask<halfword> mask);
+			InstructionCategory(std::string name, Mask<word> mask);
 			~InstructionCategory() override = default;
 
-			const Condition& getCondition(halfword instruction) const override {
+			const Condition& getCondition(word instruction) const override {
 				return always;
 			}
 

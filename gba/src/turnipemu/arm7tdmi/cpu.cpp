@@ -17,7 +17,7 @@ namespace TurnipEmu::ARM7TDMI{
 	void CPU::reset(){
 		memset(&state.registers, 0, sizeof(state.registers));
 
-		breakpoints = { 0xbc4 };
+		breakpoints = { 0xc28 };
 
 		constexpr bool RunBIOS = true;
 		if constexpr (RunBIOS){
@@ -53,13 +53,10 @@ namespace TurnipEmu::ARM7TDMI{
 			const auto currentRegisters = state.usableRegisters();
 			const CPUExecState oldExecState = state.registers.cpsr.state;
 
-			word decodedInstructionAddress;
 			if (currentRegisters.cpsr->state == CPUExecState::Thumb){
 				state.thumbPipeline.tick(*this, currentRegisters, CPU::matchThumbInstruction);
-				decodedInstructionAddress = state.thumbPipeline.decodedInstructionAddress;
 			}else{
 				state.armPipeline.tick(*this, currentRegisters, CPU::matchArmInstruction);
-				decodedInstructionAddress = state.armPipeline.decodedInstructionAddress;
 			}
 
 			const CPUExecState newExecState = state.registers.cpsr.state;
@@ -76,7 +73,9 @@ namespace TurnipEmu::ARM7TDMI{
 				}
 			}
 
-			if (std::find(breakpoints.begin(), breakpoints.end(), decodedInstructionAddress) != breakpoints.end()){
+			auto* pipeline = state.currentPipelineBaseData();
+			if (pipeline->hasDecodedInstruction &&
+				std::find(breakpoints.begin(), breakpoints.end(), pipeline->decodedInstructionAddress) != breakpoints.end()){
 				emulator.pause();
 			}
 

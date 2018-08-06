@@ -32,7 +32,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		//     Full -> The Stack Pointer points to the last item stored, NOT empty memory
 		//     Descending -> The Stack Pointer starts high and continuously decrements
 		// I define this instruction to push starting from 0, and to pop starting from 7
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			std::stringstream os;
@@ -61,7 +61,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return os.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			if (data.transferMode == TransferMode::Load){

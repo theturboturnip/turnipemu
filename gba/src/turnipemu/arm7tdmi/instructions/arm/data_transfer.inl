@@ -142,6 +142,9 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 				throw std::runtime_error("TODO: Implement S bit for Block Data Transfer");
 			}
 
+			const bool preindex = data.indexMode == DataTransferInfo::IndexMode::PreIndex;
+			const bool load = data.transferMode == DataTransferInfo::TransferMode::Load;
+			
 			// As stated by the docs:
 			// The registers must be read from lowest to highest (excluding the address)
 			// The lowest register must be written to the lowest point
@@ -149,21 +152,20 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			word address = baseAddress;
 			if (data.offsetSign < 0){
 				address -= sizeof(word) * data.registerList.count();
+				if (preindex) address -= sizeof(word);
 			}
 
-			const bool preindex = data.indexMode == DataTransferInfo::IndexMode::PreIndex;
-			const bool load = data.transferMode == DataTransferInfo::TransferMode::Load;
 			for (int i = 0; i < 16; i++){
 				if (!data.registerList[i]) continue;
 				
-				if (preindex) address += data.offsetSign * sizeof(word);
-				
+				if (preindex) address += sizeof(word);
+
 				if (load)
 					registers.set(i, cpu.memoryMap.read<word>(address).value());
 				else
 					cpu.memoryMap.write<word>(address, registers.get(i));
 					
-				if (!preindex) address += data.offsetSign * sizeof(word);
+				if (!preindex) address += sizeof(word);
 			}
 
 			if (data.writeback){

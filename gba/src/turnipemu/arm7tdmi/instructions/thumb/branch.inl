@@ -14,15 +14,15 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			}
 		};
 	public:
-		const Condition& getCondition(halfword instruction) const override {
+		const Condition& getCondition(word instruction) const override {
 			return ARM::InstructionCategory::conditions[(instruction >> 8) & 0xF];
 		}
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			return Utils::streamFormat("Branch by ", (int)data.offset);
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			registers.set(registers.PC, registers.get(registers.PC) + data.offset);
@@ -40,12 +40,12 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			}
 		};
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			return Utils::streamFormat("Branch by ", (int)data.offset);
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			registers.set(registers.PC, registers.get(registers.PC) + data.offset);
@@ -75,12 +75,12 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			}
 		};
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			return Utils::streamFormat("Long Branch with Link part #", data.instructionPart + 1, ": offset to apply = ", Utils::HexFormat(data.offset));
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			if (data.instructionPart == 0){
@@ -107,12 +107,12 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			return Utils::streamFormat("Branch to [Register ", (int)data.baseRegister, "], if bottom bit is 1 then continue in Thumb else continue in ARM");
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			word newAddress = registers.get(data.baseRegister);

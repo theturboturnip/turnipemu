@@ -13,7 +13,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		struct InstructionData {
 			TransferMode transferMode;
 			
-			uint8_t immediateValue : 5;
+			uint8_t immediateValue : 6;
 
 			union {
 				uint8_t sourceRegister : 3;
@@ -24,14 +24,14 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			InstructionData(halfword instruction){
 				transferMode = static_cast<TransferMode>((instruction >> 11) & 1);
 
-				immediateValue = (instruction >> 6) & 0b11111;
+				immediateValue = ((instruction >> 6) & 0b11111) << 1;
 				sourceRegister = (instruction >> 0) & 0b111;
 				baseRegister = (instruction >> 3) & 0b111;
 			}
 		};
 
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			std::stringstream os;
@@ -42,7 +42,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			os << "Register " << (int)data.destinationRegister;
 			return os.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			word address = registers.get(data.baseRegister) + data.immediateValue;
@@ -68,7 +68,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			return Utils::streamFormat(
@@ -79,7 +79,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 				". The PC is forced to be word-aligned by zeroing bit 0."
 				);
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			word address = registers.get(registers.PC);
@@ -117,7 +117,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			std::stringstream os;
@@ -128,7 +128,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			os << "Register " << (int)data.destinationRegister;
 			return os.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			word address = registers.get(registers.SP) + data.immediateValue;
@@ -205,7 +205,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 		
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			std::stringstream os;
@@ -230,7 +230,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 
 			return os.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			word address = registers.get(data.baseRegister) + registers.get(data.offsetRegister);

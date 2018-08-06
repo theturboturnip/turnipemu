@@ -151,7 +151,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			if (indexPendingRemoval >= 0) cpu.breakpoints.erase(cpu.breakpoints.begin() + indexPendingRemoval);
 			ImGui::Text("0x"); ImGui::SameLine();
 			ImGui::PushItemWidth(10 * 8);
-			ImGui::InputText("", newBreakpointIndex, 9, ImGuiInputTextFlags_CharsHexadecimal); ImGui::SameLine();
+			ImGui::InputText("##breakpoint", newBreakpointIndex, 9, ImGuiInputTextFlags_CharsHexadecimal); ImGui::SameLine();
 			ImGui::PopItemWidth();
 			if (ImGui::Button("+")){
 				cpu.breakpoints.push_back(std::strtoul(newBreakpointIndex, nullptr, 16));
@@ -159,12 +159,19 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			ImGui::Unindent();
 
 			ImGui::Checkbox("Show All Stages", &showPartialPipelineStates);
+
+			ImGui::Text("Filter:"); ImGui::SameLine(); ImGui::InputText("##instructionFilter", instructionFilter, 50);
 			
 			ImGui::BeginChild("CPU History", ImVec2(0,0), true);
 			for (int i = 0; i < stateHistory.size(); i++){
 				const auto* statePipelineBaseData = stateHistory[i].currentPipelineBaseData();
 
-				if (!showPartialPipelineStates && !statePipelineBaseData->hasDecodedInstruction && i != stateHistory.size() - 1) continue;
+				if (!showPartialPipelineStates
+					&& !statePipelineBaseData->hasDecodedInstruction
+					&& i != stateHistory.size() - 1) continue;
+				if (strlen(instructionFilter) > 0
+					&& statePipelineBaseData->hasDecodedInstruction
+					&& statePipelineBaseData->decodedInstructionCategory->name.find(instructionFilter) == std::string::npos) continue;
 				
 				char buf[15];
 				sprintf(buf, "0x%08x %c%c%c",

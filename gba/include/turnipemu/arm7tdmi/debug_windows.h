@@ -21,10 +21,11 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		
 		CPU& cpu;
 		char newBreakpointIndex[9];
+		char instructionFilter[50];
 		std::vector<CPUState> stateHistory;
 		int selectedStateIndex = 0;
 		bool teleportToSelected = false;
 		bool showPartialPipelineStates = false;
-		constexpr static int maxStateMemory = 100;
+		constexpr static int maxStateMemory = 1000;
 	};
 }

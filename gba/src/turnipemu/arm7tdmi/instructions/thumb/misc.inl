@@ -14,12 +14,12 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 		
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			return Utils::streamFormat("Offset the Stack Pointer by ", data.offset);
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			registers.set(registers.SP, registers.get(registers.SP) + data.offset);

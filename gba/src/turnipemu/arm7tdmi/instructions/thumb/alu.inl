@@ -30,7 +30,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 			
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 			
 			const ALU::Operation& operation = operations[data.opcode];
@@ -41,7 +41,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -85,7 +85,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 			
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -99,7 +99,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -143,7 +143,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 			
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -154,7 +154,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -206,7 +206,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -217,7 +217,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 		  
 			const ALU::Operation& operation = operations[data.opcode];
@@ -260,7 +260,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		};
 
 	public:
-		std::string disassembly(halfword instruction) const override {
+		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			const ALU::Operation& operation = operations[data.opcode];
@@ -271,7 +271,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			stream << "Destination Register: " << (int)data.destinationRegister;
 			return stream.str();
 		}
-		void execute(CPU& cpu, InstructionRegisterInterface registers, halfword instruction) const override {
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
 		  
 			const ALU::Operation& operation = operations[data.opcode];
