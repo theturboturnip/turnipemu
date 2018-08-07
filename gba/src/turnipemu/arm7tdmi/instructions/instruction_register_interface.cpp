@@ -19,6 +19,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions {
 		assert(0 <= index && index <= 15);
 		if (index == 15) pipeline->queueFlushFromInstruction();
 		*registers.main[index] = value;
+		*registers.changedRegisters[index] = true;
 	}
 	ProgramStatusRegister& InstructionRegisterInterface::cpsr() const {
 		return *registers.cpsr;

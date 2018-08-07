@@ -84,7 +84,17 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			ImGui::Indent();
 			ImGui::Columns(2, "Registers");
 			for (int i = 0; i < 16; i++){
-				ImGui::Text("r%-2d: 0x%08x", i, *registers.main[i]);
+				char buf[16];
+				sprintf(buf, "r%-2d: 0x%08x", i, *registers.main[i]);
+				bool selected = selectedRegister == i;
+
+				ImGui::PushID(i);
+				if (ImGui::Selectable(buf, &selected)){
+					if (selectedRegister == i) selectedRegister = -1;
+					else selectedRegister = i;
+					registerTraceStartStateIndex = selectedStateIndex;
+				}
+				ImGui::PopID();
 				if (i == 7) ImGui::NextColumn();
 			}
 			ImGui::Columns(1);
@@ -172,6 +182,12 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 				if (strlen(instructionFilter) > 0
 					&& statePipelineBaseData->hasDecodedInstruction
 					&& statePipelineBaseData->decodedInstructionCategory->name.find(instructionFilter) == std::string::npos) continue;
+				if (selectedRegister != -1
+					&& i != registerTraceStartStateIndex
+					&& i != stateHistory.size() - 1
+					&& !stateHistory[i + 1].changedRegisters[selectedRegister]) continue;
+				//if (selectedRegister != -1 && stateHistory[i].changedRegisters[selectedRegister])
+				//	LogLine("DBG", "State Index %d changed register %d", i, selectedRegister);
 				
 				char buf[15];
 				sprintf(buf, "0x%08x %c%c%c",

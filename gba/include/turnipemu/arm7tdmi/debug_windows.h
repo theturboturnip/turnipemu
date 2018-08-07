@@ -26,6 +26,8 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		int selectedStateIndex = 0;
 		bool teleportToSelected = false;
 		bool showPartialPipelineStates = false;
+		int selectedRegister = -1;
+		int registerTraceStartStateIndex = -1;
 		constexpr static int maxStateMemory = 1000;
 	};
 }

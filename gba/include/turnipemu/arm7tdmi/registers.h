@@ -30,6 +30,7 @@ namespace TurnipEmu::ARM7TDMI {
     // This is used by the instructions 
 	struct RegisterPointers{
 		word* main[16] = {nullptr};
+		bool* changedRegisters[16] = {nullptr};
 			
 		ProgramStatusRegister* cpsr = nullptr;
 		ProgramStatusRegister* spsr = nullptr; // Not enabled in System/User mode

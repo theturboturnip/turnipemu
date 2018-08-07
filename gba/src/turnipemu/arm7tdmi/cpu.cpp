@@ -50,6 +50,8 @@ namespace TurnipEmu::ARM7TDMI{
 	
 	void CPU::tick(){
 		try{
+			state.resetPerTickVariables();
+			
 			const auto currentRegisters = state.usableRegisters();
 			const CPUExecState oldExecState = state.registers.cpsr.state;
 
@@ -105,6 +107,7 @@ namespace TurnipEmu::ARM7TDMI{
 
 		for (int i = 0; i < 16; i++){
 			pointers.main[i] = &registers.main[i];
+			pointers.changedRegisters[i] = &changedRegisters[i];
 		}
 		pointers.cpsr = &registers.cpsr;
 		
@@ -148,5 +151,12 @@ namespace TurnipEmu::ARM7TDMI{
 		}
 		
 		return pointers;
+	}
+
+	void CPUState::resetPerTickVariables(){
+		for (bool& b : changedRegisters){
+			b = false;
+		}
+		cyclesThisTick = 0;
 	}
 }

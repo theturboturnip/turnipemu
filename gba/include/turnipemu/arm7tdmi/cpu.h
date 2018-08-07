@@ -24,6 +24,7 @@ namespace TurnipEmu::ARM7TDMI {
 	
 	struct CPUState {
 		AllRegisters registers;
+		bool changedRegisters[16] = {false};
 
 		uint32_t cyclesThisTick;
 		uint32_t cyclesTotal;
@@ -37,6 +38,8 @@ namespace TurnipEmu::ARM7TDMI {
 
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
 		const RegisterPointers usableRegisters();
+
+		void resetPerTickVariables();
 	};
 	
 	class CPU {
