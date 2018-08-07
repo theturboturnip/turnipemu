@@ -140,6 +140,76 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		}
 	};
 
+	class LoadStoreImmediateOffsetInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+
+		enum class TransferMode : bool {
+			Load = true,
+			Store = false
+		};
+		enum class TransferSize : uint8_t {
+			Byte = 1,
+			Word = 4
+		};
+		struct InstructionData {
+			TransferMode transferMode;
+			TransferSize transferSize;
+
+			uint8_t offset;
+
+			uint8_t addressRegister : 3;
+			union {
+				uint8_t sourceRegister : 3;
+				uint8_t destinationRegister : 3;
+			};
+
+			InstructionData(halfword instruction){
+				transferMode = static_cast<TransferMode>((instruction >> 11) & 1);
+				transferSize = ((instruction >> 12) & 1) ? TransferSize::Byte : TransferSize::Word;
+
+				offset = (instruction >> 6) & 0b11111;
+				if (transferSize == TransferSize::Word){
+					offset = offset << 2;
+				}
+
+				addressRegister = (instruction >> 3) & 0b111;
+				sourceRegister = (instruction >> 0) & 0b111;
+			}
+		};
+
+	public:
+		std::string disassembly(word instruction) const override {
+			InstructionData data(instruction);
+
+			std::stringstream os;
+			os << (data.transferMode == TransferMode::Load ? "Load " : "Store ");
+			os << (data.transferSize == TransferSize::Byte ? "byte " : "word ");
+			os << (data.transferMode == TransferMode::Load ? "from " : "to ");
+			os << "[Register " << (int)data.addressRegister << " + " << Utils::HexFormat(data.offset) << "] ";
+			os << (data.transferMode == TransferMode::Load ? "to " : "from ");
+			os << "Register " << (int)data.sourceRegister;
+			return os.str();
+		}
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
+			InstructionData data(instruction);
+
+			word address = registers.get(data.addressRegister) + data.offset;
+			if (data.transferMode == TransferMode::Load){
+				word value;
+				if (data.transferSize == TransferSize::Byte) value = cpu.memoryMap.read<byte>(address).value();
+				else value = cpu.memoryMap.read<word>(address).value();
+				registers.set(data.destinationRegister, value);
+			}else{
+				word registerValue = registers.get(data.sourceRegister);
+				if (data.transferSize == TransferSize::Byte){
+					cpu.memoryMap.write<byte>(address, registerValue & 0xFF);
+				}else{
+					cpu.memoryMap.write<word>(address, registerValue);
+				}
+			}
+		}
+	};
+
 	class LoadStoreRegisterOffsetInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 

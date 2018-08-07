@@ -40,7 +40,7 @@ namespace TurnipEmu::Utils{
 		HexFormat(NumberType number) : number(number) {}
 		
 		friend std::ostream& operator << (std::ostream &os, const HexFormat<NumberType>& format){
-			os << "0x" << std::setfill('0') << std::setw(sizeof(NumberType) * 2) << std::hex << format.number;
+			os << "0x" << std::setfill('0') << std::setw(sizeof(NumberType) * 2) << std::hex << (int)format.number;
 			return os;
 		}
 	private:

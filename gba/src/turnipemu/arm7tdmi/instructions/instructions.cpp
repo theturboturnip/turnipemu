@@ -138,7 +138,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 12, 0b0101 },
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::LoadStoreImmediateOffsetInstruction>(
 										"F9: Load/Store with Immediate offset",
 										Mask<halfword>{
 											{ 15, 13, 0b011 }
