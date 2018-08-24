@@ -5,7 +5,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 	class ALUMoveShiftedRegisterInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
-		const std::array<const ALU::Operation, 3> operations = {{
+		/*const std::array<const ALU::Operation, 3> operations = {{
 				ALU::Thumb::LSL,
 				ALU::Thumb::LSR,
 				ALU::Thumb::ASR
@@ -52,13 +52,13 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			if (operation.writeResult)
 				registers.set(data.destinationRegister, output.result);
 			output.applyToPSR(registers.cpsr());
-		}
+			}*/
 	};
 	
 	class ALUAddSubInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
-		const std::array<const ALU::Operation, 2> operations = {{
+		/*const std::array<const ALU::Operation, 2> operations = {{
 				ALU::ADD,
 				ALU::SUB
 			}};
@@ -114,13 +114,13 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			if (operation.writeResult)
 				registers.set(data.destinationRegister, output.result);
 			output.applyToPSR(registers.cpsr());
-		}
+			}*/
 	};
 
 	class ALUImmediateInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
-		const std::array<const ALU::Operation, 4> operations = {{
+		/*const std::array<const ALU::Operation, 4> operations = {{
 				ALU::MOV,
 				ALU::CMP,
 				ALU::ADD,
@@ -165,13 +165,13 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			if (operation.writeResult)
 				registers.set(data.destinationRegister, output.result);
 			output.applyToPSR(registers.cpsr());
-		}
+			}*/
 	};
 	
 	class ALULowRegistersInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
-		const std::array<const ALU::Operation, 16> operations = {{
+		/*const std::array<const ALU::Operation, 16> operations = {{
 				ALU::AND,
 				ALU::EOR,
 				ALU::Thumb::LSL,
@@ -228,13 +228,13 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			if (operation.writeResult)
 				registers.set(data.destinationRegister, output.result);
 			output.applyToPSR(registers.cpsr());
-		}
+			}*/
 	};
 
 	class ALUHighRegistersInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
-		const std::array<const ALU::Operation, 3> operations = {{
+		/*const std::array<const ALU::Operation, 3> operations = {{
 				ALU::ADD,
 				ALU::CMP,
 				ALU::MOV,
@@ -283,6 +283,6 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 				registers.set(data.destinationRegister, output.result);
 			if (data.opcode == 0b01)
 				output.applyToPSR(registers.cpsr()); // Only CMP sets the flags in this mode
-		}
+				}*/
 	};
 }

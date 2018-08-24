@@ -152,5 +152,5 @@ namespace TurnipEmu::ARM7TDMI {
 				return registerValue.calculateValue(registers, allowChangeFlags);
 			}
 		}
-	};
+		};
 };

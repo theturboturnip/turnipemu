@@ -2,45 +2,141 @@
 
 #include "turnipemu/types.h"
 #include "turnipemu/arm7tdmi/registers.h"
+#include "turnipemu/arm7tdmi/instruction_category.h"
 
 #include <functional>
+#include <type_traits>
 
 namespace TurnipEmu::ARM7TDMI::ALU {
-	struct OperationOutput {
+	enum class OpType : bool{
+		Logical = true,
+		Arithmetic = false
+	};
+
+	template<OpType T>
+	struct OpOutput;
+
+	template<>
+	struct OpOutput<OpType::Logical>{
+		word result;
+		constexpr OpOutput(word result) : result(result){}
+
+		inline void ApplyToPSR(ProgramStatusRegister& psr, bool carry) const {
+			psr.zero = (result == 0);
+			psr.negative = (result >> 31) & 1;
+			psr.carry = carry;
+			// Overflow is unaffected
+		}
+	};
+	template<>
+	struct OpOutput<OpType::Arithmetic>{
 		word result;
 		bool carry;
 		bool overflow;
 
-		constexpr OperationOutput(word result) : result(result), carry(false), overflow(false){}
-		constexpr OperationOutput(word result, bool carry, bool overflow) : result(result), carry(carry), overflow(overflow) {}
+		constexpr OpOutput(word result, bool carry, bool overflow) : result(result), carry(carry), overflow(overflow) {}
 
-		inline void applyToPSR(ProgramStatusRegister& psr){
-			psr.overflow = overflow;
-			psr.carry = carry;
+		inline void ApplyToPSR(ProgramStatusRegister& psr) const {
 			psr.zero = (result == 0);
 			psr.negative = (result >> 31) & 1;
+			psr.carry = carry;
+			psr.overflow = overflow;
 		}
 	};
-	struct OperationType {
-		constexpr static bool Logical = true;
-		constexpr static bool Arithmetic = false;
+
+	struct Thing{};
+
+	template<OpType T>
+	struct OpFunction;
+	template<>
+	struct OpFunction<OpType::Logical>{
+		using type = std::function<OpOutput<OpType::Logical>(word arg1, word arg2)>;
 	};
-	struct Operation {
-		using OperationFunction = std::function<OperationOutput(word arg1, word arg2, int carryIn)>;
+	template<>
+	struct OpFunction<OpType::Arithmetic>{
+		using type = std::function<OpOutput<OpType::Arithmetic>(word arg1, word arg2, int carryIn)>;
+	};
+	
+	template<OpType T>
+	struct TemplatedOp {
+		
+		//static_assert(std::is_literal_type<OpFunction>());
+		//static_assert(std::is_literal_type<std::function<OpOutput<T>(word arg1, word arg2)>>());
+		//static_assert(std::is_literal_type<OpOutput<T>>());
 		char mnemonic[4];
-		OperationFunction execute;
-		bool logical;
+		typename OpFunction<T>::type execute;
 		bool writeResult;
 
-		Operation(const char* mnemonicFromStr, OperationFunction execute, bool logical)
-			: Operation(mnemonicFromStr, execute, logical, true){}
-		Operation(const char* mnemonicFromStr, OperationFunction execute, bool logical, bool writeResult)
-			: execute(execute), logical(logical), writeResult(writeResult) {
+		TemplatedOp() = default;
+		TemplatedOp(const char* mnemonicFromStr, typename OpFunction<T>::type execute, bool writeResult = true)
+			: execute(execute), writeResult(writeResult) {
 			mnemonic[0] = mnemonicFromStr[0];
 			mnemonic[1] = mnemonicFromStr[1];
 			mnemonic[2] = mnemonicFromStr[2];
 			mnemonic[3] = '\0';
 		}
+	};
+
+	struct Operation {
+		const TemplatedOp<OpType::Arithmetic> arithmeticOp;
+		const TemplatedOp<OpType::Logical> logicalOp;
+		const OpType selectedOperationType;
+
+		Operation(const char* mnemonic, typename OpFunction<OpType::Logical>::type logicalOpFunction, bool writeResult = true)
+			: arithmeticOp(), logicalOp(mnemonic, logicalOpFunction, writeResult), selectedOperationType(OpType::Logical) {}
+		Operation(const char* mnemonic, typename OpFunction<OpType::Arithmetic>::type arithmeticOpFunction, bool writeResult = true)
+			: arithmeticOp(mnemonic, arithmeticOpFunction, writeResult), logicalOp(), selectedOperationType(OpType::Arithmetic) {}
+	};
+
+	class RequestInput {
+	public:
+		enum class ValueType {
+			Register,
+			Immediate,
+		};
+		enum class ShiftType {
+			LogicalShiftLeft = 0b00,
+			LogicalShiftRight = 0b01,
+			ArithmeticShiftRight = 0b10,
+			RotateRight = 0b11
+		};
+		
+		ValueType type = ValueType::Immediate;
+		union {
+			struct {
+				word immediateValue;
+				uint8_t immediateRotation;
+			};
+			uint8_t registerIndex;
+		};
+		struct {
+			bool enabled = false;
+			ValueType amountType;
+			union {
+				word amountImmediateValue;
+				uint8_t amountRegisterIndex;
+			};
+			ShiftType shiftType;
+		} shift;
+		
+		word Evaluate(Instructions::InstructionRegisterInterface, int* shifterCarryOut = nullptr);
+
+		friend std::ostream& operator << (std::ostream&, RequestInput&);
+	};
+
+	class Request {
+	public:
+		const Operation* op = nullptr;
+		
+		RequestInput operand1;
+		RequestInput operand2;
+		uint8_t destinationRegister;
+
+		bool setFlags = true;
+
+		void Evaluate(Instructions::InstructionRegisterInterface);
+
+		friend std::ostream& operator << (std::ostream&, Request&);
 	};
 
 	// Arithmetic Ops

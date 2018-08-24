@@ -6,83 +6,78 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 	class DataProcessingInstruction : public InstructionCategory{
 		using InstructionCategory::InstructionCategory;
 		
-		const std::array<const Operation, 16> operations = {{
-				ALU::AND,
-				ALU::EOR,
-				ALU::SUB,
-				ALU::RSB,
-				ALU::ADD,
-				ALU::ADC,
-				ALU::SBC,
-				ALU::RSC,
-				ALU::TST,
-				ALU::TEQ,
-				ALU::CMP,
-				ALU::CMN,
-				ALU::ORR,
-				ALU::MOV,
-				ALU::BIC,
-				ALU::MVN,
+		constexpr static std::array<const Operation*, 16> operations = {{
+				&ALU::AND,
+				&ALU::EOR,
+				&ALU::SUB,
+				&ALU::RSB,
+				&ALU::ADD,
+				&ALU::ADC,
+				&ALU::SBC,
+				&ALU::RSC,
+				&ALU::TST,
+				&ALU::TEQ,
+				&ALU::CMP,
+				&ALU::CMN,
+				&ALU::ORR,
+				&ALU::MOV,
+				&ALU::BIC,
+				&ALU::MVN,
 			}};
 		
 		struct InstructionData {
-			uint8_t opcode : 4;
-			bool setFlags;
-			uint8_t operand1Register : 4;
-			uint8_t destinationRegister : 4;
-			ALUOperand2 operand2;
-			bool restoreSPSR;
+			ALU::Request request;
 
-			InstructionData(word instructionWord) : operand2(instructionWord){
-				opcode = (instructionWord >> 21) & 0xF;
-				setFlags = (instructionWord >> 20) & 1;
-				operand1Register = (instructionWord >> 16) & 0xF;
-				destinationRegister = (instructionWord >> 12) & 0xF;
+			InstructionData(word instructionWord){
+				request.op = operations[(instructionWord >> 21) & 0xF];
+				request.setFlags = (instructionWord >> 20) & 1;
+				
+				request.operand1.type = RequestInput::ValueType::Register;
+				request.operand1.registerIndex = (instructionWord >> 16) & 0xF;
 
-				restoreSPSR = !setFlags && (opcode == 0b1001); // SPSR restoration via TEQP
-				if (destinationRegister == 15 && setFlags){
-					restoreSPSR = true;
-					setFlags = false;
+				request.operand2.type = (instructionWord >> 25) & 1 ?
+					RequestInput::ValueType::Immediate : RequestInput::ValueType::Register;
+				if (request.operand2.type == RequestInput::ValueType::Immediate){
+					request.operand2.immediateValue = instructionWord & 0xFF;
+					request.operand2.immediateRotation = ((instructionWord >> 8) & 0xF) * 2;
+				}else{
+					request.operand2.registerIndex = instructionWord & 0xF;
+					request.operand2.shift.enabled = true;
+					request.operand2.shift.shiftType = static_cast<RequestInput::ShiftType>((instructionWord >> 5) & 0b11);
+					request.operand2.shift.amountType = (instructionWord >> 4) & 1 ?
+						RequestInput::ValueType::Register : RequestInput::ValueType::Immediate;
+					if (request.operand2.shift.amountType == RequestInput::ValueType::Register){
+						request.operand2.shift.amountRegisterIndex = (instructionWord >> 8) & 0xF;
+						assert(request.operand2.shift.amountRegisterIndex != 15);
+					}else{
+						request.operand2.shift.amountImmediateValue = (instructionWord >> 7) & 0b11111;
+					}
 				}
+
+				request.destinationRegister = (instructionWord >> 12) & 0xF;
+
+				// TODO: SPSR Restoration
 			}
 		};
 
 		std::string disassembly(word instructionWord) const override {
 			InstructionData data(instructionWord);
-			if (data.restoreSPSR){
-				return "Restores SPSR, ignored in User mode";
-			}
+			//if (data.restoreSPSR){
+			//	return "Restores SPSR, ignored in User mode";
+			//}
 			
-			const Operation& operation = operations[data.opcode];
 			std::stringstream stream;
-			stream << "ALU OP " << operation.mnemonic << "\n";
-			stream << "Operand 1: Register " << (int)data.operand1Register << "\n";
-			stream << "Operand 2: ";
-			if (data.operand2.useImmediate){
-				stream << "Immediate Value " << (int)data.operand2.immediateValue.baseImmediateValue << " rotated by " << (int)data.operand2.immediateValue.rotation;
-			}else{
-				data.operand2.registerValue.writeDescription(stream);
-			}
-			stream << "\nDestination Register: " << (int)data.destinationRegister;
+			stream << data.request;
 			return stream.str();
 		}
 		void execute(CPU& cpu, InstructionRegisterInterface currentRegisters, word instructionWord) const override {
 			InstructionData data(instructionWord);
-			if (data.restoreSPSR){
-				if (currentRegisters.cpsr().mode == Mode::User) return;
-				throw std::runtime_error("Implement SPSR restoration!");
-			}
+			//if (data.restoreSPSR){
+			//	if (currentRegisters.cpsr().mode == Mode::User) return;
+			//	throw std::runtime_error("Implement SPSR restoration!");
+			//}
 			
-			const Operation& operation = operations[data.opcode];
-			
-			word arg1 = currentRegisters.get(data.operand1Register);
-			word arg2 = data.operand2.calculateValue(currentRegisters, data.setFlags);
-			OperationOutput output = operation.execute(arg1, arg2, currentRegisters.cpsr().carry ? 1 : 0);
-			if (operation.writeResult)
-				currentRegisters.set(data.destinationRegister, output.result);
-			if (data.setFlags){ // TODO: Does it matter whether the instruction is arithmetic or logical?
-				output.applyToPSR(currentRegisters.cpsr());
-			}
+			data.request.Evaluate(currentRegisters);
 		}
 	};
 }
