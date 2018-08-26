@@ -1,6 +1,7 @@
 #include "turnipemu/arm7tdmi/alu.h"
 
 #include "turnipemu/utils.h"
+#include "turnipemu/log.h"
 
 namespace TurnipEmu::ARM7TDMI::ALU {
 	template<bool WithCarry>
@@ -57,14 +58,13 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 			);
 	}
 
-	word RequestInput::Evaluate(Instructions::InstructionRegisterInterface registers, int* shiftedCarryOut){
+	word RequestInput::Evaluate(Instructions::InstructionRegisterInterface registers, int* shiftedCarryOut) const {
 		word value = (type == ValueType::Immediate) ? immediateValue : registers.get(registerIndex);
-		if (immediateRotation){
+		if (type == ValueType::Immediate && immediateRotation){
 			value = RotateRight(value, immediateRotation).result;
 		}
 		
 		if (shift.enabled){
-			assert(shiftedCarryOut);
 			word amount = (shift.amountType == ValueType::Immediate) ? shift.amountImmediateValue : registers.get(shift.amountRegisterIndex);
 
 			switch(shift.shiftType){
@@ -81,7 +81,7 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 			case ShiftType::RotateRight:
 				if (shift.amountType == ValueType::Immediate && amount == 0){
 					auto rorxResult = RotateRightExtended(value, amount, registers.cpsr().carry);
-					*shiftedCarryOut = rorxResult.carry;
+					if (shiftedCarryOut) *shiftedCarryOut = rorxResult.carry;
 					value = rorxResult.result;
 				}else
 					value = RotateRight(value, amount).result;
@@ -91,7 +91,7 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 
 		return value;
 	}
-	std::ostream& operator << (std::ostream& os, RequestInput& requestInput){
+	std::ostream& operator << (std::ostream& os, const RequestInput& requestInput){
 		if (requestInput.type == RequestInput::ValueType::Immediate){
 			os << Utils::HexFormat<word>(requestInput.immediateValue);
 			if (requestInput.immediateRotation)
@@ -124,7 +124,7 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 		return os;
 	}
 
-	void Request::Evaluate(Instructions::InstructionRegisterInterface registers){
+	void Request::Evaluate(Instructions::InstructionRegisterInterface registers) const {
 		if (op->selectedOperationType == OpType::Logical){
 			int carryOut = 0;
 			word operand1Value = operand1.Evaluate(registers, &carryOut);
@@ -134,6 +134,9 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 
 			if (op->logicalOp.writeResult) registers.set(destinationRegister, result.result);
 			if (setFlags) result.ApplyToPSR(registers.cpsr(), carryOut);
+
+			if (!op->logicalOp.writeResult && !setFlags)
+				throw std::runtime_error("ALU Request did not set flags or write result!");
 		}else{
 			word operand1Value = operand1.Evaluate(registers);
 			word operand2Value = operand2.Evaluate(registers);
@@ -142,9 +145,12 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 
 			if (op->arithmeticOp.writeResult) registers.set(destinationRegister, result.result);
 			if (setFlags) result.ApplyToPSR(registers.cpsr());
+
+			if (!op->arithmeticOp.writeResult && !setFlags)
+				throw std::runtime_error("ALU Request did not set flags or write result!");
 		}
 	}
-	std::ostream& operator << (std::ostream& os, Request& request){
+	std::ostream& operator << (std::ostream& os, const Request& request) {
 		os << "ALU OP " << ((request.op->selectedOperationType == OpType::Logical) ? request.op->logicalOp.mnemonic : request.op->arithmeticOp.mnemonic);
 		os << "\nOperand 1: " << request.operand1;
 		os << "\nOperand 2: " << request.operand2;

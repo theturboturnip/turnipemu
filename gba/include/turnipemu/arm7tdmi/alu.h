@@ -118,10 +118,20 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 			};
 			ShiftType shiftType;
 		} shift;
-		
-		word Evaluate(Instructions::InstructionRegisterInterface, int* shifterCarryOut = nullptr);
 
-		friend std::ostream& operator << (std::ostream&, RequestInput&);
+		void SetImmediateValue(word newImmediateValue, uint8_t newImmediateRotation = 0){
+			type = ValueType::Immediate;
+			immediateValue = newImmediateValue;
+			immediateRotation = newImmediateRotation;
+		}
+		void SetRegisterIndex(uint8_t newRegisterIndex){
+			type = ValueType::Register;
+			registerIndex = newRegisterIndex;
+		}
+		
+		word Evaluate(Instructions::InstructionRegisterInterface, int* shifterCarryOut = nullptr) const;
+
+		friend std::ostream& operator << (std::ostream&, const RequestInput&);
 	};
 
 	class Request {
@@ -134,9 +144,9 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 
 		bool setFlags = true;
 
-		void Evaluate(Instructions::InstructionRegisterInterface);
+		void Evaluate(Instructions::InstructionRegisterInterface) const;
 
-		friend std::ostream& operator << (std::ostream&, Request&);
+		friend std::ostream& operator << (std::ostream&, const Request&);
 	};
 
 	// Arithmetic Ops

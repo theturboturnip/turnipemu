@@ -6,7 +6,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 	class DataProcessingInstruction : public InstructionCategory{
 		using InstructionCategory::InstructionCategory;
 		
-		constexpr static std::array<const Operation*, 16> operations = {{
+		constexpr static std::array<const ALU::Operation*, 16> operations = {{
 				&ALU::AND,
 				&ALU::EOR,
 				&ALU::SUB,
