@@ -69,14 +69,16 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 
 			switch(shift.shiftType){
 			case ShiftType::LogicalShiftLeft:
+				if (value != 0 && shiftedCarryOut) *shiftedCarryOut = (value >> (32 - amount)) & 1;
 				value = LogicalShiftLeft(value, amount).result;
 				break;
 			case ShiftType::LogicalShiftRight:
+				if (shiftedCarryOut) *shiftedCarryOut = (value >> (amount - 1)) & 1;
 				value = LogicalShiftRight(value, amount).result;
 				break;
 			case ShiftType::ArithmeticShiftRight:
+				if (shiftedCarryOut) *shiftedCarryOut = (value >> (amount - 1)) & 1;
 				value = ArithmeticShiftRight(value, amount, registers.cpsr().carry).result;
-				// TODO: Should this set the carry bit? It'll always be 0...
 				break;
 			case ShiftType::RotateRight:
 				if (shift.amountType == ValueType::Immediate && amount == 0){
