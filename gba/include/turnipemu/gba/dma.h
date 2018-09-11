@@ -58,6 +58,10 @@ namespace TurnipEmu::GBA{
 			word destinationAddress;
 			halfword transferCount;
 
+			DMAChannel(){
+				externalState.enable = false;
+			}
+
 			inline bool enabled(){
 				return externalState.enable;
 			}

@@ -11,6 +11,7 @@ namespace TurnipEmu::GBA{
 		memoryMap.registerMemoryController(&this->gamePak);
 		memoryMap.registerMemoryController(&this->io.lcdEngine);
 		memoryMap.registerMemoryController(&this->io.dmaEngine);
+		memoryMap.registerMemoryController(&this->io.timerEngine);
 		memoryMap.registerMemoryController(&this->io.unusedMemory);
 		memoryMap.registerMemoryController(&this->systemControl);
 		memoryMap.registerMemoryController(&this->interruptControl);
@@ -24,6 +25,9 @@ namespace TurnipEmu::GBA{
 			cpu.tick();
 			if (io.dmaEngine.canExecute()){
 				io.dmaEngine.execute(memoryMap);
+			}
+			if (io.timerEngine.canExecute()){
+				io.timerEngine.execute(interruptControl);
 			}
 		} catch (const std::exception& e) {
 			LogLine(logTag, "Exception encountered, stopping...");
