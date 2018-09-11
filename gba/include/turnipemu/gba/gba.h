@@ -10,6 +10,7 @@
 #include "turnipemu/gba/sys_control.h"
 #include "turnipemu/gba/internal_ram.h"
 #include "turnipemu/gba/interrupt_control.h"
+#include "turnipemu/gba/unused_memory.h"
 #include "turnipemu/memory/map.h"
 
 namespace TurnipEmu::GBA{
@@ -30,11 +31,12 @@ namespace TurnipEmu::GBA{
 		GamePak gamePak;
 		struct {
 			LCDEngine lcdEngine; // TODO: Define fully
-			//SoundEngine soundEngine; // TODO: Define
-			//DMAEngine dmaEngine; // TODO: Define behaviour
+			DMAEngine dmaEngine; // TODO: Define fully
+            //SoundEngine soundEngine; // TODO: Define
 			//Timer timer; // TODO: Define
-			//SerialEngine serialEngine; // TODO: Define. Can be a no-op, serial support isn't planned for now
+			// Serial Engine will be left undefined
 			//Keypad keypad; // TODO: Define
+			UnusedIOMemoryController unusedMemory;
 		} io;
 		SystemControl systemControl;
 		InterruptControl interruptControl;

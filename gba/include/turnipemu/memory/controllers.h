@@ -73,4 +73,27 @@ namespace TurnipEmu::Memory{
 	protected:
 		StorageClass data;
 	};
+
+	// This is for storing parts of memory that have no purpose.
+	// Reads will return a constant value. Writes are always allowed, but have no effect.
+	class NoopController : public Controller {
+	public:
+		NoopController(byte valueOnRead = 0xFF)
+			: valueOnRead(valueOnRead) {
+		}
+		
+		bool allowRead(uint32_t address) const override {
+			return true;
+		}
+		byte read(uint32_t address) const override {
+			// TODO: Warn the user on a read from Noop'd memory
+			return valueOnRead;
+		}
+		bool allowWrite(uint32_t address) const override {
+			return true;
+		}
+		void write(uint32_t address, byte value) override {}
+	private:
+		uint32_t valueOnRead;
+	};
 }
