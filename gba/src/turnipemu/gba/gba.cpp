@@ -12,6 +12,7 @@ namespace TurnipEmu::GBA{
 		memoryMap.registerMemoryController(&this->io.lcdEngine);
 		memoryMap.registerMemoryController(&this->io.dmaEngine);
 		memoryMap.registerMemoryController(&this->io.timerEngine);
+		memoryMap.registerMemoryController(&this->io.keypad);
 		memoryMap.registerMemoryController(&this->io.unusedMemory);
 		memoryMap.registerMemoryController(&this->systemControl);
 		memoryMap.registerMemoryController(&this->interruptControl);
@@ -29,6 +30,8 @@ namespace TurnipEmu::GBA{
 			if (io.timerEngine.canExecute()){
 				io.timerEngine.execute(interruptControl);
 			}
+			// TODO: Handle user input
+			io.keypad.setKeysPressed(0, interruptControl);
 		} catch (const std::exception& e) {
 			LogLine(logTag, "Exception encountered, stopping...");
 			LogLine(logTag, "%s", e.what());
