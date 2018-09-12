@@ -93,6 +93,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 					if (selectedRegister == i) selectedRegister = -1;
 					else selectedRegister = i;
 					registerTraceStartStateIndex = selectedStateIndex;
+					teleportToSelected = true;
 				}
 				ImGui::PopID();
 				if (i == 7) ImGui::NextColumn();
@@ -168,11 +169,16 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 			}
 			ImGui::Unindent();
 
-			ImGui::Checkbox("Show All Stages", &showPartialPipelineStates);
+			if (ImGui::Checkbox("Show All Stages", &showPartialPipelineStates))
+				teleportToSelected = true;
+			if (ImGui::Checkbox("Merge Tight Loops", &mergeTightLoops))
+				teleportToSelected = true;
 
 			ImGui::Text("Filter:"); ImGui::SameLine(); ImGui::InputText("##instructionFilter", instructionFilter, 50);
 			
 			ImGui::BeginChild("CPU History", ImVec2(0,0), true);
+			int tightLoopLength = 0;
+			word tightLoopStartInstruction = 0;
 			for (int i = 0; i < stateHistory.size(); i++){
 				const auto* statePipelineBaseData = stateHistory[i].currentPipelineBaseData();
 
@@ -186,11 +192,42 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 					&& i != registerTraceStartStateIndex
 					&& i != stateHistory.size() - 1
 					&& !stateHistory[i + 1].changedRegisters[selectedRegister]) continue;
-				//if (selectedRegister != -1 && stateHistory[i].changedRegisters[selectedRegister])
-				//	LogLine("DBG", "State Index %d changed register %d", i, selectedRegister);
+				if (mergeTightLoops && statePipelineBaseData->hasDecodedInstruction){
+					bool insideTightLoop = false;
+					const auto currentPC = statePipelineBaseData->decodedInstructionAddress;
+					int previousValidInstructions = 0;
+					for (int deltaI = -1; previousValidInstructions < maxTightLoopSize; deltaI--){
+						if (i + deltaI < 0) break;
+						const auto* prevStatePipelineBaseData = stateHistory[i + deltaI].currentPipelineBaseData();
+						if (prevStatePipelineBaseData->hasDecodedInstruction){
+							if (currentPC == prevStatePipelineBaseData->decodedInstructionAddress){
+								insideTightLoop = true;
+								break;
+							}
+							previousValidInstructions++;
+						}
+					}
+
+					if (tightLoopLength > 0 && !insideTightLoop){
+						ImGui::TextWrapped("Tight loop from 0x%08x (x%d)", tightLoopStartInstruction, tightLoopLength);
+						
+						tightLoopLength = 0;
+						continue;
+					}
+
+					if (insideTightLoop){
+						if (tightLoopLength == 0) tightLoopStartInstruction = currentPC;
+						tightLoopLength++;
+
+						// This will cause selectedStateIndex to be incremented until it isn't inside a tight loop
+						if (selectedStateIndex == i) selectedStateIndex++;
+						
+						continue;
+					}
+				}
 				
 				char buf[15];
-				sprintf(buf, "0x%08x %c%c%c",
+				snprintf(buf, 15, "0x%08x %c%c%c",
 						statePipelineBaseData->decodedInstructionAddress,
 						statePipelineBaseData->hasFetchedInstruction ? 'F' : '/',
 						statePipelineBaseData->hasDecodedInstruction ? 'D' : '/',
