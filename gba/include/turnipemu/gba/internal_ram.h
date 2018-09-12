@@ -5,9 +5,10 @@
 #include <array>
 
 namespace TurnipEmu::GBA {
-	class InternalRam : public Memory::RangeController {
+	template<size_t RangeStart, size_t RangeEnd, size_t Size>
+	class MirroredRangeController : public Memory::RangeController {
 	public:
-		InternalRam() : Memory::RangeController(0x0'0300'0000, 0x0'0400'0000) {
+		MirroredRangeController() : Memory::RangeController(RangeStart, RangeEnd) {
 			data.fill(0);
 		}
 
@@ -15,16 +16,19 @@ namespace TurnipEmu::GBA {
 			return true;
 		}
 		byte read(uint32_t address) const override {
-			// Internal RAM is mirrored every 0x8000 bytes
-			return data[(address - 0x0'0300'0000) % 0x8000];
+			return data[(address - RangeStart) % Size];
 		}
 		bool allowWrite(uint32_t address) const override {
 			return true;
 		}
 		void write(uint32_t address, uint8_t value) override {
-			data[(address - 0x0'0300'0000) % 0x8000] = value;
+			data[(address - RangeStart) % Size] = value;
 		}
 	protected:
-		std::array<byte, 0x8000> data;
+		std::array<byte, Size> data;
 	};
+
+
+	using OnBoardRam = MirroredRangeController<0x0'0200'0000, 0x0'0300'0000, 0x4'0000>;
+	using OnChipRam  = MirroredRangeController<0x0'0300'0000, 0x0'0400'0000, 0x0'8000>;
 }

@@ -8,7 +8,8 @@ namespace TurnipEmu::GBA{
 		display.registerCustomWindow(this, &this->cpu.debugStateWindow);
 
 		memoryMap.registerMemoryController(&this->bios);
-		memoryMap.registerMemoryController(&this->gamePak);
+		memoryMap.registerMemoryController(&this->boardRam);
+		memoryMap.registerMemoryController(&this->chipRam);
 		memoryMap.registerMemoryController(&this->io.lcdEngine);
 		memoryMap.registerMemoryController(&this->io.dmaEngine);
 		memoryMap.registerMemoryController(&this->io.timerEngine);
@@ -17,7 +18,7 @@ namespace TurnipEmu::GBA{
 		memoryMap.registerMemoryController(&this->io.unusedMemory);
 		memoryMap.registerMemoryController(&this->systemControl);
 		memoryMap.registerMemoryController(&this->interruptControl);
-		memoryMap.registerMemoryController(&this->iram);
+		memoryMap.registerMemoryController(&this->gamePak);
 
 		reset();
 	}

@@ -44,7 +44,8 @@ namespace TurnipEmu::GBA{
 		SystemControl systemControl;
 		InterruptControl interruptControl;
 
-		InternalRam iram;
+		OnBoardRam boardRam;
+		OnChipRam chipRam;
 
 		const char* const logTag = "GBA";
 	};
