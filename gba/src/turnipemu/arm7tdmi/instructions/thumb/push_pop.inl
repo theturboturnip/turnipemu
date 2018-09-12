@@ -63,31 +63,33 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 		}
 		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
-
+			
+			// TODO: This should be rewritten to *exactly* mimic the ARM version
 			if (data.transferMode == TransferMode::Load){
 				auto pop = [&](int registerIndex){
 					word sp = registers.get(registers.SP);
 					registers.set(registerIndex, cpu.memoryMap.read<word>(sp).value());
 					registers.set(registers.SP, sp + 4);
 				};
-				if (data.loadProgramCounter) pop(15);
-				for (int i = 7; i >= 0; i--){
+				for (int i = 0; i < 8; i++){
 					if (!data.registerList[i]) continue;
 
 					pop(i);
 				}
+				if (data.loadProgramCounter) pop(registers.PC);
 			}else{
 				auto push = [&](int registerIndex){
 					word sp = registers.get(registers.SP) - 4;
 					registers.set(registers.SP, sp);
-					cpu.memoryMap.write<word>(sp, registers.get(registerIndex));
+					word value = registers.get(registerIndex);
+					cpu.memoryMap.write<word>(sp, value);
 				};
-				for (int i = 0; i < 8; i++){
+				if (data.storeLinkRegister) push(registers.LR);
+				for (int i = 7; i >= 0; i--){
 					if (!data.registerList[i]) continue;
 
 					push(i);
 				}
-				if (data.storeLinkRegister) push(13);
 			}
 		}
 	};
