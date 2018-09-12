@@ -69,7 +69,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 	}
 
 	void CPUStateWindow::drawCPUState(CPUState& state){
-		const RegisterPointers registers = state.usableRegisters();
+		const RegisterPointers registers = state.usableRegisters(false);
 		
 		if (registers.cpsr->state == CPUExecState::Thumb){
 			displayPipeline(registers, state.thumbPipeline);
@@ -195,19 +195,21 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 				if (mergeTightLoops && statePipelineBaseData->hasDecodedInstruction){
 					bool insideTightLoop = false;
 					const auto currentPC = statePipelineBaseData->decodedInstructionAddress;
-					int previousValidInstructions = 0;
-					for (int deltaI = -1; previousValidInstructions < maxTightLoopSize; deltaI--){
-						if (i + deltaI < 0) break;
-						const auto* prevStatePipelineBaseData = stateHistory[i + deltaI].currentPipelineBaseData();
-						if (prevStatePipelineBaseData->hasDecodedInstruction){
-							if (currentPC == prevStatePipelineBaseData->decodedInstructionAddress){
-								insideTightLoop = true;
-								break;
+					if (i < stateHistory.size() - 2) {
+						int previousValidInstructions = 0;
+						for (int deltaI = -1; previousValidInstructions < maxTightLoopSize; deltaI--){
+							if (i + deltaI < 0) break;
+							const auto* prevStatePipelineBaseData = stateHistory[i + deltaI].currentPipelineBaseData();
+							if (prevStatePipelineBaseData->hasDecodedInstruction){
+								if (currentPC == prevStatePipelineBaseData->decodedInstructionAddress){
+									insideTightLoop = true;
+									break;
+								}
+								previousValidInstructions++;
 							}
-							previousValidInstructions++;
 						}
 					}
-
+						
 					if (tightLoopLength > 0 && !insideTightLoop){
 						ImGui::TextWrapped("Tight loop from 0x%08x (x%d)", tightLoopStartInstruction, tightLoopLength);
 						

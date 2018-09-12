@@ -83,6 +83,7 @@ namespace TurnipEmu::ARM7TDMI{
 
 			debugStateWindow.onCPUTick();
 		}catch(...){
+			LogLine("ARM7", "Exception was thrown in the CPU but then was caught!");
 			debugStateWindow.onCPUTick();
 			
 			throw;
@@ -102,7 +103,7 @@ namespace TurnipEmu::ARM7TDMI{
 		}
 	}
 	
-	const RegisterPointers CPUState::usableRegisters() {
+	const RegisterPointers CPUState::usableRegisters(bool shouldThrow) {
 		RegisterPointers pointers;
 
 		for (int i = 0; i < 16; i++){
@@ -146,8 +147,10 @@ namespace TurnipEmu::ARM7TDMI{
 			pointers.spsr = &registers.und.spsr;
 			break;
 		default:
-			// This can still happen, if an invalid value is written to the CPSR by the program.
-			throw std::runtime_error(Utils::streamFormat("Illegal Mode for CPSR. Value = ", (int)registers.cpsr.mode, " which is '", ModeString(registers.cpsr.mode), "'"));
+			if (shouldThrow){
+				// This can still happen, if an invalid value is written to the CPSR by the program.
+				throw std::runtime_error(Utils::streamFormat("Illegal Mode for CPSR. Value = ", (int)registers.cpsr.mode, " which is '", ModeString(registers.cpsr.mode), "'"));
+			}
 		}
 		
 		return pointers;

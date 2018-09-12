@@ -37,7 +37,7 @@ namespace TurnipEmu::ARM7TDMI {
 		const PipelineBase* currentPipelineBaseData();
 
 		// Determines the register pointers for the current state, taking into account the execution state and current instruction type
-		const RegisterPointers usableRegisters();
+		const RegisterPointers usableRegisters(bool shouldThrow = true);
 
 		void resetPerTickVariables();
 	};
