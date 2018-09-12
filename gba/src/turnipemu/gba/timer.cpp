@@ -6,10 +6,8 @@ namespace TurnipEmu::GBA{
 		: Memory::RangeController(0x0'0400'0100, 0x0'0400'0110) {}
 	
 	void TimerEngine::execute(InterruptControl& interrupts){
-		throw std::runtime_error("Timers have not been implemented!");
-	}
-	bool TimerEngine::canExecute(){
-		return timers[0].enabled() || timers[1].enabled() || timers[2].enabled() || timers[3].enabled();
+		if (timers[0].enabled() || timers[1].enabled() || timers[2].enabled() || timers[3].enabled())
+			throw std::runtime_error("Timers have not been implemented!");
 	}
 	
 	bool TimerEngine::allowRead(uint32_t address) const {

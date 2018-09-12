@@ -9,7 +9,6 @@ namespace TurnipEmu::GBA{
 		DMAEngine();
 		
 		void execute(Memory::Map& memoryMap);
-		bool canExecute();
 
 		bool allowRead(uint32_t address) const override;
 		byte read(uint32_t address) const override;
@@ -23,17 +22,17 @@ namespace TurnipEmu::GBA{
 				Decrement = 1,
 				Fixed = 2,
 				IncrementAndReload = 3 // Only allowed for destination, means that on a reload the destination for DMA is the same. Otherwise, the destination will increment forever
-				};
-		enum class StartTiming : uint8_t {
+		};
+		enum class StartTiming {
 			Immediate = 0,
 				VBlank = 1,
 				HBlank = 2,
 				Special = 3
-				};
+		};
 		enum class TransferType : bool {
 			HalfWord = false,
 				Word = true
-				};
+		};
 		class DMAChannel {
 		public:
 			union ExternalState {

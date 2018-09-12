@@ -11,7 +11,6 @@ namespace TurnipEmu::GBA{
 		TimerEngine();
 
 		void execute(InterruptControl&);
-		bool canExecute();
 		
 		bool allowRead(uint32_t address) const override;
 		byte read(uint32_t address) const override;

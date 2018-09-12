@@ -11,6 +11,7 @@
 #include "turnipemu/gba/internal_ram.h"
 #include "turnipemu/gba/interrupt_control.h"
 #include "turnipemu/gba/keypad.h"
+#include "turnipemu/gba/sound.h"
 #include "turnipemu/gba/timer.h"
 #include "turnipemu/gba/unused_memory.h"
 #include "turnipemu/memory/map.h"
@@ -34,7 +35,7 @@ namespace TurnipEmu::GBA{
 		struct {
 			LCDEngine lcdEngine; // TODO: Define fully
 			DMAEngine dmaEngine; // TODO: Define fully
-            //SoundEngine soundEngine; // TODO: Define
+            SoundEngine soundEngine; // TODO: Define fully
 			TimerEngine timerEngine; // TODO: Define fully
 			// Serial Engine will be left undefined
 			Keypad keypad;

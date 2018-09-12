@@ -72,6 +72,13 @@ namespace TurnipEmu::Utils{
 
 #define TURNIPEMU_UINT32_TO_SINT64(VALUE) (int64_t)(int32_t)(VALUE)
 
+#define TURNIPEMU_SPLIT_HALFWORD_OR_LESS(NAME, SIZE)	\
+	uint8_t NAME##_low : 8;								\
+	uint8_t NAME##_high : (SIZE - 8);					\
+	inline uint16_t NAME##(){							\
+		return (NAME##_high << 8) | NAME##_low;			\
+	}
+
 #pragma pack(0)
 #if TURNIPEMU_BIG_ENDIAN
 #define TURNIPEMU_WORD_BLOCK(BITS_FROM_0, BITS_FROM_8, BITS_FROM_16, BITS_FROM_24) \

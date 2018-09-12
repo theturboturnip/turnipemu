@@ -13,6 +13,7 @@ namespace TurnipEmu::GBA{
 		memoryMap.registerMemoryController(&this->io.dmaEngine);
 		memoryMap.registerMemoryController(&this->io.timerEngine);
 		memoryMap.registerMemoryController(&this->io.keypad);
+		memoryMap.registerMemoryController(&this->io.soundEngine);
 		memoryMap.registerMemoryController(&this->io.unusedMemory);
 		memoryMap.registerMemoryController(&this->systemControl);
 		memoryMap.registerMemoryController(&this->interruptControl);
@@ -24,12 +25,8 @@ namespace TurnipEmu::GBA{
 	void GBA::tick(){
 		try {
 			cpu.tick();
-			if (io.dmaEngine.canExecute()){
-				io.dmaEngine.execute(memoryMap);
-			}
-			if (io.timerEngine.canExecute()){
-				io.timerEngine.execute(interruptControl);
-			}
+			io.dmaEngine.execute(memoryMap);
+			io.timerEngine.execute(interruptControl);
 			// TODO: Handle user input
 			io.keypad.setKeysPressed(0, interruptControl);
 		} catch (const std::exception& e) {

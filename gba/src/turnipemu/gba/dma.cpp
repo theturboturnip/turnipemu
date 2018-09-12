@@ -6,12 +6,8 @@ namespace TurnipEmu::GBA{
 	}
 	
 	void DMAEngine::execute(Memory::Map& memoryMap){
-		throw std::runtime_error("DMA has not been implemented!");
-	}
-	bool DMAEngine::canExecute(){
-		// TODO: Should this check if certain DMAs have actually been requested?
-		// Or should that be left to execute()?
-		return channels[0].enabled() || channels[1].enabled() || channels[2].enabled() || channels[3].enabled();
+		if (channels[0].enabled() || channels[1].enabled() || channels[2].enabled() || channels[3].enabled())
+			throw std::runtime_error("DMA has not been implemented!");
 	}
 	
 	bool DMAEngine::allowRead(uint32_t address) const {
