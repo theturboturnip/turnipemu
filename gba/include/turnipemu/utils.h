@@ -75,7 +75,7 @@ namespace TurnipEmu::Utils{
 #define TURNIPEMU_SPLIT_HALFWORD_OR_LESS(NAME, SIZE)	\
 	uint8_t NAME##_low : 8;								\
 	uint8_t NAME##_high : (SIZE - 8);					\
-	inline uint16_t NAME##(){							\
+	inline uint16_t NAME (){							\
 		return (NAME##_high << 8) | NAME##_low;			\
 	}
 
