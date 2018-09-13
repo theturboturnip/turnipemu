@@ -1,96 +1,47 @@
-#include "turnipemu/arm7tdmi/instruction_category.h"
+#pragma once
 
-#include <bitset>
+#include "turnipemu/arm7tdmi/instruction_category.h"
+#include "turnipemu/arm7tdmi/misc.h"
 
 namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 	class PushPopInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
-
-		enum class TransferMode : bool {
-			Load = true,
-			Store = false
-		};
 		
-		struct InstructionData {
-			std::bitset<8> registerList;
+		struct InstructionData : public MultipleLoadStore::InstructionData {
+			InstructionData(halfword instruction) {
+				registerList = (instruction & 0xFF);
 
-			TransferMode transferMode;
-			union {
-				bool storeLinkRegister;
-				bool loadProgramCounter;
-			};
-
-			InstructionData(halfword instruction)
-				: registerList(instruction & 0xFF) {
-				transferMode = static_cast<TransferMode>((instruction >> 11) & 1);
-				storeLinkRegister = (instruction >> 8) & 1; // Equivalent to setting loadProgramCounter
+				// NOTES: Stack is assumed to be Full Descending
+				//     Full -> The Stack Pointer points to the last item stored, NOT empty memory
+				//     Descending -> The Stack Pointer starts high and continuously decrements
+				if ((instruction >> 11) & 1){
+					genericInfo.transferMode = DataTransferInfo::TransferMode::Load;
+					genericInfo.indexMode = DataTransferInfo::IndexMode::PostIndex;
+					genericInfo.offsetSign = 1;
+					if ((instruction >> 8) & 1) registerList.set(15); // Load PC
+				}else{
+					genericInfo.transferMode = DataTransferInfo::TransferMode::Store;
+					genericInfo.indexMode = DataTransferInfo::IndexMode::PreIndex;
+					genericInfo.offsetSign = -1;
+					if ((instruction >> 8) & 1) registerList.set(14); // Store LR
+				}
+				genericInfo.writeback = true;
+				genericInfo.addressRegister = 13; // TODO: Static definition of "Stack Pointer" somewhere
 			}
 		};
 
 	public:
-		// NOTES: Stack is assumed to be Full Descending
-		//     Full -> The Stack Pointer points to the last item stored, NOT empty memory
-		//     Descending -> The Stack Pointer starts high and continuously decrements
-		// I define this instruction to push starting from 0, and to pop starting from 7
 		std::string disassembly(word instruction) const override {
 			InstructionData data(instruction);
 
 			std::stringstream os;
-			bool popping = (data.transferMode == TransferMode::Load);
-			os << (popping ? "Pop (Load) " : "Push (Store) ");
-			bool hasPrevious = false;
-			for (int i = 0; i < 8; i++){
-				if (!data.registerList[i]) continue;
-
-				if (hasPrevious) os << ", ";
-				os << "R" << i;
-				hasPrevious = true;
-			}
-			if (popping && data.loadProgramCounter){
-				if (hasPrevious) os << ", ";
-				os << "PC";
-				hasPrevious = true;
-			}else if (!popping && data.storeLinkRegister){
-				if (hasPrevious) os << ", ";
-				os << "LR";
-				hasPrevious = true;
-			}
-
-			assert(hasPrevious);
-			os << (popping ? " from SP" : " to SP");
-
+			os << data;
 			return os.str();
 		}
 		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
-			
-			// TODO: This should be rewritten to *exactly* mimic the ARM version
-			if (data.transferMode == TransferMode::Load){
-				auto pop = [&](int registerIndex){
-					word sp = registers.get(registers.SP);
-					registers.set(registerIndex, cpu.memoryMap.read<word>(sp).value());
-					registers.set(registers.SP, sp + 4);
-				};
-				for (int i = 0; i < 8; i++){
-					if (!data.registerList[i]) continue;
 
-					pop(i);
-				}
-				if (data.loadProgramCounter) pop(registers.PC);
-			}else{
-				auto push = [&](int registerIndex){
-					word sp = registers.get(registers.SP) - 4;
-					registers.set(registers.SP, sp);
-					word value = registers.get(registerIndex);
-					cpu.memoryMap.write<word>(sp, value);
-				};
-				if (data.storeLinkRegister) push(registers.LR);
-				for (int i = 7; i >= 0; i--){
-					if (!data.registerList[i]) continue;
-
-					push(i);
-				}
-			}
+			MultipleLoadStore::Execute(data, cpu, registers);
 		}
 	};
 }

@@ -214,7 +214,6 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 						ImGui::TextWrapped("Tight loop from 0x%08x (x%d)", tightLoopStartInstruction, tightLoopLength);
 						
 						tightLoopLength = 0;
-						continue;
 					}
 
 					if (insideTightLoop){
