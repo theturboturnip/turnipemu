@@ -169,7 +169,7 @@ namespace TurnipEmu::ARM7TDMI{
 											{ 15, 12, 0b1011 },
 											{ 10, 9, 0b10 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::MultipleLoadStoreInstruction>(
 										"F15: Multiple Load/Store",
 										Mask<halfword>{
 											{ 15, 12, 0b1100 }

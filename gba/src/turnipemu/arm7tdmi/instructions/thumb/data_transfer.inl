@@ -340,4 +340,38 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			}
 		}
 	};
+
+	class MultipleLoadStoreInstruction : public InstructionCategory {
+		using InstructionCategory::InstructionCategory;
+		
+		struct InstructionData : public MultipleLoadStore::InstructionData {
+			InstructionData(halfword instruction) {
+				registerList = (instruction & 0xFF);
+
+				if ((instruction >> 11) & 1){
+					genericInfo.transferMode = DataTransferInfo::TransferMode::Load;
+				}else{
+					genericInfo.transferMode = DataTransferInfo::TransferMode::Store;
+				}
+				genericInfo.indexMode = DataTransferInfo::IndexMode::PostIndex;
+				genericInfo.offsetSign = 1;
+				genericInfo.writeback = true;
+				genericInfo.addressRegister = (instruction >> 8) & 0b111;
+			}
+		};
+
+	public:
+		std::string disassembly(word instruction) const override {
+			InstructionData data(instruction);
+
+			std::stringstream os;
+			os << data;
+			return os.str();
+		}
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
+			InstructionData data(instruction);
+
+			MultipleLoadStore::Execute(data, cpu, registers);
+		}
+	};
 }
