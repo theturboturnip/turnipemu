@@ -44,9 +44,14 @@ namespace TurnipEmu::ARM7TDMI::Instructions::MultipleLoadStore {
 				
 			if (preindex) address += sizeof(word);
 
-			if (load)
-				registers.set(i, cpu.memoryMap.read<word>(address).value());
-			else
+			if (load) {
+				// TODO: Should this logic be here?
+				word value = cpu.memoryMap.read<word>(address).value();
+				if (i == 15)
+					registers.set(i, value & ~1);
+				else
+					registers.set(i, value);
+			}else
 				cpu.memoryMap.write<word>(address, registers.get(i));
 					
 			if (!preindex) address += sizeof(word);

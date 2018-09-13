@@ -153,7 +153,7 @@ namespace TurnipEmu::ARM7TDMI{
 										Mask<halfword>{
 											{ 15, 12, 0b1001 }
 										}));
-		thumbInstructions.push_back(std::make_unique<Thumb::InstructionCategory>(
+		thumbInstructions.push_back(std::make_unique<Thumb::ALULoadAddresswithOffset>(
 										"F12: Load Address",
 										Mask<halfword>{
 											{ 15, 12, 0b1010 }

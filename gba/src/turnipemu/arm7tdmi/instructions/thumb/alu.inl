@@ -203,4 +203,34 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			data.request.Evaluate(registers);
 		}
 	};
+
+	
+	class ALULoadAddresswithOffset : public InstructionCategory {
+	using InstructionCategory::InstructionCategory;
+
+		struct InstructionData {
+			ALU::Request request;
+
+			InstructionData(halfword instruction){
+				request.op = &ALU::ADD;
+				request.setFlags = false;
+				request.operand1.SetRegisterIndex(((instruction >> 11) & 1) ? 13 : 15);
+				request.operand2.SetImmediateValue((instruction & 0xFF) << 2);
+				request.destinationRegister = (instruction >> 8) & 0b111;
+			}
+		};
+		
+	public:
+		std::string disassembly(word instruction) const override {
+			InstructionData data(instruction);
+			
+			std::stringstream stream;
+			stream << data.request;
+			return stream.str();
+		}
+		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
+			InstructionData data(instruction);
+			data.request.Evaluate(registers);
+		}
+	};
 }

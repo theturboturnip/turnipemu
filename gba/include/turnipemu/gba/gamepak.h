@@ -22,9 +22,13 @@ namespace TurnipEmu::GBA{
 				// Wait State 0 (0x08000000 - 0x09FFFFFF)
 				// Wait State 1 (0x0A000000 - 0x0BFFFFFF)
 				// Wait State 2 (0x0C000000 - 0x0DFFFFFF)
-				return rom[rel_address % 0x02000000];
+				word rom_address = rel_address % 0x02000000;
+				if (rom_address >= rom.size()) return 0;
+				return rom[rom_address];
 			}else{
-				return backup[rel_address - 0x0E000000];
+				word backup_address = rel_address - 0x0E000000;
+				if (backup_address >= backup.size()) return 0;
+				return backup[backup_address];
 			}
 		}
 
