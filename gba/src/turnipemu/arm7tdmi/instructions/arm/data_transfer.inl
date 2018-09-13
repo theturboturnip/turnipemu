@@ -1,3 +1,7 @@
+#pragma once
+
+#include "turnipemu/arm7tdmi/misc.h"
+
 namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 	class SingleDataTransferInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
@@ -99,17 +103,19 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 	class BlockDataTransferInstruction : public InstructionCategory {
 		using InstructionCategory::InstructionCategory;
 
-		struct InstructionData : public DataTransferInfo{
-			std::bitset<16> registerList;
+		struct InstructionData {
+			MultipleLoadStore::InstructionData multipleLoadStoreInstruction;
 			
 			union {
 				bool loadPSR;
 				bool forceUser;
 			};
 
-			InstructionData(word instructionWord) : 
-				DataTransferInfo(instructionWord), registerList(instructionWord & 0xFFFF) {
+			InstructionData(word instructionWord) {
 				loadPSR = (instructionWord >> 22) & 1;
+				
+				multipleLoadStoreInstruction.genericInfo = DataTransferInfo(instructionWord);
+				multipleLoadStoreInstruction.registerList = instructionWord & 0xFFFF;
 			}
 		};
 	public:
@@ -117,22 +123,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 			InstructionData data(instructionWord);
 			
 			std::stringstream stream;
-			stream << "Block ";
-			if (data.transferMode == DataTransferInfo::TransferMode::Load){
-				stream << "Load\n"; 
-			}else{
-				stream << "Store\n";
-			}
-			stream << "Registers:";
-			for (int i = 0; i < 16; i++){
-				if (data.registerList[i]){
-					stream << " R" << i;
-				}
-			}
-			stream << "\nAddress Register: " << (int)data.addressRegister;
-			stream << "\nDirection: " << ((data.offsetSign == 1) ? "Increment" : "Decrement") << " from register";
-			stream << "\nWriteback: " << std::boolalpha << data.writeback;
-			stream << "\nIndexing: " << ((data.indexMode == DataTransferInfo::IndexMode::PreIndex) ? "Pre" : "Post");
+			stream << data.multipleLoadStoreInstruction;
 			return stream.str();
 		}
 		void execute(CPU& cpu, InstructionRegisterInterface registers, word instructionWord) const override {
@@ -142,35 +133,7 @@ namespace TurnipEmu::ARM7TDMI::Instructions::ARM {
 				throw std::runtime_error("TODO: Implement S bit for Block Data Transfer");
 			}
 
-			const bool preindex = data.indexMode == DataTransferInfo::IndexMode::PreIndex;
-			const bool load = data.transferMode == DataTransferInfo::TransferMode::Load;
-			
-			// As stated by the docs:
-			// The registers must be read from lowest to highest (excluding the address)
-			// The lowest register must be written to the lowest point
-			word baseAddress = registers.get(data.addressRegister);
-			word address = baseAddress;
-			if (data.offsetSign < 0){
-				address -= sizeof(word) * data.registerList.count();
-				if (preindex) address -= sizeof(word);
-			}
-
-			for (int i = 0; i < 16; i++){
-				if (!data.registerList[i]) continue;
-				
-				if (preindex) address += sizeof(word);
-
-				if (load)
-					registers.set(i, cpu.memoryMap.read<word>(address).value());
-				else
-					cpu.memoryMap.write<word>(address, registers.get(i));
-					
-				if (!preindex) address += sizeof(word);
-			}
-
-			if (data.writeback){
-				registers.set(data.addressRegister, baseAddress + data.offsetSign * sizeof(word) * data.registerList.count());
-			}
+			MultipleLoadStore::Execute(data.multipleLoadStoreInstruction, cpu, registers);
 		}
 	};
 }
