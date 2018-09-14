@@ -149,6 +149,23 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 		friend std::ostream& operator << (std::ostream&, const Request&);
 	};
 
+	class MultiplyRequest {
+	public:
+		RequestInput operand1;
+		RequestInput operand2;
+		uint8_t destinationRegister1;
+		uint8_t destinationRegister2; // Only used when doing long multiplies
+
+		bool setFlags = true;
+		bool isSigned;
+		bool accumulate;
+		bool isLong;
+
+		void Evaluate(Instructions::InstructionRegisterInterface) const;
+
+		friend std::ostream& operator << (std::ostream&, const MultiplyRequest&);
+	};
+
 	// Arithmetic Ops
 	const extern ALU::Operation ADD;
 	const extern ALU::Operation ADC;

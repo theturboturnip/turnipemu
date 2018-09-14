@@ -160,7 +160,43 @@ namespace TurnipEmu::ARM7TDMI::ALU {
 		os << "\nFlags: " << std::boolalpha << request.setFlags;
 	    return os;
 	}
-	
+
+	void MultiplyRequest::Evaluate(Instructions::InstructionRegisterInterface registers) const {
+		word operand1Value = operand1.Evaluate(registers);
+		word operand2Value = operand2.Evaluate(registers);
+
+		uint64_t uResult;
+		
+		if (isSigned){
+			uResult = static_cast<uint64_t>(
+				TURNIPEMU_UINT32_TO_SINT64(operand1Value) * TURNIPEMU_UINT32_TO_SINT64(operand2Value)
+				);
+		}else{
+			uResult = operand1Value * operand2Value;
+		}
+
+		uint64_t uFullResult = uResult;
+		if (accumulate){
+			uFullResult += registers.get(destinationRegister1);
+			if (isLong) uFullResult += ((uint64_t)registers.get(destinationRegister2)) << 32;
+		}
+
+		registers.set(destinationRegister1, uFullResult & word(~0));
+		if (isLong) registers.set(destinationRegister2, (uFullResult << 32) & word(~0));
+
+		registers.cpsr().zero = uFullResult == 0;
+		registers.cpsr().negative = (uFullResult >> 63) & 1;
+		// Carry and Overflow are defined to "set garbage values", so we don't need to modify them.
+	}
+	std::ostream& operator << (std::ostream& os, const MultiplyRequest& request) {
+		os << "Multiply " << (request.isSigned ? 'S' : '/') << (request.accumulate ? 'A' : '/') << (request.isLong ? 'L' : '/');
+		os << "\nOperand 1: " << request.operand1;
+		os << "\nOperand 2: " << request.operand2;
+		os << "\nDestination: Register " << ((int)request.destinationRegister1);
+		if (request.isLong) os << " [Low] Register " << ((int)request.destinationRegister2) << " [High]";
+		os << "\nFlags: " << std::boolalpha << request.setFlags;
+	    return os;
+	}
 
 	// Arithmetic Ops
 	const ALU::Operation ADD = {

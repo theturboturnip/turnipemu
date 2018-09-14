@@ -132,20 +132,36 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 				&ALU::CMP,
 				&ALU::CMN,
 				&ALU::ORR,
-				&ALU::Thumb::MUL,
+				nullptr,
 				&ALU::BIC,
 				&ALU::MVN,
 			}};
 
 		struct InstructionData {
 			ALU::Request request;
-
+			ALU::MultiplyRequest multiplyRequest;
+			bool isNormalRequest;
+				
 			InstructionData(halfword instruction){
 				request.op = operations[(instruction >> 6) & 0xF];
+				
+				if (request.op == nullptr){
+					isNormalRequest = false;
 
-				request.destinationRegister = (instruction >> 0) & 0b111;
-				request.operand1.SetRegisterIndex(request.destinationRegister);
-				request.operand2.SetRegisterIndex((instruction >> 3) & 0b111);
+					multiplyRequest.destinationRegister1 = (instruction >> 0) & 0b111;
+					multiplyRequest.operand1.SetRegisterIndex(multiplyRequest.destinationRegister1);
+					multiplyRequest.operand2.SetRegisterIndex((instruction >> 3) & 0b111);
+
+					multiplyRequest.isSigned = false;
+					multiplyRequest.accumulate = false;
+					multiplyRequest.isLong = false;
+				}else{
+					isNormalRequest = true;
+					
+					request.destinationRegister = (instruction >> 0) & 0b111;
+					request.operand1.SetRegisterIndex(request.destinationRegister);
+					request.operand2.SetRegisterIndex((instruction >> 3) & 0b111);
+				}
 			}
 		};
 
@@ -154,12 +170,18 @@ namespace TurnipEmu::ARM7TDMI::Instructions::Thumb {
 			InstructionData data(instruction);
 			
 			std::stringstream stream;
-			stream << data.request;
+			if (data.isNormalRequest)
+				stream << data.request;
+			else
+				stream << data.multiplyRequest;
 			return stream.str();
 		}
 		void execute(CPU& cpu, InstructionRegisterInterface registers, word instruction) const override {
 			InstructionData data(instruction);
-			data.request.Evaluate(registers);
+			if (data.isNormalRequest)
+				data.request.Evaluate(registers);
+			else
+				data.multiplyRequest.Evaluate(registers);
 		}
 	};
 
