@@ -81,6 +81,9 @@ namespace TurnipEmu::ARM7TDMI{
 				emulator.pause();
 			}
 
+			state.cyclesThisTick = 1;
+			state.cyclesTotal += state.cyclesThisTick;
+
 			debugStateWindow.onCPUTick();
 		}catch(...){
 			LogLine("ARM7", "Exception was thrown in the CPU but then was caught!");

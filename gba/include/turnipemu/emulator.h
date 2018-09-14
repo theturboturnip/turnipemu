@@ -21,6 +21,8 @@ namespace TurnipEmu{
 			while(!paused && !stopped && !vsyncReady){
 				this->tick();
 			}
+			// TODO: Remove
+			vsyncReady = false;
 		}
 		virtual void handleInput(SDL_Event event){}
 

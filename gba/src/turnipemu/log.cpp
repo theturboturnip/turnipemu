@@ -9,7 +9,7 @@ constexpr int FULL_TAG_WIDTH = TAG_WIDTH + 2 + 1; // Tag Width with braces and f
 
 int indentLevel = 0;
 
-void TurnipEmu::LogLine(const char* tag, const char* format, ...){
+void LogLineVarargs(const char* tag, const char* format, va_list argptr){
 	for (int i = 0; i < indentLevel; i++){
 		fprintf(stdout, "\t");
 	}
@@ -23,12 +23,23 @@ void TurnipEmu::LogLine(const char* tag, const char* format, ...){
 		strncpy(lastTag, tag, TAG_WIDTH);
 	}
 	
-	va_list argptr;
-    va_start(argptr, format);
+
     vfprintf(stdout, format, argptr);
-    va_end(argptr);
+}
+void TurnipEmu::LogLine(const char* tag, const char* format, ...){
+	va_list argptr;
+	va_start(argptr, format);
+	LogLineVarargs(tag, format, argptr);
+	va_end(argptr);
 
 	fprintf(stdout, "\n");
+}
+void TurnipEmu::LogLineOverwrite(const char* tag, const char* format, ...){
+	if (strcmp(tag, lastTag) == 0) fprintf(stdout, "\r");
+	va_list argptr;
+	va_start(argptr, format);
+	LogLineVarargs(tag, format, argptr);
+	va_end(argptr);
 }
 void TurnipEmu::Indent(){
 	indentLevel++;

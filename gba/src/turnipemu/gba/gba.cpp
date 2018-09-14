@@ -26,6 +26,12 @@ namespace TurnipEmu::GBA{
 	void GBA::tick(){
 		try {
 			cpu.tick();
+			LogLineOverwrite(logTag, "Cycles: %d", cpu.totalCycles());
+			static auto vSyncTick = cpu.totalCycles();
+			if (cpu.totalCycles() - vSyncTick > 100000){
+				vsyncReady = true;
+				vSyncTick = cpu.totalCycles();
+			}else vsyncReady = false;
 			io.dmaEngine.execute(memoryMap);
 			io.timerEngine.execute(interruptControl);
 			// TODO: Handle user input

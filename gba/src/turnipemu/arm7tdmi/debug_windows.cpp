@@ -5,13 +5,12 @@
 namespace TurnipEmu::ARM7TDMI::Debug {
 	CPUStateWindow::CPUStateWindow(CPU& cpu)
 		: Display::CustomWindow("ARM7TDMI Instruction Inspector", 600, 500), cpu(cpu) {
-		stateHistory = std::vector<CPUState>();
-		stateHistory.reserve(maxStateMemory + 1);
+		stateHistory = std::deque<CPUState>();
 	}
 
 	void CPUStateWindow::onCPUTick(){
+		if (stateHistory.size() > maxStateMemory) stateHistory.pop_front();
 		stateHistory.push_back(cpu.state);
-		if (stateHistory.size() > maxStateMemory) stateHistory.erase(stateHistory.begin());
 		selectedStateIndex = stateHistory.size() - 1;
 		teleportToSelected = true;
 	}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+
 #include "turnipemu/display.h"
 
 namespace TurnipEmu::ARM7TDMI {
@@ -22,7 +24,7 @@ namespace TurnipEmu::ARM7TDMI::Debug {
 		CPU& cpu;
 		char newBreakpointIndex[9];
 		char instructionFilter[50];
-		std::vector<CPUState> stateHistory;
+		std::deque<CPUState> stateHistory;
 		int selectedStateIndex = 0;
 		bool teleportToSelected = false;
 		bool showPartialPipelineStates = false;

@@ -54,6 +54,10 @@ namespace TurnipEmu::ARM7TDMI {
 
 		void reset();
 
+		inline uint32_t totalCycles(){
+			return state.cyclesTotal;
+		}
+
 		Emulator& emulator;
 		const Memory::Map& memoryMap;
 
